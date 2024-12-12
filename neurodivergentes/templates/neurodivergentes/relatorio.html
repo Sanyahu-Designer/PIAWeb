@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório - {{ neurodivergente }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2c5282;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        th {
+            background-color: #f7fafc;
+            font-weight: bold;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8em;
+            color: #718096;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório Individual</h1>
+        <h2>{{ neurodivergente }}</h2>
+        <p>Data de geração: {{ data_geracao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <div class="section">
+        <h3>Dados Pessoais</h3>
+        <div class="info-item">
+            <span class="info-label">Nome:</span>
+            {{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Data de Nascimento:</span>
+            {{ neurodivergente.data_nascimento|date:"d/m/Y" }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Idade:</span>
+            {{ neurodivergente.idade }} anos
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>PDIs</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Meta</th>
+                    <th>Nível</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pdi in pdis %}
+                <tr>
+                    <td>{{ pdi.data_criacao|date:"d/m/Y" }}</td>
+                    <td>{{ pdi.meta }}</td>
+                    <td>{{ pdi.nivel_desenvolvimento }}%</td>
+                    <td>{{ pdi.get_status_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Evolução</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Profissional</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evolucao in evolucoes %}
+                <tr>
+                    <td>{{ evolucao.data|date:"d/m/Y" }}</td>
+                    <td>{{ evolucao.profissional }}</td>
+                    <td>{{ evolucao.descricao }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Monitoramento</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Meta</th>
+                    <th>Nível</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for monitoramento in monitoramentos %}
+                <tr>
+                    <td>{{ monitoramento.data|date:"d/m/Y" }}</td>
+                    <td>{{ monitoramento.meta }}</td>
+                    <td>{{ monitoramento.nivel }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Frequência</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mês/Ano</th>
+                    <th>Total de Atendimentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for frequencia in frequencias %}
+                <tr>
+                    <td>{{ frequencia.get_mes_display }}/{{ frequencia.ano }}</td>
+                    <td>{{ frequencia.total_atendimentos }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Relatório gerado automaticamente pelo sistema PIA</p>
+        <p>Página {{ page }} de {{ pages }}</p>
+    </div>
+</body>
+</html>

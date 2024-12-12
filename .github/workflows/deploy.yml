@@ -1,0 +1,25 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Deploy to cPanel
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: localhost
+        username: sanyahu@netsarym.com.br
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /home/netsarim/pia-teste
+          git pull origin main

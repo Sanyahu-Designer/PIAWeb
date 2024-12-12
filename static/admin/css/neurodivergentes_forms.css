@@ -1,0 +1,225 @@
+.tab-dados-pessoais,
+.tab-localizacao,
+.tab-endereco,
+.tab-contato,
+.tab-nascimento,
+.tab-medico,
+.tab-historico,
+.tab-relacionamentos,
+.tab-desenvolvimento,
+.tab-percepcao {
+    border: 1px solid #eee;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.tab-header {
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 2px solid #447e9b;
+    padding-bottom: 5px;
+}
+
+.errorlist {
+    color: #ba2121;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #fff3f3;
+    border: 1px solid #ba2121;
+    border-radius: 4px;
+}
+
+/* Form field styling */
+.form-row {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-row:last-child {
+    border-bottom: none;
+}
+
+/* Input styling */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Help text styling */
+.help {
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Grupo Familiar inline styling */
+.inline-group {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.inline-group h2 {
+    background: #f8f8f8;
+    padding: 10px;
+    margin: 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
+}
+
+.inline-related {
+    padding: 10px;
+}
+
+.inline-related h3 {
+    margin-top: 0;
+}
+
+/* Campos obrigatórios */
+.required label:after {
+    content: '*';
+    color: #ba2121;
+    margin-left: 4px;
+}
+
+/* Estilo específico para campos JSON */
+.field-medicacoes_list textarea,
+.field-rotina_text textarea {
+    font-family: monospace;
+    min-height: 150px;
+    width: 100%;
+}
+
+/* Estilo para campos de avaliação */
+.field-rel_mae select,
+.field-rel_pai select,
+.field-rel_colegas select,
+.field-rel_professores select,
+.field-rel_social select {
+    width: 200px !important;
+}
+
+/* Campos dependentes */
+.field-tempo_prematuridade.hidden,
+.field-nome_convenio.hidden,
+.field-descricao_restricoes.hidden {
+    display: none;
+}
+
+/* Preview de foto */
+.field-foto_preview img {
+    max-width: 150px;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Melhorias de acessibilidade */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid #447e9b;
+    outline-offset: -1px;
+}
+
+/* Estilo para mensagens de erro */
+.field-error {
+    border-color: #ba2121 !important;
+    background-color: #fff3f3 !important;
+}
+
+/* Estilo para campos com sucesso */
+.field-success {
+    border-color: #2e7d32 !important;
+    background-color: #f1f8e9 !important;
+}
+
+/* Estilos para categorias de diagnóstico */
+.category {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.category-title {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 16px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+}
+
+.checkbox-item {
+    margin: 8px 0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-top: 4px;
+    margin-right: 8px;
+}
+
+.checkbox-item label {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    color: #333;
+}
+
+.cid {
+    color: #666;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.diagnosticos-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+/* Responsividade */
+@media (max-width: 767px) {
+    .form-row {
+        padding: 10px 0;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    select,
+    textarea {
+        font-size: 16px;
+    }
+    
+    .field-rel_mae select,
+    .field-rel_pai select,
+    .field-rel_colegas select,
+    .field-rel_professores select,
+    .field-rel_social select {
+        width: 100% !important;
+    }
+
+    .category {
+        padding: 10px;
+    }
+
+    .checkbox-item label {
+        font-size: 13px;
+    }
+}

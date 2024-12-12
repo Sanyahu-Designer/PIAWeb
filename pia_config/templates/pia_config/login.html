@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{% static 'favicon.ico' %}">
+  <link rel="icon" type="image/webp" href="{% static 'pia_config/images/logo.webp' %}">
+  <title>
+    PIA - Plano Individual de Aprendizagem
+  </title>
+  <!-- Fonts and icons -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+  <!-- Nucleo Icons -->
+  <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-svg.css" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <!-- CSS Files -->
+  <link id="pagestyle" href="{% static 'pia_config/css/argon-dashboard.css' %}" rel="stylesheet" />
+
+  <style>
+    .btn-custom-primary {
+      background: #007bff !important;
+      color: white !important;
+    }
+
+    .btn-custom-primary:hover {
+      background: #0A2647 !important;
+      color: white !important;
+    }
+
+    .form-check-input:checked {
+      background-color: #144272 !important;
+      border-color: #144272 !important;
+    }
+
+    .form-check-input:focus {
+      border-color: #144272;
+      box-shadow: 0 0 0 0.25rem rgba(20, 66, 114, 0.25);
+    }
+
+    .form-switch .form-check-input:focus {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(20, 66, 114, 0.25)'/%3e%3c/svg%3e");
+    }
+
+    .position-relative.h-100.m-3.px-7.border-radius-lg.d-flex.flex-column.justify-content-center.overflow-hidden {
+      border-radius: 0 !important;
+    }
+  </style>
+
+</head>
+
+<body class="">
+  <main class="main-content mt-0">
+    <section>
+      <div class="page-header min-vh-100">
+        <div class="container">
+          <div class="row h-100 align-items-center">
+            <!-- Lado esquerdo com gradiente -->
+            <div class="col-lg-6 col-md-7 col-sm-10 d-lg-flex d-none h-100 my-auto ps-0 position-absolute top-0 start-0 text-center justify-content-center flex-column">
+              <div class="position-relative h-100 m-3 px-7 border-radius-lg d-flex flex-column justify-content-center overflow-hidden" style="background: linear-gradient(310deg, #007bff 0%, #007bff 100%);">
+                <span class="mask bg-gradient-primary opacity-6"></span>
+
+                <!-- Logo -->
+                <div class="text-center mb-4">
+                  <img src="{% static 'pia_config/images/logo.webp' %}" alt="Logo PIA" class="img-fluid position-relative mx-auto" style="max-width: 200px; height: auto;">
+                </div>
+
+                <!-- Textos aprimorados -->
+                <div class="px-4">
+                  <h4 class="mt-3 text-white font-weight-bolder position-relative">
+                    Plano Individual de Aprendizagem
+                  </h4>
+                  <h5 class="text-white position-relative mt-3">
+                    Prefeitura Municipal de Caraá
+                  </h5>
+                  <p class="text-white-50 position-relative mt-4 mb-0">
+                    Sistema integrado de acompanhamento
+                  </p>
+                  <p class="text-white-50 position-relative mb-4">
+                    personalizado para alunos neurodivergentes
+                  </p>
+                  <hr class="horizontal light w-50 mx-auto">
+                  <p class="text-white position-relative mt-4 font-weight-light">
+                    Uma iniciativa conjunta das Secretarias de<br>
+                    Educação e Saúde do Município de Caraá.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- Fim do lado esquerdo -->
+            <!-- Lado direito com login -->
+            <div class="col-lg-5 col-md-7 col-sm-10 ms-lg-auto me-lg-5 mx-auto">
+              <div class="card card-plain">
+                <div class="card-header pb-0 text-start">
+                  <h4 class="font-weight-bolder mb-3">Faça seu Login</h4>
+                  <p class="mb-0">Informe suas credenciais para entrar</p>
+                </div>
+                <div class="card-body">
+                  {% if messages %}
+                    {% for message in messages %}
+                      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                  <form method="post" role="form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                      <input type="text" class="form-control form-control-lg" name="username" placeholder="Digite seu nome de usuário" aria-label="Usuário" required>
+                    </div>
+                    <div class="mb-3">
+                      <input type="password" class="form-control form-control-lg" name="password" placeholder="Digite sua senha" aria-label="Senha" required>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe">
+                      <label class="form-check-label" for="rememberMe">Manter conectado</label>
+                    </div>
+                    <div class="text-center">
+                      <button type="submit" class="btn btn-lg btn-custom-primary btn-lg w-100 mt-4 mb-0">
+                        <i class="fas fa-sign-in-alt me-2"></i>Clique aqui para fazer o Login
+                      </button>
+                    </div>
+                  </form>
+                </div>
+                <div class="card-footer text-center pt-0 px-lg-2 px-1">
+                  <div class="mt-4 mb-3">
+                    <small class="text-muted">Acesso exclusivo para servidores autorizados</small>
+                  </div>
+                  <hr class="horizontal dark my-3">
+                  <p class="text-sm mb-0">
+                    Precisa de acesso?
+                    <a href="mailto:educacao@caraa.rs.gov.br" target="_blank" class="text-primary font-weight-bold">Entre em contato</a>
+                    com a Secretaria de Educação
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- Fim do lado direito -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Core JS Files -->
+  <script src="{% static 'pia_config/js/core/popper.min.js' %}"></script>
+  <script src="{% static 'pia_config/js/core/bootstrap.min.js' %}"></script>
+  <script src="{% static 'pia_config/js/plugins/perfect-scrollbar.min.js' %}"></script>
+  <script src="{% static 'pia_config/js/plugins/smooth-scrollbar.min.js' %}"></script>
+  <script src="{% static 'pia_config/js/argon-dashboard.min.js' %}"></script>
+</body>
+</html>

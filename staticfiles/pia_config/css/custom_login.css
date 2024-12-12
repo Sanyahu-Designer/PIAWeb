@@ -1,0 +1,299 @@
+/* custom_login.css */
+
+/* Fundo da página de login */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f4f6f9;
+}
+
+/* Container principal dividindo a tela */
+.container {
+  display: flex;
+  width: 80%;
+  max-width: 900px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Seção de informações */
+.info-section {
+  width: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.info-section .logo {
+  max-width: 80%;
+  margin-bottom: 1rem;
+}
+
+.info-section h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.info-section p {
+  font-size: 1.1rem;
+}
+
+/* Seção de login */
+.login-section {
+  width: 50%;
+  padding: 2rem;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-section h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+label {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+input[type='text'],
+input[type='password'] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Estilo específico apenas para o grupo do checkbox */
+.form-group:has(input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+}
+
+/* Estilo apenas para o checkbox */
+input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Estilo apenas para o label do checkbox */
+input[type='checkbox'] + label {
+  vertical-align: middle;
+  margin: 0;
+}
+
+button[type='submit'] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button[type='submit']:hover {
+  background-color: #0056b3;
+}
+
+.messages {
+  margin-bottom: 20px;
+}
+
+.alert-messages {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.alert {
+  padding: 0.75rem 1.25px;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.alert-error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+/* Media Queries para responsividade */
+@media screen and (max-width: 768px) {
+  /* Ajustes para o container principal */
+  .container {
+    width: 100%;
+    flex-direction: column;
+    margin: 0;
+    height: 100%;
+    max-width: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  /* Ajustes para a seção de informações */
+  .info-section {
+    width: 100%;
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .info-section h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .info-section p,
+  .info-section h5 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .info-section .logo {
+    max-width: 60%;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Ajustes para a seção de login */
+  .login-section {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .login-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Ajustes para os campos do formulário */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  input[type='text'],
+  input[type='password'] {
+    padding: 0.75rem;
+    font-size: 16px; /* Previne zoom em iOS */
+  }
+
+  button[type='submit'] {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+/* Ajustes específicos para telas muito pequenas */
+@media screen and (max-width: 480px) {
+  body {
+    margin: 0;
+    padding: 0;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .container {
+    min-height: 100vh;
+  }
+
+  .info-section {
+    padding: 1rem;
+  }
+
+  .info-section h1 {
+    font-size: 1.2rem;
+  }
+
+  .info-section p,
+  .info-section h5 {
+    font-size: 0.8rem;
+  }
+
+  .login-section {
+    padding: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  input[type='text'],
+  input[type='password'] {
+    padding: 0.5rem;
+  }
+
+  button[type='submit'] {
+    margin-top: 0.5rem;
+  }
+
+  /* Ajuste para o checkbox em telas pequenas */
+  .form-group:has(input[type='checkbox']) {
+    margin: 0.5rem 0;
+  }
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+  }
+
+  input[type='checkbox'] + label {
+    font-size: 0.9rem;
+  }
+}
+
+/* Ajustes para altura muito pequena */
+@media screen and (max-height: 600px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .container {
+    min-height: 100vh;
+  }
+
+  .info-section,
+  .login-section {
+    padding: 0.5rem;
+  }
+}
+
+/* Ajustes para dispositivos em paisagem */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .container {
+    flex-direction: row;
+    height: auto;
+  }
+
+  .info-section,
+  .login-section {
+    width: 50%;
+    overflow-y: auto;
+    max-height: 100vh;
+  }
+}

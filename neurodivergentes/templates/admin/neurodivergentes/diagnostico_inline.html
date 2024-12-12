@@ -1,0 +1,104 @@
+{% load static %}
+<div class="js-inline-admin-formset inline-group diagnosticos-container" id="{{ inline_admin_formset.formset.prefix }}-group"
+     data-inline-type="tabular"
+     data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+  <div class="tabular inline-related">
+    <fieldset class="module">
+      {{ inline_admin_formset.formset.management_form }}
+      {{ inline_admin_formset.formset.non_form_errors }}
+      <table>
+        <thead>
+          <tr>
+            {% for field in inline_admin_formset.fields %}
+              <th class="{{ field.widget.attrs.class }}">
+                {{ field.label|capfirst }}
+                {% if field.required %}<span class="required">*</span>{% endif %}
+              </th>
+            {% endfor %}
+            {% if inline_admin_formset.formset.can_delete %}<th>Remover?</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for inline_admin_form in inline_admin_formset %}
+            <tr class="form-row {% if forloop.last %}empty-form{% endif %}"
+                id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+              {% for fieldset in inline_admin_form %}
+                {% for line in fieldset %}
+                  {% for field in line %}
+                    <td class="{{ field.field.name }}">
+                      {% if field.is_readonly %}
+                        <p>{{ field.contents }}</p>
+                      {% else %}
+                        {{ field.field }}
+                      {% endif %}
+                      {{ field.field.errors.as_ul }}
+                    </td>
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+              {% if inline_admin_formset.formset.can_delete %}
+                <td class="delete">
+                  {{ inline_admin_form.deletion_field.field }}
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </fieldset>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function($) {
+    'use strict';
+    $(document).ready(function() {
+        var prefix = "{{ inline_admin_formset.formset.prefix }}";
+        
+        // Função para atualizar as condições quando uma categoria é selecionada
+        function updateCondicoes($row) {
+            var $categoria = $row.find('select[name$="-categoria"]');
+            var $condicao = $row.find('select[name$="-condicao"]');
+            var categoriaId = $categoria.val();
+            
+            if (categoriaId) {
+                $.getJSON("{% url 'neurodivergentes:get_condicoes' %}", {
+                    categoria_id: categoriaId
+                }).done(function(data) {
+                    var options = '<option value="">---------</option>';
+                    $.each(data.condicoes, function(index, item) {
+                        options += '<option value="' + item.id + '">' + 
+                                  item.nome + ' (CID-10: ' + item.cid_10 + ')</option>';
+                    });
+                    $condicao.html(options);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('Erro ao carregar condições:', errorThrown);
+                });
+            } else {
+                $condicao.html('<option value="">---------</option>');
+            }
+        }
+
+        // Atualizar condições quando uma categoria é selecionada
+        $('.diagnosticos-container').on('change', 'select[name$="-categoria"]', function() {
+            updateCondicoes($(this).closest('tr'));
+        });
+
+        // Inicializar condições para linhas existentes
+        $('.diagnosticos-container tr:not(.empty-form)').each(function() {
+            updateCondicoes($(this));
+        });
+
+        // Atualizar condições quando uma nova linha é adicionada
+        $('.add-row a').click(function() {
+            setTimeout(function() {
+                $('.diagnosticos-container tr:not(.empty-form)').each(function() {
+                    if (!$(this).find('select[name$="-condicao"]').html()) {
+                        updateCondicoes($(this));
+                    }
+                });
+            }, 100);
+        });
+    });
+})(django.jQuery);
+</script>

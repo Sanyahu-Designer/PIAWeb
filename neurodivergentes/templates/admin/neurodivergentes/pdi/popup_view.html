@@ -1,0 +1,49 @@
+{% load i18n static %}
+
+<div class="popup-content">
+    <div class="popup-header">
+        <h2>Detalhes do PDI</h2>
+        <div class="popup-actions">
+            <a href="{% url 'neurodivergentes:imprimir_pdi' pdi.id %}" target="_blank" class="print-btn" title="Imprimir PDI">
+                <i class="fas fa-print"></i>
+            </a>
+            <span class="close-popup">&times;</span>
+        </div>
+    </div>
+    <div class="popup-body">
+        <div class="info-group">
+            <label>Aluno/Paciente:</label>
+            <span>{{ pdi.neurodivergente }}</span>
+        </div>
+        <div class="info-group">
+            <label>Data do PDI:</label>
+            <span>{{ pdi.data_criacao|date:"d/m/Y" }}</span>
+        </div>
+        <div class="info-group">
+            <label>Status:</label>
+            <span>{{ pdi.get_status_display }}</span>
+        </div>
+        <div class="info-group">
+            <label>Progresso:</label>
+            <span>{{ progresso }}%</span>
+        </div>
+        <div class="info-group">
+            <label>Pedagogo Responsável:</label>
+            <span>{{ pdi.pedagogo_responsavel }}</span>
+        </div>
+        <div class="info-group">
+            <label>Metas/Habilidades:</label>
+            <ul>
+                {% for meta in pdi.metas_habilidades.all %}
+                <li>
+                    {{ meta.meta_habilidade.nome }} - {{ meta.progresso }}%
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="info-group">
+            <label>Diário de Classe:</label>
+            <p>{{ pdi.observacoes|linebreaks }}</p>
+        </div>
+    </div>
+</div>

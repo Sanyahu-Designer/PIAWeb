@@ -1,0 +1,9 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="alert alert-info" style="margin: 20px 0; padding: 15px; border-radius: 4px; background-color: #e3f2fd; border: 1px solid #90caf9;">
+    <p style="margin: 0; color: #1976d2;">Primeiro, insira um nome de usuário e senha. Em seguida, você poderá editar as opções adicionais do usuário.</p>
+</div>
+{{ block.super }}
+{% endblock %}

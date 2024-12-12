@@ -1,0 +1,10 @@
+{
+  "name": "pia-project",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "jquery": "^3.7.1",
+    "jquery-mask-plugin": "^1.14.16"
+  }
+}

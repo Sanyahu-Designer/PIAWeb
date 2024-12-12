@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>PDI - {{ pdi.neurodivergente }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2c5282;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c5282;
+            padding-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #4a5568;
+            min-width: 200px;
+            display: inline-block;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #edf2f7;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #2c5282;
+            transition: width 0.3s ease;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        th {
+            background-color: #f7fafc;
+            font-weight: bold;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8em;
+            color: #718096;
+            padding: 10px 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        .meta-status {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Plano de Desenvolvimento Individual (PDI)</h2>
+        <h1>{{ pdi.neurodivergente }}</h1>
+        <p>Data de Impressão: {{ data_impressao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <div class="section">
+        <h3>Informações Gerais</h3>
+        <div class="info-item">
+            <span class="info-label">Data do PDI:</span>
+            {{ pdi.data_criacao|date:"d/m/Y" }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Status:</span>
+            {{ pdi.get_status_display }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Pedagogo Responsável:</span>
+            {{ pdi.pedagogo_responsavel }}
+        </div>
+        
+    </div>
+
+    <div class="section">
+        <h3>Metas e Habilidades</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Meta/Habilidade</th>
+                    <th>Progresso</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meta in pdi.metas_habilidades.all %}
+                <tr>
+                    <td>{{ meta.meta_habilidade.nome }}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ meta.progresso }}%"></div>
+                        </div>
+                        {{ meta.progresso }}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pdi.observacoes %}
+    <div class="section">
+        <h3>Diário de Classe</h3>
+        <p>{{ pdi.observacoes|linebreaks }}</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Documento gerado por PIA - Plano Individual de Aprendizagem</p>
+        <p>{{ pdi.neurodivergente }} - PDI #{{ pdi.id }}</p>
+    </div>
+</body>
+</html>
