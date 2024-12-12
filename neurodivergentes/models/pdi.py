@@ -15,10 +15,12 @@ class PDI(models.Model):
     ]
 
     neurodivergente = models.ForeignKey(
-        Neurodivergente,
-        on_delete=models.CASCADE,
-        related_name='pdis'
-    )
+    Neurodivergente,
+    on_delete=models.CASCADE,
+    related_name='pdis',
+    verbose_name='Aluno/Paciente'
+)
+
     data_criacao = models.DateField('Data do PDI')
     status = models.CharField(
         'Status',

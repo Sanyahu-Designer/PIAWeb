@@ -24,6 +24,8 @@ from .forms import (
     MonitoramentoForm, FrequenciaForm, ParecerAvaliativoForm
 )
 
+from django.db.models import Max
+
 class GrupoFamiliarInline(admin.TabularInline):
     model = GrupoFamiliar
     extra = 1
@@ -290,21 +292,6 @@ class PDIAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('neurodivergente', 'data_criacao', 'status', 'observacoes', 'pedagogo_responsavel')
-        }),
-    )
-
-
-@admin.register(PlanoEducacional)
-class PlanoEducacionalAdmin(admin.ModelAdmin):
-    form = PlanoEducacionalForm
-    inlines = [AdaptacaoCurricularInline]
-    list_display = ['pdi', 'data_inicio', 'data_fim', 'pedagogo_responsavel']
-    list_filter = ['data_inicio', 'data_fim']
-    search_fields = ['pdi__neurodivergente__primeiro_nome', 'pdi__neurodivergente__ultimo_nome']
-
-    fieldsets = (
-        ('ACI', {
-            'fields': ('pdi', 'data_inicio', 'data_fim', 'pedagogo_responsavel', 'objetivos', 'estrategias', 'recursos')
         }),
     )
 

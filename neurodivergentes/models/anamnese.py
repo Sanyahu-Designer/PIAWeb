@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from ..models import Neurodivergente
+from profissionais_app.models import Profissional
 
 class Medicacao(models.Model):
     anamnese = models.ForeignKey(
@@ -51,23 +52,27 @@ class Anamnese(models.Model):
         ('outros', 'Outros')
     ]
     
-    AVALIACAO_CHOICES = [
-        ('otimo', 'Ótimo'),
-        ('bom', 'Bom'),
-        ('regular', 'Regular'),
-        ('ruim', 'Ruim')
-    ]
-    
     SIM_NAO_CHOICES = [
         (True, 'Sim'),
         (False, 'Não')
     ]
 
-    # Relacionamento com Neurodivergente
+    # Relacionamento com Aluno/Paciente
     neurodivergente = models.OneToOneField(
         Neurodivergente,
         on_delete=models.CASCADE,
-        related_name='anamnese'
+        related_name='anamnese',
+        verbose_name='Aluno/Paciente'
+    )
+
+    # Profissional Responsável
+    profissional_responsavel = models.ForeignKey(
+        Profissional,
+        on_delete=models.PROTECT,
+        related_name='anamneses_responsavel',
+        verbose_name='Profissional Responsável',
+        null=True,  # Permitir nulo temporariamente
+        blank=True  # Permitir formulários vazios temporariamente
     )
 
     # Nascimento e Primeira Infância
@@ -107,10 +112,6 @@ class Anamnese(models.Model):
     )
 
     # Informações Médicas
-    especialidade_medica = models.CharField(
-        'Especialidade Médica Avaliadora',
-        max_length=100
-    )
     beneficios_sociais = models.CharField(
         'Benefícios Sociais',
         max_length=100,
@@ -131,43 +132,17 @@ class Anamnese(models.Model):
     queixa_inicial = models.TextField('Queixa Inicial')
     historia_vida = models.TextField('História de Vida')
 
-    # Relacionamentos
-    rel_mae = models.CharField(
-        'Relacionamento com a Mãe/Madrasta/Avó',
-        max_length=10,
-        choices=AVALIACAO_CHOICES
+    # Comportamento
+    comportamento_familiar = models.TextField(
+        'Comportamento no Ambiente Familiar',
+        default='A ser preenchido'
     )
-    rel_pai = models.CharField(
-        'Relacionamento com o Pai/Padrasto/Avô',
-        max_length=10,
-        choices=AVALIACAO_CHOICES
-    )
-    rel_colegas = models.CharField(
-        'Relacionamento com Colegas',
-        max_length=10,
-        choices=AVALIACAO_CHOICES
-    )
-    rel_professores = models.CharField(
-        'Relacionamento com Professores',
-        max_length=10,
-        choices=AVALIACAO_CHOICES
-    )
-    rel_social = models.CharField(
-        'Relacionamento Social em Geral',
-        max_length=10,
-        choices=AVALIACAO_CHOICES
+    comportamento_social = models.TextField(
+        'Comportamento no Ambiente Social e Escolar',
+        default='A ser preenchido'
     )
 
     # Desenvolvimento
-    primeira_aprendizagem = models.TextField(
-        'Primeira Aprendizagem/Alimentação'
-    )
-    segunda_aprendizagem = models.TextField(
-        'Segunda Aprendizagem/Evolução Psicomotora'
-    )
-    terceira_aprendizagem = models.TextField(
-        'Terceira Aprendizagem/Fala'
-    )
     autonomia = models.TextField('Autonomia')
     comunicacao = models.TextField('Comunicação')
     restricoes_alimentares = models.BooleanField(

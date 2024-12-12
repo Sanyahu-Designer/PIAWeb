@@ -28,8 +28,8 @@ class CondicaoNeurodivergente(models.Model):
     ativo = models.BooleanField('Ativo', default=True)
     
     class Meta:
-        verbose_name = 'Condição Neurodivergente'
-        verbose_name_plural = 'Condições Neurodivergentes'
+        verbose_name = 'Condição Aluno/Paciente'
+        verbose_name_plural = 'Condições Alunos/Pacientes'
         ordering = ['categoria', 'nome']
         unique_together = ['categoria', 'nome']
 

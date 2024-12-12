@@ -7,7 +7,7 @@ class EscolaForm(forms.ModelForm):
         model = Escola
         fields = '__all__'
         labels = {
-            'telefone': 'Celular/Whatsapp'  # Atualiza o label do campo "telefone"
+            'telefone': 'Whatsapp'  # Atualiza o label do campo "telefone"
         }
         widgets = {
             'telefone': forms.TextInput(attrs={
