@@ -25,6 +25,7 @@ from .forms import (
 )
 
 from django.db.models import Max
+from django.shortcuts import get_object_or_404
 
 class GrupoFamiliarInline(admin.TabularInline):
     model = GrupoFamiliar
@@ -186,38 +187,52 @@ class PDIAdmin(admin.ModelAdmin):
     list_per_page = 20
 
     def get_queryset(self, request):
+        """
+        Retorna apenas o PDI mais recente por aluno na lista inicial,
+        ou todos os PDIs se um filtro de aluno estiver ativo.
+        """
         self.request = request
         queryset = super().get_queryset(request).select_related(
-            'neurodivergente', 
-            'pedagogo_responsavel'
+            'neurodivergente', 'pedagogo_responsavel'
         ).prefetch_related('metas_habilidades')
-        
+
         neurodivergente_id = request.GET.get('neurodivergente__id__exact')
         if neurodivergente_id:
-            # Se um aluno específico foi selecionado, mostra todos os seus PDIs
-            return queryset.filter(
-                neurodivergente_id=neurodivergente_id
-            ).order_by('-data_criacao')
-        
-        # Na tela inicial, mostra apenas um PDI por aluno (agrupamento)
+            # Lista todos os PDIs do aluno filtrado
+            return queryset.filter(neurodivergente_id=neurodivergente_id).order_by('-data_criacao')
+
+        # Lista inicial: retorna apenas o PDI mais recente por aluno
         from django.db.models import Max
-        latest_pdis = queryset.values('neurodivergente').annotate(
+        latest_pdi_ids = queryset.values('neurodivergente').annotate(
             max_id=Max('id')
-        ).values('max_id')
-        
-        return queryset.filter(id__in=latest_pdis).order_by(
-            'neurodivergente__primeiro_nome'
-        )
+        ).values_list('max_id', flat=True)
+
+        return queryset.filter(id__in=latest_pdi_ids).order_by('neurodivergente__primeiro_nome')
+
+    def get_object(self, request, object_id, from_field=None):
+        """
+        Personaliza a busca de objetos para garantir que qualquer PDI seja carregado,
+        independentemente do queryset usado na exibição agrupada.
+        """
+        queryset = super().get_queryset(request)
+        return get_object_or_404(PDI, pk=object_id)
 
     def get_aluno_nome(self, obj):
+        """
+        Gera o link correto para o nome do aluno:
+        - Lista inicial: redireciona para a lista de PDIs do aluno.
+        - Lista filtrada: redireciona para o detalhe do PDI.
+        """
         if not obj.neurodivergente:
             return '-'
-            
-        if hasattr(self, 'request') and 'neurodivergente__id__exact' in self.request.GET:
-            url = reverse('admin:neurodivergentes_pdi_change', args=[obj.id])
-        else:
+
+        if hasattr(self, 'request') and 'neurodivergente__id__exact' not in self.request.GET:
+            # Link para a lista de PDIs do aluno
             url = f"{reverse('admin:neurodivergentes_pdi_changelist')}?neurodivergente__id__exact={obj.neurodivergente.id}"
-            
+        else:
+            # Link para o detalhe do PDI
+            url = reverse('admin:neurodivergentes_pdi_change', args=[obj.id])
+
         nome_completo = f"{obj.neurodivergente.primeiro_nome} {obj.neurodivergente.ultimo_nome}"
         return format_html(
             '<a href="{}" style="color: #447e9b; text-decoration: none;">{}</a>',
@@ -228,16 +243,27 @@ class PDIAdmin(admin.ModelAdmin):
     get_aluno_nome.admin_order_field = 'neurodivergente__primeiro_nome'
 
     def get_total_pdis(self, obj):
+        """
+        Retorna o número total de PDIs associados ao aluno.
+        """
         if not obj.neurodivergente:
             return 0
         return PDI.objects.filter(neurodivergente=obj.neurodivergente).count()
     get_total_pdis.short_description = 'Total de PDIs'
 
     def get_ultimo_pdi(self, obj):
+        """
+        Retorna a data de criação do último PDI.
+        """
         return obj.data_criacao if obj.data_criacao else '-'
     get_ultimo_pdi.short_description = 'Último PDI'
 
     def changelist_view(self, request, extra_context=None):
+        """
+        Ajusta as colunas exibidas na listagem com base no contexto:
+        - Lista inicial: exibe agrupamento.
+        - Lista detalhada: exibe todos os PDIs do aluno.
+        """
         self.request = request
         if 'neurodivergente__id__exact' in request.GET:
             self.list_display = ['get_aluno_nome', 'data_criacao', 'get_progresso', 'status', 'get_view_button']
@@ -246,6 +272,9 @@ class PDIAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context)
 
     def get_progresso(self, obj):
+        """
+        Calcula o progresso médio das metas associadas ao PDI.
+        """
         metas = obj.metas_habilidades.all()
         if not metas:
             return '0%'
@@ -255,9 +284,12 @@ class PDIAdmin(admin.ModelAdmin):
     get_progresso.short_description = 'Progresso (%)'
 
     def get_view_button(self, obj):
+        """
+        Gera um botão de ação para visualizar detalhes do PDI.
+        """
         if not obj.id:
             return '-'
-            
+
         if hasattr(self, 'request') and 'neurodivergente__id__exact' in self.request.GET:
             return format_html(
                 '<button type="button" onclick="loadPDIDetails({})" class="view-pdi-btn" '
@@ -277,6 +309,9 @@ class PDIAdmin(admin.ModelAdmin):
     get_view_button.short_description = 'Ações'
 
     class Media:
+        """
+        Inclui arquivos CSS e JavaScript adicionais para customização.
+        """
         css = {
             'all': (
                 'admin/css/pdi_forms.css',
