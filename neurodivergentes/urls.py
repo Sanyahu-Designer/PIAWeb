@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 
 app_name = 'neurodivergentes'
@@ -11,3 +13,7 @@ urlpatterns = [
     path('pdi/<int:pdi_id>/imprimir/', views.imprimir_pdi, name='imprimir_pdi'),
     path('aluno/<int:aluno_id>/pdis/imprimir/', views.imprimir_pdis_aluno, name='imprimir_pdis_aluno'),
 ]
+
+# Adicione esta linha para servir arquivos de mídia durante o desenvolvimento
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

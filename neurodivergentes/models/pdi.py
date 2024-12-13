@@ -79,8 +79,8 @@ class PlanoEducacional(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Adaptação Curricular Individualizada'
-        verbose_name_plural = 'Adaptações Curriculares Individualizadas'
+        verbose_name = 'ACI'
+        verbose_name_plural = 'ACIs'
 
     def __str__(self):
         return f"ACI de {self.pdi.neurodivergente}"
