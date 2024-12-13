@@ -97,7 +97,7 @@ class Anamnese(models.Model):
         null=True,
         blank=True,
         validators=[
-            MinValueValidator(1),
+            MinValueValidator(0),
             MaxValueValidator(20)
         ]
     )
@@ -132,14 +132,13 @@ class Anamnese(models.Model):
     queixa_inicial = models.TextField('Queixa Inicial')
     historia_vida = models.TextField('História de Vida')
 
-    # Comportamento
     comportamento_familiar = models.TextField(
-        'Comportamento no Ambiente Familiar',
-        default='A ser preenchido'
+    'Comportamento no Ambiente Familiar',
+    blank=True  # Permite campo vazio no formulário
     )
     comportamento_social = models.TextField(
-        'Comportamento no Ambiente Social e Escolar',
-        default='A ser preenchido'
+    'Comportamento no Ambiente Social e Escolar',
+    blank=True
     )
 
     # Desenvolvimento
