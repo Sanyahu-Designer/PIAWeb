@@ -65,15 +65,15 @@ ROOT_URLCONF = 'pia_config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'pia_config/templates')],
+        'DIRS': [BASE_DIR / "templates"],  # Diretório onde está o "index.html"
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.i18n',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media',  # Adicionado para acesso à MEDIA_URL
             ],
         },
     },
@@ -160,8 +160,7 @@ JAZZMIN_SETTINGS = {
     "copyright": "PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03",
     "user_avatar": None,
     "search_model": ["auth.User"],
-
-    
+        
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "Ajuda", "url": "https://sanyahudesigner.com.br", "new_window": True},
