@@ -33,7 +33,7 @@ class PDI(models.Model):
         on_delete=models.PROTECT,
         related_name='pdis_responsavel',
         verbose_name='Pedagogo Responsável',
-        limit_choices_to={'profissao__startswith': 'pedagogo'},
+        limit_choices_to={'profissao__in': ['pedagogo', 'psicopedagogo', 'neuropsicopedagogo']}
     )
     observacoes = models.TextField(
         'Diário de Classe',
