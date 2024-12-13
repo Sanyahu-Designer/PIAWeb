@@ -386,3 +386,20 @@ class AnamneseAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
     }
+    
+@admin.register(PlanoEducacional)
+class PlanoEducacionalAdmin(admin.ModelAdmin):
+    form = PlanoEducacionalForm
+    list_display = ['pdi', 'data_inicio', 'data_fim', 'pedagogo_responsavel']
+    list_filter = ['data_inicio', 'pedagogo_responsavel']
+    search_fields = ['pdi__neurodivergente__primeiro_nome', 'pdi__neurodivergente__ultimo_nome']
+    inlines = [AdaptacaoCurricularInline]
+
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('pdi', 'pedagogo_responsavel', 'data_inicio', 'data_fim')
+        }),
+        ('Detalhes do Plano', {
+            'fields': ('objetivos', 'estrategias', 'recursos')
+        }),
+    )
