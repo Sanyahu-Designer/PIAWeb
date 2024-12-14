@@ -33,7 +33,7 @@ class PDI(models.Model):
         on_delete=models.PROTECT,
         related_name='pdis_responsavel',
         verbose_name='Pedagogo Responsável',
-        limit_choices_to={'profissao__in': ['pedagogo', 'psicopedagogo', 'neuropsicopedagogo']}
+        limit_choices_to={'profissao__in': ['educador_especial', 'pedagogo', 'psicopedagogo', 'neuropsicopedagogo']}
     )
     observacoes = models.TextField(
         'Diário de Classe',
@@ -70,7 +70,7 @@ class PlanoEducacional(models.Model):
         Profissional,
         on_delete=models.PROTECT,
         related_name='planos_educacionais',
-        limit_choices_to={'profissao__startswith': 'educador'}
+        limit_choices_to={'profissao__startswith': 'pedagogo'}
     )
     objetivos = models.TextField('Objetivos')
     estrategias = models.TextField('Estratégias')
@@ -103,7 +103,7 @@ class AdaptacaoCurricular(models.Model):
         Profissional,
         on_delete=models.PROTECT,
         related_name='adaptacoes_curriculares',
-        limit_choices_to={'profissao__startswith': 'educador'}
+        limit_choices_to={'profissao__startswith': 'educador_especial'}
     )
     componente_curricular = models.CharField('Componente Curricular', max_length=100)
     conteudo_adaptado = models.TextField('Conteúdo Adaptado')
