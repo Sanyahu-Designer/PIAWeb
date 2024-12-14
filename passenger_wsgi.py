@@ -2,10 +2,10 @@ import os
 import sys
 
 # Adicione o caminho para o projeto
-sys.path.insert(0, '/home/netsarim/spia')
+sys.path.insert(0, '/home/netsarim/pia')
 
 # Adicione o caminho para o ambiente virtual (se aplicável)
-# sys.path.insert(0, '/home/netsarim/virtualenv/spia/3.11/lib/python3.11/site-packages')
+# sys.path.insert(0, '/home/netsarim/virtualenv/pia-teste/3.11/lib/python3.11/site-packages')
 
 # Carregue a aplicação Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pia_config.settings')

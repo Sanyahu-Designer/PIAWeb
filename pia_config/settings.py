@@ -11,14 +11,14 @@ SECRET_KEY = 'django-insecure-l#65p7z-m9f4n-v02tgnf9rm%4!=u@fke*g4)brw$8+ym-$szj
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['piateste.sanyahudesigner.com.br', '*', 'localhost']  # Ajuste para seu domínio
+ALLOWED_HOSTS = ['pia.sanyahudesigner.com.br', '*', 'localhost']  # Ajuste para seu domínio
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-    'http://piateste.sanyahudesigner.com.br',
-    'https://piateste.sanyahudesigner.com.br'
+    'http://pia.sanyahudesigner.com.br',
+    'https://pia.sanyahudesigner.com.br'
 ]
 
 # Duração padrão da sessão (2 semanas)
@@ -62,10 +62,15 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 ROOT_URLCONF = 'pia_config.urls'
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],  # Diretório onde está o "index.html"
+        'DIRS': [
+            os.path.join(BASE_DIR, 'pia_config/templates'),
+            os.path.join(BASE_DIR, 'templates'),  # Adicionei a pasta templates na raiz
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.i18n',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -83,7 +89,7 @@ WSGI_APPLICATION = 'pia_config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'mysql.connector.django',
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
@@ -126,6 +132,13 @@ LOCALE_PATHS = [
 ]
 
 # Configurações de arquivos estáticos
+import os
+from pathlib import Path
+
+# Configuração do diretório base
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Configuração de URLs estáticas
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
