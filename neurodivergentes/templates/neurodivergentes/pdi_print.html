@@ -1,94 +1,119 @@
+{% load i18n static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>PDI - {{ pdi.neurodivergente }}</title>
     <style>
-        @page {
-            size: A4;
-            margin: 2cm;
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
         }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             line-height: 1.6;
             color: #333;
+            margin: 0;
+            padding: 20px;
         }
-        h1, h2, h3 {
-            color: #2c5282;
-            margin-top: 20px;
-        }
+        
         .header {
             text-align: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #2c5282;
             padding-bottom: 20px;
         }
+        
         .section {
             margin-bottom: 20px;
-            padding: 10px;
+            padding: 15px;
             border: 1px solid #e2e8f0;
             border-radius: 4px;
+            page-break-inside: avoid;
         }
+        
+        .section h3 {
+            color: #2c5282;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
         .info-item {
             margin-bottom: 10px;
         }
+        
         .info-label {
             font-weight: bold;
             color: #4a5568;
             min-width: 200px;
             display: inline-block;
         }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        th, td {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            font-size: 12px;
+        }
+        
+        th {
+            background-color: #f7fafc;
+            font-weight: bold;
+        }
+        
         .progress-bar {
             width: 100%;
             height: 20px;
             background-color: #edf2f7;
             border-radius: 10px;
             overflow: hidden;
-            margin: 10px 0;
+            margin: 5px 0;
         }
+        
         .progress-fill {
             height: 100%;
             background-color: #2c5282;
-            transition: width 0.3s ease;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        th, td {
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            text-align: left;
-        }
-        th {
-            background-color: #f7fafc;
-            font-weight: bold;
-        }
+        
         .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            position: running(footer);
             text-align: center;
-            font-size: 0.8em;
+            font-size: 10px;
             color: #718096;
             padding: 10px 0;
             border-top: 1px solid #e2e8f0;
         }
-        .meta-status {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            margin-left: 10px;
+        
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: element(footer);
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h2>Plano de Desenvolvimento Individual (PDI)</h2>
-        <h1>{{ pdi.neurodivergente }}</h1>
-        <p>Data de Impressão: {{ data_impressao|date:"d/m/Y H:i" }}</p>
+        <h1 style="color: #2c5282; margin-bottom: 10px;">Plano de Desenvolvimento Individual (PDI)</h1>
+        <h2 style="color: #4a5568; margin-top: 0;">{{ pdi.neurodivergente }}</h2>
+        <p style="color: #718096;">Data de Impressão: {{ data_impressao|date:"d/m/Y H:i" }}</p>
     </div>
 
     <div class="section">
@@ -105,7 +130,13 @@
             <span class="info-label">Pedagogo Responsável:</span>
             {{ pdi.pedagogo_responsavel }}
         </div>
-        
+        <div class="info-item">
+            <span class="info-label">Progresso Total:</span>
+            {{ progresso_total }}%
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ progresso_total }}%"></div>
+            </div>
+        </div>
     </div>
 
     <div class="section">
@@ -113,12 +144,12 @@
         <table>
             <thead>
                 <tr>
-                    <th>Meta/Habilidade</th>
-                    <th>Progresso</th>
+                    <th style="width: 60%;">Meta/Habilidade</th>
+                    <th style="width: 40%;">Progresso</th>
                 </tr>
             </thead>
             <tbody>
-                {% for meta in pdi.metas_habilidades.all %}
+                {% for meta in metas %}
                 <tr>
                     <td>{{ meta.meta_habilidade.nome }}</td>
                     <td>
@@ -136,7 +167,7 @@
     {% if pdi.observacoes %}
     <div class="section">
         <h3>Diário de Classe</h3>
-        <p>{{ pdi.observacoes|linebreaks }}</p>
+        <p style="white-space: pre-wrap;">{{ pdi.observacoes }}</p>
     </div>
     {% endif %}
 

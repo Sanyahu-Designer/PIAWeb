@@ -4,15 +4,25 @@ from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_GET
-from weasyprint import HTML
+from weasyprint import HTML, CSS
+from weasyprint.text.fonts import FontConfiguration
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import json
 from datetime import datetime
+from django.conf import settings
+import os
 from .models import (
     Neurodivergente, PDI, PlanoEducacional, RegistroEvolucao,
     Monitoramento, Frequencia, ParecerAvaliativo, CondicaoNeurodivergente
 )
+
+def calculate_progresso_total(pdi):
+    """Calcula o progresso total do PDI"""
+    metas = pdi.metas_habilidades.all()
+    if not metas:
+        return 0
+    return int(sum(meta.progresso for meta in metas) / len(metas))
 
 @login_required
 def pdi_popup_view(request, pdi_id):
@@ -26,13 +36,8 @@ def pdi_popup_view(request, pdi_id):
         id=pdi_id
     )
     
-    # Calcula o progresso
-    metas = pdi.metas_habilidades.all()
-    if metas:
-        total_progresso = sum(meta.progresso for meta in metas)
-        progresso = int(total_progresso / len(metas))
-    else:
-        progresso = 0
+    # Calcula o progresso usando a função auxiliar
+    progresso = calculate_progresso_total(pdi)
     
     context = {
         'pdi': pdi,
@@ -41,21 +46,55 @@ def pdi_popup_view(request, pdi_id):
     
     return render(request, 'admin/neurodivergentes/pdi/popup_view.html', context)
 
-
 @login_required
 def imprimir_pdi(request, pdi_id):
-    pdi = get_object_or_404(PDI, id=pdi_id)
+    # Busca o PDI com todos os relacionamentos necessários
+    pdi = get_object_or_404(PDI.objects.select_related(
+        'neurodivergente',
+        'pedagogo_responsavel'
+    ).prefetch_related(
+        'metas_habilidades__meta_habilidade'
+    ), id=pdi_id)
     
+    # Prepara o contexto com todos os dados necessários
     context = {
         'pdi': pdi,
-        'metas': pdi.metas_habilidades.all(),
-        'data_impressao': timezone.now()
+        'data_impressao': timezone.now(),
+        'metas': pdi.metas_habilidades.all().select_related('meta_habilidade'),
+        'progresso_total': calculate_progresso_total(pdi)
     }
     
-    html_string = render_to_string('neurodivergentes/pdi_print.html', context)
-    html = HTML(string=html_string)
-    pdf = html.write_pdf()
+    # Configura as fontes
+    font_config = FontConfiguration()
+    css_string = """
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: bold;
+        }
+    """ % (
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+    )
     
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/pdi_print.html', context)
+    
+    # Cria o PDF com as configurações de fonte
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    css = CSS(string=css_string, font_config=font_config)
+    pdf = html.write_pdf(
+        stylesheets=[css],
+        font_config=font_config,
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=pdi_{pdi.id}.pdf'
     
