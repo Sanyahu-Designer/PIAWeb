@@ -53,6 +53,11 @@ class PDI(models.Model):
 
     def clean(self):
         if self.status == 'concluido':
+            # Impede salvar como concluído na primeira vez
+            if not self.pk:
+                raise ValidationError({
+                    'status': 'Não é possível salvar como "Concluído". Sugiro usar "Iniciado" ou "Em Andamento".'
+                })
             metas = self.metas_habilidades.all()
             if not metas.exists():
                 raise ValidationError('É necessário adicionar pelo menos uma Meta/Habilidade antes de concluir o PDI.')

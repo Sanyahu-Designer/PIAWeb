@@ -1,0 +1,273 @@
+{% load neurodivergentes_tags static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório Geral - {{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        @page landscape {
+            size: A4 landscape;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c5282;
+            padding-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+        .section h3 {
+            color: #2c5282;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-right: 8px;
+        }
+        .historico-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        .historico-table th, .historico-table td {
+            padding: 5px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .historico-table th:first-child, .historico-table td:first-child {
+            text-align: left;
+        }
+        .data-header {
+            writing-mode: vertical-rl;
+            transform: rotate(-70deg);
+            white-space: nowrap;
+            vertical-align: bottom;
+            padding: 15px 0;
+            height: 80px;
+            max-width: 30px;
+            border: none;  
+            border-left: 1px solid #e2e8f0;  
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+        .auto-fit {
+            width: auto;
+            min-width: 15px;
+            max-width: 30px;
+        }
+        .no-break {
+            page-break-inside: avoid;
+        }
+        .progresso-alto {
+            color: #38a169;
+            font-weight: bold;
+        }
+        .progresso-medio {
+            color: #d69e2e;
+            font-weight: bold;
+        }
+        .progresso-baixo {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        .legenda {
+            margin-bottom: 10px;
+        }
+        .legenda-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .cor-legenda {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+            border-radius: 50%;
+        }
+        .pdi-table, .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        .pdi-table th, .pdi-table td, .info-table th, .info-table td {
+            padding: 5px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            text-align: left;
+            font-size: 10px;
+            color: #666;
+        }
+        .acompanhamento-section {
+            page: landscape;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="color: #2c5282; margin-bottom: 10px;">Plano de Desenvolvimento Individual</h1>
+            <h2 style="color: #4a5568; margin-top: 0; font-size: 24px;">{{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</h2>
+            <p style="color: #718096;">Período: {{ periodo.inicio }} a {{ periodo.fim }}</p>
+        </div>
+
+        <div class="section">
+            <h3>Informações Gerais</h3>
+            
+            <div class="info-item">
+                <span class="info-label">Neurodivergência:</span>
+                {% if neurodivergencias %}
+                    {% for neurodivergencia in neurodivergencias %}
+                        {% for diagnostico in neurodivergencia.diagnosticos.all %}
+                            {{ diagnostico.condicao.nome }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    Não informada
+                {% endif %}
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Pedagogo Responsável:</span>
+                {% if pedagogo %}{{ pedagogo.user.get_full_name }}{% else %}Não informado{% endif %}
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Escola:</span>
+                {{ escola.nome|default:"Não informada" }}
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Frequência Média:</span>
+                {{ frequencia_media }} atendimento(s)
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Diário de Classe - PDI</h3>
+            <table class="pdi-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Metas/Habilidades</th>
+                        <th>Diário de Classe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pdi in pdis_list %}
+                        <tr>
+                            <td>{{ pdi.data_criacao|date:"d/m/Y" }}</td>
+                            <td>
+                                {% for meta in pdi.metas_habilidades.all %}
+                                    {{ meta.meta_habilidade.nome }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ pdi.observacoes|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="page-break-before: always;">
+            <div class="section acompanhamento-section">
+                <h3>Acompanhamento de Metas/Habilidades</h3>
+                
+                <div class="legenda">
+                    <span class="legenda-item">
+                        <span class="cor-legenda progresso-alto"></span>
+                        Alto (≥ 75%)
+                    </span>
+                    <span class="legenda-item">
+                        <span class="cor-legenda progresso-medio"></span>
+                        Médio (≥ 50%)
+                    </span>
+                    <span class="legenda-item">
+                        <span class="cor-legenda progresso-baixo"></span>
+                        Baixo (< 50%)
+                    </span>
+                </div>
+
+                <table class="historico-table">
+                    <thead>
+                        <tr>
+                            <th>Metas/Habilidades</th>
+                            {% for data_meta in datas_metas %}
+                                <th class="data-header auto-fit">
+                                    {{ data_meta.data|date:"d/m/Y" }}<br>
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for meta_nome, progressos in metas_habilidades.items %}
+                        <tr>
+                            <td style="text-align: left;">{{ meta_nome }}</td>
+                            {% for data_meta in datas_metas %}
+                                {% with progresso=progressos|get_item:data_meta.data %}
+                                <td class="auto-fit {% if progresso != '-' %}{% if progresso >= 75 %}progresso-alto{% elif progresso >= 50 %}progresso-medio{% else %}progresso-baixo{% endif %}{% endif %}">
+                                    {% if progresso != '-' %}{{ progresso }}%{% else %}{{ progresso }}{% endif %}
+                                </td>
+                                {% endwith %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Documento gerado por PIA - Plano Individual de Aprendizagem | {{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }} - Relatório Geral | Data de Geração: {% now "d/m/Y H:i" %}</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,4 +1,6 @@
-django.jQuery(document).ready(function($) {
+window.addEventListener('load', function() {
+    var $ = window.django ? django.jQuery : jQuery;
+
     // Função para reordenar as metas/habilidades
     function updateOrdem() {
         $('.meta-habilidade-inline tbody tr:not(.empty-form)').each(function(index) {

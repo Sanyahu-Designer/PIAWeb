@@ -5,7 +5,7 @@ from .models import (
     Neurodivergente, GrupoFamiliar, Neurodivergencia,
     PDI, PlanoEducacional,
     AdaptacaoCurricular, RegistroEvolucao,
-    Monitoramento, Frequencia, ParecerAvaliativo
+    Monitoramento, ParecerAvaliativo
 )
 
 class NeurodivergenteForms(forms.ModelForm):
@@ -175,34 +175,6 @@ class MonitoramentoForm(forms.ModelForm):
                 'placeholder': 'Observações sobre o progresso'
             })
         }
-
-class FrequenciaForm(forms.ModelForm):
-    class Meta:
-        model = Frequencia
-        fields = '__all__'
-        widgets = {
-            'observacoes': forms.Textarea(attrs={
-                'rows': 4,
-                'placeholder': 'Observações sobre a frequência'
-            })
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Anos de 2000 até 2050
-        anos = range(2000, 2051)
-        self.fields['ano'].widget = forms.Select(choices=[
-            (ano, ano) for ano in anos
-        ])
-
-    def clean_ano(self):
-        ano = self.cleaned_data.get('ano')
-        ano_atual = timezone.now().year
-        
-        if ano > ano_atual:
-            raise ValidationError('Não é permitido registrar frequência para anos futuros.')
-        
-        return ano
 
 class ParecerAvaliativoForm(forms.ModelForm):
     class Meta:

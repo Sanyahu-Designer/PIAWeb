@@ -52,3 +52,83 @@ function loadPDIDetails(pdiId) {
             console.error('Erro:', error);
         });
 }
+
+function showReportModal(event, url) {
+    event.preventDefault();
+    
+    // Fecha qualquer modal aberto anteriormente
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+        modal.style.display = 'none';
+    });
+    
+    // Abre o modal específico
+    var modal = event.target.closest('a').nextElementSibling;
+    modal.style.display = 'block';
+    
+    // Fecha o modal quando clicar fora dele
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
+
+// Adiciona estilos CSS dinamicamente
+var style = document.createElement('style');
+style.textContent = `
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-content label {
+    font-weight: bold;
+}
+
+.modal-content input[type="date"] {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.modal-content button {
+    background-color: #79aec8;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.modal-content button:hover {
+    background-color: #417690;
+}
+`;
+document.head.appendChild(style);

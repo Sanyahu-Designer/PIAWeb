@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Filtro de período -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" action="{% url 'neurodivergentes:relatorio_geral_aluno' aluno.id %}" class="d-flex align-items-center gap-3">
+                    <div class="form-group mb-0">
+                        <label for="data_inicial" class="mr-2">Data Inicial:</label>
+                        <input type="date" name="data_inicial" id="data_inicial" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="data_final" class="mr-2">Data Final:</label>
+                        <input type="date" name="data_final" id="data_final" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-file-pdf"></i> Gerar Relatório
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de PDIs -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">PDIs - {{ aluno.nome_completo }}</h5>
+            <button type="button" class="btn btn-success" onclick="location.href='{% url 'neurodivergentes:adicionar_pdi' %}'">
+                <i class="fas fa-plus"></i> Adicionar PDI
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover m-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="select-all">
+                        </th>
+                        <th>Aluno/Paciente</th>
+                        <th>Data do PDI <i class="fas fa-sort"></i></th>
+                        <th>Progresso (%)</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pdi in pdis %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input" value="{{ pdi.id }}">
+                        </td>
+                        <td>{{ pdi.neurodivergente.nome_completo }}</td>
+                        <td>{{ pdi.data_criacao|date:"d/m/Y" }}</td>
+                        <td>{{ pdi.progresso }}%</td>
+                        <td>
+                            <span class="badge bg-{{ pdi.status_class }}">{{ pdi.get_status_display }}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick="location.href='{% url 'neurodivergentes:visualizar_pdi' pdi.id %}'">
+                                <i class="fas fa-eye"></i> Visualizar PDI
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

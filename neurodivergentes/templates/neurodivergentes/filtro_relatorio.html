@@ -1,0 +1,74 @@
+{% load i18n %}
+
+<div class="filtro-relatorio">
+    <form method="get" action="{% url 'neurodivergentes:relatorio_geral_html' aluno.id %}" class="form-inline" target="_blank">
+        <div class="form-group mx-2">
+            <label for="data_inicial" class="mr-2">Data Inicial:</label>
+            <input type="date" name="data_inicial" id="data_inicial" class="form-control" 
+                   value="{{ request.GET.data_inicial }}" required>
+        </div>
+        <div class="form-group mx-2">
+            <label for="data_final" class="mr-2">Data Final:</label>
+            <input type="date" name="data_final" id="data_final" class="form-control" 
+                   value="{{ request.GET.data_final }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-file-alt"></i> Gerar Relatório
+        </button>
+    </form>
+</div>
+
+<style>
+    .filtro-relatorio {
+        background: var(--card-bg, #fff);
+        padding: 1.25rem;
+        border-radius: 0.25rem;
+        margin: 1rem 0;
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    }
+    .filtro-relatorio form {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .filtro-relatorio .form-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0;
+    }
+    .filtro-relatorio label {
+        margin-bottom: 0;
+        white-space: nowrap;
+        color: var(--body-color, #212529);
+        font-weight: 500;
+    }
+    .filtro-relatorio .form-control {
+        border: 1px solid var(--border-color, #ced4da);
+        border-radius: 0.25rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    .filtro-relatorio .form-control:focus {
+        border-color: var(--primary, #007bff);
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    .filtro-relatorio .btn-primary {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .filtro-relatorio .btn-primary i {
+        font-size: 1rem;
+    }
+    @media (max-width: 768px) {
+        .filtro-relatorio form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filtro-relatorio .form-group {
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+        }
+    }
+</style>

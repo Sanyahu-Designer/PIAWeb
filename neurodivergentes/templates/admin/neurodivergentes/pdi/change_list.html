@@ -1,0 +1,249 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block object-tools-items %}
+    {% if has_add_permission %}
+        <li>
+            <a href="{% url 'admin:neurodivergentes_pdi_add' %}" class="addlink">
+                {% blocktranslate with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktranslate %}
+            </a>
+        </li>
+        {% if request.GET.neurodivergente__id__exact and request.GET.neurodivergente__id__exact != '' %}
+        <li>
+            <button type="button" class="btn btn-info" onclick="openRelatorioModal()">
+                <i class="fas fa-file-pdf"></i> Gerar Relatório Geral
+            </button>
+        </li>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {{ block.super }}
+    
+    {% if request.GET.neurodivergente__id__exact and request.GET.neurodivergente__id__exact != '' %}
+    <!-- Modal do Relatório Geral -->
+    <div class="modal" id="relatorioGeralModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gerar Relatório Geral</h5>
+                    <button type="button" class="close" onclick="closeRelatorioModal()" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="get" action="{% url 'neurodivergentes:gerar_relatorio_geral_html' request.GET.neurodivergente__id__exact %}" id="formRelatorioGeral" target="_blank">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="data_inicial_geral">Data Inicial</label>
+                            <input type="date" name="data_inicial" id="data_inicial_geral" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_final_geral">Data Final</label>
+                            <input type="date" name="data_final" id="data_final_geral" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-info">Gerar Relatório</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script type="text/javascript">
+        function openRelatorioModal() {
+            var modal = document.getElementById('relatorioGeralModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function closeRelatorioModal() {
+            var modal = document.getElementById('relatorioGeralModal');
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+
+        // Fecha o modal se clicar fora dele
+        window.onclick = function(event) {
+            var modal = document.getElementById('relatorioGeralModal');
+            if (event.target == modal) {
+                closeRelatorioModal();
+            }
+        }
+
+        // Configura a validação do formulário
+        document.getElementById('formRelatorioGeral').onsubmit = function(e) {
+            var dataInicial = document.getElementById('data_inicial_geral').value;
+            var dataFinal = document.getElementById('data_final_geral').value;
+            
+            if (!dataInicial || !dataFinal) {
+                e.preventDefault();
+                alert('Por favor, preencha as datas inicial e final.');
+                return false;
+            }
+            
+            if (dataInicial > dataFinal) {
+                e.preventDefault();
+                alert('A data inicial não pode ser maior que a data final.');
+                return false;
+            }
+
+            // Fecha o modal após submeter
+            setTimeout(function() {
+                closeRelatorioModal();
+            }, 100);
+        };
+
+        // Configura os campos de data
+        window.addEventListener('load', function() {
+            var dataInicial = document.getElementById('data_inicial_geral');
+            var dataFinal = document.getElementById('data_final_geral');
+            
+            // Define a data máxima como hoje
+            var hoje = new Date().toISOString().split('T')[0];
+            dataInicial.max = hoje;
+            dataFinal.max = hoje;
+            
+            // Atualiza a data mínima do campo data_final quando data_inicial mudar
+            dataInicial.addEventListener('change', function() {
+                dataFinal.min = this.value;
+                if (dataFinal.value && dataFinal.value < this.value) {
+                    dataFinal.value = this.value;
+                }
+            });
+            
+            // Atualiza a data máxima do campo data_inicial quando data_final mudar
+            dataFinal.addEventListener('change', function() {
+                dataInicial.max = this.value;
+                if (dataInicial.value && dataInicial.value > this.value) {
+                    dataInicial.value = this.value;
+                }
+            });
+        });
+
+        function gerarRelatorioHTML() {
+            const dataInicial = document.getElementById('data_inicial_geral').value;
+            const dataFinal = document.getElementById('data_final_geral').value;
+
+            if (!dataInicial || !dataFinal) {
+                alert('Por favor, selecione as datas inicial e final.');
+                return;
+            }
+
+            const neurodivergente_id = '{{ request.GET.neurodivergente__id__exact }}';
+            const url = `{% url 'neurodivergentes:gerar_relatorio_geral_html' 0 %}`.replace('0', neurodivergente_id) + `?data_inicial=${dataInicial}&data_final=${dataFinal}`;
+            window.open(url, '_blank');
+        }
+    </script>
+
+    <style>
+        /* Estilos para o modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 30px auto;
+            max-width: 500px;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.2);
+            border-radius: .3rem;
+            outline: 0;
+            box-shadow: 0 3px 9px rgba(0,0,0,.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-body {
+            position: relative;
+            padding: 1rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            opacity: .5;
+            padding: 0;
+            background: transparent;
+            border: 0;
+            appearance: none;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+
+        /* Estilos para o botão */
+        .object-tools .btn {
+            float: right;
+            padding: 10px 15px;
+            margin-left: 5px;
+            background: var(--button-bg, #79aec8);
+            border: none;
+            border-radius: 4px;
+            color: var(--button-fg, #fff);
+            font-size: 13px;
+            line-height: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .object-tools .btn:hover {
+            background: var(--button-hover-bg, #609ab6);
+        }
+
+        .object-tools .btn i {
+            margin-right: 5px;
+        }
+    </style>
+{% endblock %}

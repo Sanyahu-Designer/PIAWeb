@@ -19,15 +19,24 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-venv/
 venv_py311/
-.env
-.ENV
 
 # Django
+*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+
+# Static files
+staticfiles/
+static/
+
+# Logs
+logs/
+
+# Environments
+.env
+.ENV
 
 # IDE
 .idea/

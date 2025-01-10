@@ -1,0 +1,496 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Plano de Desenvolvimento Individual - {{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</title>
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        /* Configurações de página */
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+        }
+
+        @page landscape {
+            size: A4 landscape;
+            margin: 1.5cm;
+        }
+
+        /* Variáveis de cores */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #22c55e;
+            --warning-color: #eab308;
+            --danger-color: #ef4444;
+            --background-color: #ffffff;
+            --border-color: #e2e8f0;
+            --text-color: #1e293b;
+        }
+
+        /* Estilos básicos */
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.4;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            background-color: var(--background-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            page-break-after: avoid;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header h2 {
+            margin: 8px 0;
+            font-size: 20px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Seções */
+        .section {
+            margin: 10px 0;
+            padding: 15px;
+            background-color: white;
+            page-break-inside: avoid;
+        }
+
+        .section h3 {
+            color: var(--primary-color);
+            margin: 0 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 16px;
+            font-weight: 600;
+            page-break-after: avoid;
+        }
+
+        /* Informações gerais */
+        .info-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: baseline;
+            font-size: 12px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            min-width: 180px;
+            font-size: 12px;
+        }
+
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Legenda */
+        .legenda {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #f8fafc;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .cor-legenda {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Tabela de Metas/Habilidades - ATUALIZADA */
+        .metas-habilidades-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .metas-habilidades-table .meta-nome {
+            width: 25%;
+            min-width: 150px;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 1;
+            font-size: 12px;
+        }
+
+        .metas-habilidades-table td {
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        .metas-habilidades-table th.data-header {
+            position: relative;
+            height: 120px;
+            min-width: 80px;
+            padding: 0;
+            vertical-align: bottom;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+          
+        .metas-habilidades-table th.data-header span {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(50%) rotate(-65deg);
+            transform-origin: center;
+            width: max-content;
+            font-size: 11px;
+            white-space: nowrap;
+            padding: 0;
+        }
+
+        /* Cores de progresso */
+        .progresso-cell {
+            padding: 5px !important;
+            text-align: center;
+            font-size: 12px !important;
+        }
+
+        .progresso-alto {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .progresso-medio {
+            background-color: var(--warning-color);
+            color: var(--text-color);
+        }
+
+        .progresso-baixo {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: var(--secondary-color);
+            padding: 10px;
+            border-top: 1px solid var(--border-color);
+            page-break-before: avoid;
+        }
+
+        /* Estilos de impressão */
+        @media print {
+            @page {
+                size: A4;
+                margin: 1cm; /* Ajuste para evitar margens excessivas */
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+            }
+
+            .container {
+                width: 100%;
+                margin: 0 auto;
+                padding: 0;
+            }
+
+            .section {
+                page-break-inside: avoid; /* Evita quebras desnecessárias dentro das seções */
+                margin-bottom: 1cm; /* Evita espaços grandes no final */
+            }
+
+            .footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 12px;
+            }
+
+            /* Evita elementos vazios ou espaços adicionais */
+            .hidden {
+                display: none;
+            }
+
+            .clear {
+                clear: both;
+            }
+
+            /* Ocultar botão de impressão */
+            .print-button-container {
+                display: none;
+            }
+        }
+
+        @media print {
+            /* Evitar página em branco */
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Forçar quebra de página */
+            .section {
+                page-break-inside: avoid;
+            }
+
+            /* Remover margens e espaços desnecessários */
+            h1, h2, p, div {
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Ocultar elementos que não devem ser impressos */
+            .print-button-container {
+                display: none !important;
+            }
+
+            /* Garantir que não haja espaço em branco */
+            @page {
+                margin: 10mm;
+                size: auto;
+            }
+        }
+        
+        .print-button-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        
+        .print-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .print-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Estilos para tela */
+        @media screen {
+            .container {
+                padding: 20px;
+                max-width: 21cm;
+                margin: 0 auto;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .metas-habilidades-table {
+                overflow-x: auto;
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="print-button-container">
+            <button onclick="window.print()" class="print-button">
+                Imprimir Relatório
+            </button>
+        </div>
+
+        <div class="header">
+            <h1>Plano de Desenvolvimento Individual</h1>
+            <h2>{{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</h2>
+            <p>Período: {{ periodo.inicio }} a {{ periodo.fim }}</p>
+        </div>
+
+        <div class="section">
+            <h3>Informações Gerais</h3>
+            <div class="info-item">
+                <span class="info-label">Neurodivergência:</span>
+                <span>
+                    {% if neurodivergencias %}
+                        {% for neurodivergencia in neurodivergencias %}
+                            {% for diagnostico in neurodivergencia.diagnosticos.all %}
+                                {{ diagnostico.condicao.nome }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        Não informada
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Pedagogo Responsável:</span>
+                <span>{% if pedagogo %}{{ pedagogo.user.get_full_name }}{% else %}Não informado{% endif %}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Escola:</span>
+                <span>{{ escola.nome|default:"Não informada" }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Frequência Média:</span>
+                <span>{{ frequencia_media }} atendimento(s)</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Diário de Classe - PDI</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Metas/Habilidades</th>
+                        <th>Diário de Classe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pdi in pdis_list %}
+                        <tr>
+                            <td>{{ pdi.data_criacao|date:"d/m/Y" }}</td>
+                            <td>
+                                {% for meta in pdi.metas_habilidades.all %}
+                                    {{ meta.meta_habilidade.nome }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ pdi.observacoes|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if metas_habilidades %}
+        <div class="section acompanhamento-section">
+            <h3>Acompanhamento de Metas/Habilidades</h3>
+            
+            <div class="legenda">
+                <span class="legenda-item">
+                    <span class="cor-legenda progresso-alto"></span>
+                    Alto (≥ 75%)
+                </span>
+                <span class="legenda-item">
+                    <span class="cor-legenda progresso-medio"></span>
+                    Médio (≥ 50%)
+                </span>
+                <span class="legenda-item">
+                    <span class="cor-legenda progresso-baixo"></span>
+                    Baixo (< 50%)
+                </span>
+            </div>
+
+            <table class="metas-habilidades-table">
+                <thead>
+                    <tr>
+                        <th class="meta-nome">Metas/Habilidades</th>
+                        {% for data_meta in datas_metas %}
+                            <th class="data-header">
+                                <span>{{ data_meta.data|date:"d/m/Y" }}</span>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meta_nome, progressos in metas_habilidades.items %}
+                        <tr>
+                            <td class="meta-nome">{{ meta_nome }}</td>
+                            {% for prog in progressos %}
+                                {% if prog.progresso and prog.progresso != '-' %}
+                                    <td class="progresso-cell {% if prog.progresso >= 75 %}progresso-alto{% elif prog.progresso >= 50 %}progresso-medio{% else %}progresso-baixo{% endif %}">
+                                        {{ prog.progresso }}%
+                                    </td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>Documento gerado por PIA - Plano Individual de Aprendizagem | {{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }} - Relatório Geral | Data de Geração: {% now "d/m/Y H:i" %}</p>
+        </div>
+    </div>
+</body>
+</html>

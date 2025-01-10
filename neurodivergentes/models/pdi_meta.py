@@ -26,7 +26,8 @@ class PDIMeta(models.Model):
         verbose_name = 'Meta do PDI'
         verbose_name_plural = 'Metas do PDI'
         ordering = ['ordem']
-        unique_together = ['pdi', 'meta_habilidade']
+        # Remover unique_together se não for necessário
+        # unique_together = ['pdi', 'meta_habilidade']
 
     def __str__(self):
         return f"{self.meta_habilidade} - {self.nivel_desenvolvimento}%"

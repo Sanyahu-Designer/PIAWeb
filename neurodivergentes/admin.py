@@ -16,12 +16,12 @@ from .models import (
     CategoriaNeurodivergente, DiagnosticoNeurodivergente,
     Anamnese, PDI, MetaHabilidade, PDIMetaHabilidade,
     PlanoEducacional, AdaptacaoCurricular, RegistroEvolucao,
-    Monitoramento, Frequencia, ParecerAvaliativo
+    Monitoramento, ParecerAvaliativo
 )
 from .forms import (
     NeurodivergenteForms, PDIForm, PlanoEducacionalForm,
     AdaptacaoCurricularForm, RegistroEvolucaoForm,
-    MonitoramentoForm, FrequenciaForm, ParecerAvaliativoForm
+    MonitoramentoForm, ParecerAvaliativoForm
 )
 
 from django.db.models import Max
@@ -319,6 +319,7 @@ class PDIAdmin(admin.ModelAdmin):
                 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
             )
         }
+
         js = (
             'admin/js/pdi_admin.js',
             'admin/js/pdi_popup.js',
@@ -352,13 +353,6 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
         return bool(obj.anexos)
     tem_anexos.boolean = True
     tem_anexos.short_description = 'Anexos'
-
-@admin.register(Frequencia)
-class FrequenciaAdmin(admin.ModelAdmin):
-    form = FrequenciaForm
-    list_display = ['neurodivergente', 'ano', 'get_mes_display', 'total_atendimentos']
-    list_filter = ['ano', 'mes']
-    search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
 
 @admin.register(ParecerAvaliativo)
 class ParecerAvaliativoAdmin(admin.ModelAdmin):

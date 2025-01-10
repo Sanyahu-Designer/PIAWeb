@@ -1,0 +1,115 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            {% for bc in breadcrumbs %}
+            {% if bc.active %}
+            <li class="breadcrumb-item active" aria-current="page">{{ bc.title }}</li>
+            {% else %}
+            <li class="breadcrumb-item"><a href="{{ bc.url }}">{{ bc.title }}</a></li>
+            {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ title }}</h3>
+                    <div class="card-tools">
+                        <a href="{% url 'neurodivergentes:imprimir_pdi' pdi.id %}" class="btn btn-primary">
+                            <i class="fas fa-print"></i> Imprimir PDI
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do PDI -->
+    <div class="row">
+        <!-- Detalhes Básicos -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Informações Básicas</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Aluno/Paciente:</dt>
+                        <dd class="col-sm-8">{{ pdi.neurodivergente.nome_completo }}</dd>
+
+                        <dt class="col-sm-4">Data de Criação:</dt>
+                        <dd class="col-sm-8">{{ pdi.data_criacao|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{{ pdi.status_class }}">{{ pdi.get_status_display }}</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Pedagogo Responsável:</dt>
+                        <dd class="col-sm-8">{{ pdi.pedagogo_responsavel }}</dd>
+
+                        <dt class="col-sm-4">Progresso Geral:</dt>
+                        <dd class="col-sm-8">
+                            <div class="progress">
+                                <div class="progress-bar bg-{{ pdi.status_class }}" 
+                                     role="progressbar" 
+                                     style="width: {{ pdi.progresso }}%">
+                                    {{ pdi.progresso }}%
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metas e Habilidades -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Metas e Habilidades</h5>
+                </div>
+                <div class="card-body">
+                    {% for meta in pdi.metas_habilidades.all %}
+                    <div class="mb-3">
+                        <h6>{{ meta.meta_habilidade.nome }}</h6>
+                        <p class="text-muted small">{{ meta.meta_habilidade.descricao }}</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" 
+                                 role="progressbar" 
+                                 style="width: {{ meta.progresso }}%">
+                                {{ meta.progresso }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observações -->
+    {% if pdi.observacoes %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Observações</h5>
+                </div>
+                <div class="card-body">
+                    {{ pdi.observacoes|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

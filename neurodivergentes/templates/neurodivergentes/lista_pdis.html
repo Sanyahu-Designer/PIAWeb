@@ -1,0 +1,106 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">PDIs - {{ aluno.primeiro_nome }} {{ aluno.ultimo_nome }}</h3>
+                    <div class="card-tools">
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'neurodivergentes:adicionar_pdi' %}" class="btn btn-primary fw-semibold text-nowrap d-inline-flex align-items-center gap-2 ms-2">
+                                <i class="fas fa-plus"></i> Adicionar PDI
+                            </a>
+                            <button type="button" class="btn btn-info btn-sm d-inline-flex align-items-center gap-1" onclick="openRelatorioModal()">
+                                <i class="fas fa-file-pdf"></i> Gerar Relatório Geral
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Filtro -->
+    <div class="modal fade" id="filtroModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gerar Relatório Geral do Aluno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" id="data_inicial" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" id="data_final" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="var di = document.getElementById('data_inicial').value; var df = document.getElementById('data_final').value; if(di && df) { window.open('{% url 'neurodivergentes:relatorio_geral_aluno' aluno.id %}?data_inicial=' + di + '&data_final=' + df, '_blank'); document.querySelector('[data-bs-dismiss=modal]').click(); }">Gerar Relatório</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de PDIs -->
+    <div class="card">
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap">
+                <thead>
+                    <tr>
+                        <th>Data do PDI</th>
+                        <th>Progresso (%)</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pdi in pdis %}
+                    <tr>
+                        <td>{{ pdi.data_criacao|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar bg-{{ pdi.status_class }}" 
+                                     role="progressbar" 
+                                     style="width: {{ pdi.progresso }}%">
+                                    {{ pdi.progresso }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ pdi.status_class }}">{{ pdi.get_status_display }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'neurodivergentes:imprimir_pdi' pdi.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-file-pdf"></i> Gerar Relatório
+                            </a>
+                            <a href="{% url 'admin:neurodivergentes_pdi_change' pdi.id %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> Visualizar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function gerarRelatorio(event) {
+        event.preventDefault();
+        const form = document.getElementById('relatorioForm');
+        window.open(form.action + '?' + new URLSearchParams(new FormData(form)).toString(), '_blank');
+        $('#filtroModal').modal('hide');
+    }
+</script>
+{% endblock %}

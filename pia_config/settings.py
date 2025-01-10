@@ -69,7 +69,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'pia_config/templates'),
-            os.path.join(BASE_DIR, 'templates'),  # Adicionei a pasta templates na raiz
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'neurodivergentes/templates/neurodivergentes'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -89,7 +90,7 @@ WSGI_APPLICATION = 'pia_config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'mysql.connector.django',
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
