@@ -37,6 +37,7 @@ logs/
 # Environments
 .env
 .ENV
+venv/
 
 # IDE
 .idea/
