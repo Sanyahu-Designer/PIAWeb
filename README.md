@@ -1,4 +1,4 @@
-# 📘 PIA - Plano Individual de Aprendizagem
+# 📘 PIA - Plano Individual de Aprendizagem#
 
 **PIA** (Plano Individual de Aprendizagem) é uma aplicação desenvolvida em **Python, Django e Jazzmin** com o objetivo de integrar diferentes setores municipais para o acompanhamento educacional e clínico de alunos neurodivergentes. A plataforma conecta a **Secretaria de Educação**, a **Secretaria de Saúde**, os **alunos neurodivergentes** e seus **responsáveis** para criar uma rede colaborativa de suporte e acompanhamento do desenvolvimento e bem-estar dos estudantes.
 
