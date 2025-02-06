@@ -30,8 +30,8 @@ class ParecerAvaliativo(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Parecer Avaliativo'
-        verbose_name_plural = 'Pareceres Avaliativos'
+        verbose_name = 'Parecer'
+        verbose_name_plural = 'Pareceres'
         ordering = ['-data_avaliacao']
 
     def __str__(self):

@@ -113,6 +113,10 @@ class Neurodivergente(models.Model):
         
     def __str__(self):
         return f"{self.primeiro_nome} {self.ultimo_nome}"
+
+    @property
+    def nome_completo(self):
+        return f"{self.primeiro_nome} {self.ultimo_nome}"
     
     def foto_preview(self):
         if self.foto_perfil:

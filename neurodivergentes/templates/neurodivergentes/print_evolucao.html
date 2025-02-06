@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Evolução - {{ evolucao.neurodivergente.nome_completo }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">PIA - Plano Individual de Aprendizagem</div>
+        <h1>Registro de Evolução</h1>
+    </div>
+
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-group">
+                <div class="info-label">Aluno</div>
+                <div class="info-value">{{ evolucao.neurodivergente.nome_completo }}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Data da Evolução</div>
+                <div class="info-value">{{ evolucao.data|date:"d/m/Y" }}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Profissional</div>
+                <div class="info-value">{{ evolucao.profissional }}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Data de Impressão</div>
+                <div class="info-value">{{ data_impressao|date:"d/m/Y H:i" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title">Descrição da Evolução</div>
+        <div class="description-box">
+            {{ evolucao.descricao|linebreaks }}
+        </div>
+    </div>
+
+    {% if evolucao.anexos %}
+    <div class="content-section">
+        <div class="section-title">Anexos</div>
+        <ul class="anexos-list">
+            <li>
+                <span class="attachment-icon">📎</span>
+                {{ evolucao.anexos.name }}
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <div class="page-number">Página 1</div>
+        <div class="signature-section">
+            <div class="signature-line"></div>
+            <div class="signature-name">{{ evolucao.profissional }}</div>
+            <div class="signature-title">Profissional Responsável</div>
+        </div>
+    </div>
+</body>
+</html>

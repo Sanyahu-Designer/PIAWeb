@@ -1,0 +1,42 @@
+{% load i18n static %}
+{% load static %}
+
+<div class="popup-content">
+    <div class="popup-header">
+        <h2>Detalhes da Evolução</h2>
+        <div class="popup-actions">
+            <a href="{% url 'neurodivergentes:imprimir_evolucao' evolucao.id %}" target="_blank" class="print-btn" title="Imprimir Evolução">
+                <i class="fas fa-print"></i>
+            </a>
+            <span class="close-popup">&times;</span>
+        </div>
+    </div>
+    <div class="popup-body">
+        <div class="info-group">
+            <label>Aluno/Paciente:</label>
+            <span>{{ evolucao.neurodivergente }}</span>
+        </div>
+        <div class="info-group">
+            <label>Data da Evolução:</label>
+            <span>{{ evolucao.data|date:"d/m/Y" }}</span>
+        </div>
+        <div class="info-group">
+            <label>Profissional:</label>
+            <span>{{ evolucao.profissional }}</span>
+        </div>
+        <div class="info-group">
+            <label>Descrição:</label>
+            <p>{{ evolucao.descricao|linebreaks }}</p>
+        </div>
+        {% if evolucao.anexos %}
+        <div class="info-group">
+            <label>Anexos:</label>
+            <ul>
+                {% for anexo in evolucao.anexos.all %}
+                <li><a href="{{ anexo.arquivo.url }}" target="_blank">{{ anexo.arquivo.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>

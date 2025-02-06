@@ -1,0 +1,110 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+<style>
+    .evolucao-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .evolucao-content {
+        margin-bottom: 2rem;
+    }
+
+    .evolucao-footer {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+        text-align: right;
+    }
+
+    .info-label {
+        font-weight: bold;
+        color: #666;
+    }
+
+    .info-value {
+        margin-bottom: 0.5rem;
+    }
+
+    .anexos-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .anexos-list li {
+        margin-bottom: 0.5rem;
+    }
+
+    .anexos-list i {
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="evolucao-header">
+        <h2>Evolução do Aluno</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="info-label">Aluno:</p>
+                <p class="info-value">{{ evolucao.neurodivergente.nome_completo }}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="info-label">Data:</p>
+                <p class="info-value">{{ evolucao.data|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="info-label">Profissional:</p>
+                <p class="info-value">{{ evolucao.profissional }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="evolucao-content">
+        <h4>Descrição</h4>
+        <div class="card">
+            <div class="card-body">
+                {{ evolucao.descricao|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    {% if evolucao.anexos %}
+    <div class="evolucao-content">
+        <h4>Anexos</h4>
+        <ul class="anexos-list">
+            {% for anexo in evolucao.anexos %}
+            <li>
+                <i class="fas fa-paperclip"></i>
+                <a href="{{ anexo.arquivo.url }}" target="_blank">{{ anexo.arquivo.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="evolucao-footer">
+        <button type="button" class="btn btn-primary" onclick="window.imprimirEvolucao({{ evolucao.id }})">
+            <i class="fas fa-print me-2"></i>Imprimir
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.close()">
+            <i class="fas fa-times me-2"></i>Fechar
+        </button>
+    </div>
+</div>
+
+{% block extrajs %}
+<script>
+window.imprimirEvolucao = function(evolucaoId) {
+    const url = "{% url 'neurodivergentes:imprimir_evolucao' 999999 %}".replace('999999', evolucaoId);
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -9,7 +9,11 @@ from .views import (
     get_condicoes,
     imprimir_pdi,
     imprimir_pdis_aluno,
-    teste_pdf_view
+    teste_pdf_view,
+    lista_evolucao,
+    evolucao_popup_view,
+    imprimir_evolucao,
+    gerar_relatorio_evolucao_html
 )
 
 app_name = 'neurodivergentes'
@@ -23,6 +27,11 @@ urlpatterns = [
     path('pdi/<int:pdi_id>/imprimir/', imprimir_pdi, name='imprimir_pdi'),
     path('aluno/<int:aluno_id>/pdis/imprimir/', imprimir_pdis_aluno, name='imprimir_pdis_aluno'),
     path('teste-pdf/', teste_pdf_view, name='teste_pdf'),
+    path('aluno/<int:aluno_id>/evolucao/', lista_evolucao, name='lista_evolucao'),
+    path('aluno/<int:aluno_id>/evolucao/<int:evolucao_id>/', lista_evolucao, name='visualizar_evolucao'),
+    path('evolucao/<int:evolucao_id>/popup/', evolucao_popup_view, name='evolucao_popup'),
+    path('evolucao/<int:evolucao_id>/imprimir/', imprimir_evolucao, name='imprimir_evolucao'),
+    path('relatorio-evolucao-html/<int:neurodivergente_id>/', gerar_relatorio_evolucao_html, name='gerar_relatorio_evolucao_html'),
 ]
 
 # Adicione esta linha para servir arquivos de mídia durante o desenvolvimento

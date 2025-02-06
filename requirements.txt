@@ -31,7 +31,7 @@ tinycss2==1.4.0
 tinyhtml5==2.0.0
 tzdata==2024.2
 urllib3==2.2.3
-weasyprint==63.0
+weasyprint==60.1
 webencodings==0.5.1
 whitenoise==6.8.2
 zopfli==0.2.3.post1

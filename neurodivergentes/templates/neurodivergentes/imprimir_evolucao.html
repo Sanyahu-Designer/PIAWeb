@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Evolução - {{ evolucao.neurodivergente }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .info-group {
+            margin-bottom: 20px;
+        }
+        .info-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .info-group p {
+            margin: 0;
+            text-align: justify;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: right;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Registro de Evolução</h1>
+    </div>
+
+    <div class="info-group">
+        <label>Aluno/Paciente:</label>
+        <p>{{ evolucao.neurodivergente }}</p>
+    </div>
+
+    <div class="info-group">
+        <label>Data da Evolução:</label>
+        <p>{{ evolucao.data|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="info-group">
+        <label>Profissional:</label>
+        <p>{{ evolucao.profissional }}</p>
+    </div>
+
+    <div class="info-group">
+        <label>Descrição:</label>
+        <p>{{ evolucao.descricao|linebreaks }}</p>
+    </div>
+
+    {% if evolucao.anexos.all %}
+    <div class="info-group">
+        <label>Anexos:</label>
+        <ul>
+            {% for anexo in evolucao.anexos.all %}
+            <li>{{ anexo.arquivo.name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Impresso em: {{ data_impressao }}</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Evolução - {{ evolucao.neurodivergente.nome_completo }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="header">
+        <h1>Evolução do Aluno</h1>
+        <table style="width: 100%; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 50%;">
+                    <p class="info-label">Aluno:</p>
+                    <p class="info-value">{{ evolucao.neurodivergente.nome_completo }}</p>
+                </td>
+                <td style="width: 50%;">
+                    <p class="info-label">Data da Evolução:</p>
+                    <p class="info-value">{{ evolucao.data|date:"d/m/Y" }}</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p class="info-label">Profissional:</p>
+                    <p class="info-value">{{ evolucao.profissional }}</p>
+                </td>
+                <td>
+                    <p class="info-label">Data de Impressão:</p>
+                    <p class="info-value">{{ data_impressao|date:"d/m/Y H:i" }}</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="content">
+        <h2>Descrição</h2>
+        <div class="descricao" style="white-space: pre-wrap;">
+            {{ evolucao.descricao }}
+        </div>
+    </div>
+
+    {% if evolucao.anexos.exists %}
+    <div class="content">
+        <h2>Anexos</h2>
+        <ul class="anexos-list">
+            {% for anexo in evolucao.anexos.all %}
+            <li>{{ anexo.arquivo.name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</body>
+</html>

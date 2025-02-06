@@ -1,0 +1,132 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/changelists.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}">
+<style>
+    .card {
+        background: #fff;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        margin-bottom: 1rem;
+    }
+    .card-header {
+        border-bottom: 1px solid #f4f4f4;
+        padding: 1rem;
+    }
+    .card-title {
+        margin: 0;
+        font-size: 1.1rem;
+        float: left;
+    }
+    .card-tools {
+        float: right;
+    }
+    .card-body {
+        padding: 1rem;
+    }
+    .btn-primary {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-darker);
+        border-color: var(--primary-darker);
+    }
+    @media print {
+        .card {
+            box-shadow: none;
+        }
+        .btn-primary {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Relatório de Evoluções - {{ nome_completo }}</h3>
+                    <div class="card-tools">
+                        <button onclick="window.print()" class="btn btn-primary btn-sm">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <strong>Período:</strong> {{ data_inicial }} a {{ data_final }}
+                        <br>
+                        <strong>Data de Geração:</strong> {{ data_geracao }}
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Profissional</th>
+                                    <th>Descrição</th>
+                                    <th>Anexos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evolucao in evolucoes %}
+                                <tr>
+                                    <td>{{ evolucao.data|date:"d/m/Y" }}</td>
+                                    <td>{{ evolucao.profissional }}</td>
+                                    <td>{{ evolucao.descricao|linebreaks }}</td>
+                                    <td>
+                                        {% if evolucao.anexos.all %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for anexo in evolucao.anexos.all %}
+                                            <li>
+                                                <a href="{{ anexo.arquivo.url }}" target="_blank">
+                                                    <i class="fas fa-paperclip"></i> {{ anexo.arquivo.name }}
+                                                </a>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        <span class="text-muted">Nenhum anexo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Nenhuma evolução encontrada no período selecionado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .card-tools,
+        .main-header,
+        .main-sidebar,
+        .main-footer {
+            display: none !important;
+        }
+        .content-wrapper {
+            margin-left: 0 !important;
+        }
+        .card {
+            box-shadow: none !important;
+        }
+    }
+</style>
+{% endblock %}

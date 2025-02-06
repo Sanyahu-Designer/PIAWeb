@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/css/changelists.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:neurodivergentes_registroevolucao_changelist' %}">Evoluções</a>
+    &rsaquo; <a href="{% url 'neurodivergentes:lista_evolucao' aluno.id %}">{{ aluno.nome_completo }}</a>
+    &rsaquo; Detalhes da Evolução
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>Detalhes da Evolução - {{ aluno.nome_completo }}</h2>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label>Data:</label>
+                <div class="readonly">{{ evolucao.data|date:"d/m/Y" }}</div>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label>Profissional:</label>
+                <div class="readonly">{{ evolucao.profissional }}</div>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label>Descrição:</label>
+                <div class="readonly">{{ evolucao.descricao|linebreaks }}</div>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label>Observações:</label>
+                <div class="readonly">{{ evolucao.observacoes|default:"-"|linebreaks }}</div>
+            </div>
+        </div>
+        
+        <div class="submit-row">
+            <a href="{% url 'neurodivergentes:lista_evolucao' aluno.id %}" class="button">Voltar para a Lista</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

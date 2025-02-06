@@ -28,9 +28,9 @@ class RegistroEvolucao(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Registro de Evolução'
-        verbose_name_plural = 'Registros de Evolução'
-        ordering = ['-data']
+        verbose_name = 'Evolução'
+        verbose_name_plural = 'Evolução'
+        ordering = ['-data', '-created_at']
 
     def __str__(self):
         return f"Evolução de {self.neurodivergente} em {self.data}"

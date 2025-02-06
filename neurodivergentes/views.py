@@ -1,8 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.urls import reverse
+from django.contrib import messages
+from datetime import datetime
+from weasyprint import HTML
+from django.urls import reverse
+from weasyprint import HTML
+import logging
+
+logger = logging.getLogger(__name__)
 from django.db.models import Q, Max, F
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -88,7 +97,7 @@ def imprimir_pdi(request, pdi_id):
     
     # Configura as fontes
     font_config = FontConfiguration()
-    css_string = """
+    css_string = '''
         @font-face {
             font-family: 'Roboto';
             src: url('%s') format('truetype');
@@ -99,7 +108,7 @@ def imprimir_pdi(request, pdi_id):
             src: url('%s') format('truetype');
             font-weight: bold;
         }
-    """ % (
+    ''' % (
         os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
         os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
     )
@@ -645,6 +654,15 @@ def get_condicoes(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+def get_filtro_datas(queryset, request):
+    data_inicial = request.GET.get('data_inicial')
+    data_final = request.GET.get('data_final')
+    if data_inicial:
+        queryset = queryset.filter(data__gte=data_inicial)
+    if data_final:
+        queryset = queryset.filter(data__lte=data_final)
+    return queryset
+
 def teste_pdf_view(request):
     try:
         import os
@@ -772,3 +790,306 @@ Dependências Instaladas:
         Caminho do Python: {sys.executable}
         Caminho do Interpretador: {sys.path}
         """, content_type='text/plain', status=500)
+
+@login_required
+def imprimir_evolucao(request, evolucao_id):
+    """View para imprimir uma evolução individual em PDF"""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f'Iniciando impressão da evolução {evolucao_id}')
+    
+    try:
+        from weasyprint import HTML, CSS
+        
+        evolucao = get_object_or_404(
+            RegistroEvolucao.objects.select_related(
+                'neurodivergente',
+                'profissional'
+            ),
+            id=evolucao_id
+        )
+        
+        logger.info(f'Evolução encontrada: {evolucao.id} - {evolucao.neurodivergente.nome_completo}')
+        
+        context = {
+            'evolucao': evolucao,
+            'data_impressao': timezone.now(),
+        }
+        
+        css_string = '''
+            :root {
+                --primary-color: #2c3e50;
+                --secondary-color: #3498db;
+                --accent-color: #e74c3c;
+                --text-color: #333;
+                --light-gray: #ecf0f1;
+                --border-color: #bdc3c7;
+            }
+            
+            body {
+                font-family: 'Roboto', sans-serif;
+                color: var(--text-color);
+                line-height: 1.6;
+                margin: 0;
+                padding: 2cm;
+                background-color: white;
+            }
+            
+            .header {
+                text-align: center;
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid var(--primary-color);
+            }
+            
+            .logo {
+                color: var(--primary-color);
+                font-size: 1.2rem;
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+            }
+            
+            h1 {
+                color: var(--primary-color);
+                font-size: 1.8rem;
+                margin: 0;
+            }
+            
+            .info-section {
+                background-color: var(--light-gray);
+                padding: 1.5rem;
+                border-radius: 8px;
+                margin-bottom: 2rem;
+            }
+            
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+            
+            .info-group {
+                background-color: white;
+                padding: 1rem;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            
+            .info-label {
+                color: var(--secondary-color);
+                font-weight: bold;
+                font-size: 0.9rem;
+                margin-bottom: 0.3rem;
+            }
+            
+            .info-value {
+                font-size: 1.1rem;
+            }
+            
+            .content-section {
+                margin-bottom: 2rem;
+            }
+            
+            .section-title {
+                color: var(--primary-color);
+                font-size: 1.2rem;
+                font-weight: bold;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .description-box {
+                background-color: white;
+                padding: 1.5rem;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                white-space: pre-wrap;
+            }
+            
+            .anexos-list {
+                list-style: none;
+                padding: 0;
+            }
+            
+            .anexos-list li {
+                display: flex;
+                align-items: center;
+                padding: 0.5rem;
+                background-color: var(--light-gray);
+                border-radius: 4px;
+                margin-bottom: 0.5rem;
+            }
+            
+            .attachment-icon {
+                margin-right: 0.5rem;
+            }
+            
+            .footer {
+                margin-top: 3rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--border-color);
+            }
+            
+            .page-number {
+                text-align: right;
+                color: var(--text-color);
+                font-size: 0.8rem;
+                margin-bottom: 2rem;
+            }
+            
+            .signature-section {
+                text-align: center;
+                margin-top: 3rem;
+            }
+            
+            .signature-line {
+                width: 200px;
+                margin: 0 auto;
+                border-bottom: 1px solid var(--text-color);
+            }
+            
+            .signature-name {
+                margin-top: 0.5rem;
+                font-weight: bold;
+            }
+            
+            .signature-title {
+                color: var(--text-color);
+                font-size: 0.9rem;
+            }
+            
+            @page {
+                size: A4;
+                margin: 0;
+                @top-right {
+                    content: counter(page);
+                }
+            }
+        '''
+        
+        logger.info('Renderizando template HTML')
+        html_string = render_to_string('neurodivergentes/print_evolucao.html', context)
+        
+        logger.info('Gerando PDF')
+        html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+        css = CSS(string=css_string)
+        pdf = html.write_pdf(stylesheets=[css])
+        
+        logger.info('Enviando PDF')
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="evolucao_{evolucao.id}.pdf"'
+        response.write(pdf)
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f'Erro ao gerar PDF: {str(e)}')
+        raise
+
+@login_required
+def gerar_relatorio_evolucao_html(request, neurodivergente_id):
+    """View para gerar o relatório geral de evoluções em HTML"""
+    try:
+        # Obtém as datas do filtro
+        data_inicial = request.GET.get('data_inicial')
+        data_final = request.GET.get('data_final')
+        
+        if not data_inicial or not data_final:
+            messages.error(request, 'Por favor, selecione um período para gerar o relatório.')
+            return HttpResponseRedirect(reverse('admin:neurodivergentes_registroevolucao_changelist') + 
+                                      f'?neurodivergente__id__exact={neurodivergente_id}')
+        
+        # Converte as datas para datetime
+        try:
+            data_inicial_dt = datetime.strptime(data_inicial + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
+            data_final_dt = datetime.strptime(data_final + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+        except Exception as date_error:
+            messages.error(request, 'Formato de data inválido.')
+            return HttpResponseRedirect(reverse('admin:neurodivergentes_registroevolucao_changelist') + 
+                                      f'?neurodivergente__id__exact={neurodivergente_id}')
+        
+        # Busca o neurodivergente
+        neurodivergente = get_object_or_404(Neurodivergente, id=neurodivergente_id)
+        
+        # Busca as evoluções do período
+        evolucoes = RegistroEvolucao.objects.filter(
+            neurodivergente=neurodivergente,
+            data__range=(data_inicial_dt, data_final_dt)
+        ).order_by('data')
+        
+        context = {
+            'neurodivergente': neurodivergente,
+            'evolucoes': evolucoes,
+            'nome_completo': f"{neurodivergente.primeiro_nome} {neurodivergente.ultimo_nome}",
+            'data_inicial': data_inicial_dt.strftime('%d/%m/%Y'),
+            'data_final': data_final_dt.strftime('%d/%m/%Y'),
+            'data_geracao': timezone.now().strftime('%d/%m/%Y %H:%M:%S')
+        }
+        
+        return render(request, 'neurodivergentes/relatorio_evolucao.html', context)
+        
+    except Exception as e:
+        messages.error(request, 'Erro ao gerar relatório.')
+        return HttpResponseRedirect(reverse('admin:neurodivergentes_registroevolucao_changelist') + 
+                                  f'?neurodivergente__id__exact={neurodivergente_id}')
+
+@login_required
+def lista_evolucao(request, aluno_id, evolucao_id=None):
+    """View para listar as evoluções de um aluno específico ou visualizar uma evolução específica."""
+    aluno = get_object_or_404(Neurodivergente, id=aluno_id)
+    
+    if evolucao_id:
+        # Se um ID de evolução foi fornecido, mostra os detalhes dessa evolução
+        evolucao = get_object_or_404(RegistroEvolucao, id=evolucao_id, neurodivergente=aluno)
+        return render(request, 'neurodivergentes/evolucao_detail.html', {
+            'aluno': aluno,
+            'evolucao': evolucao
+        })
+    
+    # Obtém os filtros de data
+    data_inicial = request.GET.get('data_inicial')
+    data_final = request.GET.get('data_final')
+    
+    # Query base
+    evolucoes = RegistroEvolucao.objects.filter(neurodivergente=aluno)
+    
+    # Aplica filtros de data se fornecidos
+    if data_inicial:
+        evolucoes = evolucoes.filter(data__gte=data_inicial)
+    if data_final:
+        evolucoes = evolucoes.filter(data__lte=data_final)
+    
+    # Ordenação
+    evolucoes = evolucoes.order_by('-data')
+    
+    # Paginação
+    paginator = Paginator(evolucoes, 10)  # 10 itens por página
+    page = request.GET.get('page')
+    evolucoes_paginadas = paginator.get_page(page)
+    
+    context = {
+        'aluno': aluno,
+        'evolucoes': evolucoes_paginadas,
+        'data_inicial': data_inicial,
+        'data_final': data_final,
+    }
+    
+    return render(request, 'neurodivergentes/evolucao_list.html', context)
+
+@login_required
+def evolucao_popup_view(request, evolucao_id):
+    """View para exibir o popup com detalhes da evolução"""
+    evolucao = get_object_or_404(
+        RegistroEvolucao.objects.select_related(
+            'neurodivergente',
+            'profissional'
+        ),
+        id=evolucao_id
+    )
+    
+    context = {
+        'evolucao': evolucao,
+    }
+    
+    return render(request, 'admin/neurodivergentes/registroevolucao/popup_view.html', context)

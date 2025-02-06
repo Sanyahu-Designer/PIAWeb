@@ -59,7 +59,7 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
     form = NeurodivergenteForms
     inlines = [GrupoFamiliarInline]
     readonly_fields = ['foto_preview']
-    list_display = ['primeiro_nome', 'ultimo_nome', 'idade', 'cidade', 'estado']
+    list_display = ['primeiro_nome', 'ultimo_nome', 'idade', 'cidade', 'estado', 'ver_evolucoes']
     list_filter = ['estado', 'genero']
     search_fields = ['primeiro_nome', 'ultimo_nome', 'cpf']
     formfield_overrides = {
@@ -94,6 +94,11 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
             'classes': ('tab-contato',)
         })
     )
+
+    def ver_evolucoes(self, obj):
+        url = reverse('admin:neurodivergentes_evolucao_list', args=[obj.id])
+        return mark_safe(f'<a href="{url}" class="button">Ver Evoluções</a>')
+    ver_evolucoes.short_description = 'Evoluções'
 
     class Media:
         css = {
@@ -345,14 +350,165 @@ class MonitoramentoAdmin(admin.ModelAdmin):
 @admin.register(RegistroEvolucao)
 class RegistroEvolucaoAdmin(admin.ModelAdmin):
     form = RegistroEvolucaoForm
-    list_display = ['neurodivergente', 'data', 'profissional', 'tem_anexos']
-    list_filter = ['data', 'profissional']
-    search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
+    list_display = ['get_aluno_nome', 'get_total_evolucoes', 'get_ultima_evolucao', 'get_view_button']
+    list_filter = ['neurodivergente']
+    search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome', 'descricao']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        """
+        Retorna apenas a evolução mais recente por aluno na lista inicial,
+        ou todas as evoluções se um filtro de aluno estiver ativo.
+        """
+        self.request = request
+        queryset = super().get_queryset(request).select_related(
+            'neurodivergente', 'profissional'
+        )
+
+        neurodivergente_id = request.GET.get('neurodivergente__id__exact')
+        if neurodivergente_id:
+            # Lista todas as evoluções do aluno filtrado
+            return queryset.filter(neurodivergente_id=neurodivergente_id).order_by('-data')
+
+        # Lista inicial: retorna apenas a evolução mais recente por aluno
+        from django.db.models import Max
+        latest_evolucao_ids = queryset.values('neurodivergente').annotate(
+            max_id=Max('id')
+        ).values_list('max_id', flat=True)
+
+        return queryset.filter(id__in=latest_evolucao_ids).order_by('neurodivergente__primeiro_nome')
+
+    def get_object(self, request, object_id, from_field=None):
+        """
+        Personaliza a busca de objetos para garantir que qualquer evolução seja carregada,
+        independentemente do queryset usado na exibição agrupada.
+        """
+        queryset = super().get_queryset(request)
+        return get_object_or_404(RegistroEvolucao, pk=object_id)
+
+    def get_aluno_nome(self, obj):
+        """
+        Gera o link correto para o nome do aluno:
+        - Lista inicial: redireciona para a lista de evoluções do aluno.
+        - Lista filtrada: redireciona para o detalhe da evolução.
+        """
+        if not obj.neurodivergente:
+            return '-'
+
+        if hasattr(self, 'request') and 'neurodivergente__id__exact' not in self.request.GET:
+            # Link para a lista de evoluções do aluno
+            url = f"{reverse('admin:neurodivergentes_registroevolucao_changelist')}?neurodivergente__id__exact={obj.neurodivergente.id}"
+        else:
+            # Link para o detalhe da evolução
+            url = reverse('admin:neurodivergentes_registroevolucao_change', args=[obj.id])
+
+        nome_completo = f"{obj.neurodivergente.primeiro_nome} {obj.neurodivergente.ultimo_nome}"
+        return format_html(
+            '<a href="{}" style="color: #447e9b; text-decoration: none;">{}</a>',
+            url,
+            nome_completo
+        )
+    get_aluno_nome.short_description = 'Aluno/Paciente'
+    get_aluno_nome.admin_order_field = 'neurodivergente__primeiro_nome'
+
+    def get_total_evolucoes(self, obj):
+        """
+        Retorna o total de evoluções do aluno.
+        """
+        if not obj.neurodivergente:
+            return '0'
+        return obj.neurodivergente.registros_evolucao.count()
+    get_total_evolucoes.short_description = 'Total de Evoluções'
+
+    def get_ultima_evolucao(self, obj):
+        """
+        Retorna a data da última evolução formatada.
+        """
+        if not obj.neurodivergente:
+            return '-'
+        ultima = obj.neurodivergente.registros_evolucao.order_by('-data').first()
+        return ultima.data.strftime('%d/%m/%Y') if ultima else '-'
+    get_ultima_evolucao.short_description = 'Última Evolução'
+
+    def get_view_button(self, obj):
+        """
+        Retorna o botão de visualização que leva para a lista de evoluções do aluno.
+        """
+        if not obj.neurodivergente:
+            return ''
+        
+        url = f"{reverse('admin:neurodivergentes_registroevolucao_changelist')}?neurodivergente__id__exact={obj.neurodivergente.id}"
+        return format_html(
+            '<a class="btn btn-info btn-sm" href="{}"><i class="fas fa-eye"></i> Ver Evoluções</a>',
+            url
+        )
+    get_view_button.short_description = 'Ver Evoluções'
+
+    def get_list_display(self, request):
+        """
+        Altera as colunas exibidas dependendo se estamos na lista inicial ou na lista de evoluções de um aluno.
+        """
+        if request.GET.get('neurodivergente__id__exact'):
+            # Na página de evoluções do aluno
+            return ['neurodivergente', 'get_data_formatada', 'descricao_resumida', 'profissional', 'tem_anexos', 'get_acoes']
+        # Na página inicial
+        return ['get_aluno_nome', 'get_total_evolucoes', 'get_ultima_evolucao', 'get_view_button']
+
+    def get_data_formatada(self, obj):
+        """
+        Retorna a data no formato dd/mm/yy
+        """
+        return obj.data.strftime('%d/%m/%y')
+    get_data_formatada.short_description = 'Data'
+    get_data_formatada.admin_order_field = 'data'
 
     def tem_anexos(self, obj):
         return bool(obj.anexos)
     tem_anexos.boolean = True
     tem_anexos.short_description = 'Anexos'
+
+    def descricao_resumida(self, obj):
+        max_length = 50
+        if len(obj.descricao) > max_length:
+            return f"{obj.descricao[:max_length]}..."
+        return obj.descricao
+    descricao_resumida.short_description = 'Descrição'
+
+    def get_acoes(self, obj):
+        """
+        Retorna os botões de ação para a lista de evoluções do aluno.
+        """
+        editar_url = reverse('admin:neurodivergentes_registroevolucao_change', args=[obj.id])
+        
+        return format_html(
+            '<div class="btn-group">'
+            '<a href="{}" class="btn btn-info btn-sm" title="Editar"><i class="fas fa-edit"></i></a>'
+            '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirEvolucao({})"><i class="fas fa-print"></i> Imprimir</button>'
+            '</div>',
+            editar_url, obj.id
+        )
+    get_acoes.short_description = 'Ações'
+
+    def get_edit_button(self, obj):
+        """
+        Retorna o botão de edição para a lista de evoluções do aluno.
+        """
+        url = reverse('admin:neurodivergentes_registroevolucao_change', args=[obj.id])
+        return format_html(
+            '<a class="btn btn-info btn-sm" href="{}"><i class="fas fa-edit"></i> Editar</a>',
+            url
+        )
+    get_edit_button.short_description = 'Editar'
+
+    class Media:
+        css = {
+            'all': ('admin/css/neurodivergentes_forms.css',)
+        }
+        js = (
+            'admin/js/vendor/jquery/jquery.min.js',
+            'admin/js/jquery.mask.min.js',
+            'js/neurodivergentes_admin.js',
+        )
 
 @admin.register(ParecerAvaliativo)
 class ParecerAvaliativoAdmin(admin.ModelAdmin):

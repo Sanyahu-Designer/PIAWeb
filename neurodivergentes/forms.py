@@ -7,6 +7,7 @@ from .models import (
     AdaptacaoCurricular, RegistroEvolucao,
     Monitoramento, ParecerAvaliativo
 )
+from django.core.exceptions import ValidationError
 
 class NeurodivergenteForms(forms.ModelForm):
     class Meta:
@@ -144,6 +145,15 @@ class AdaptacaoCurricularForm(forms.ModelForm):
         }
 
 class RegistroEvolucaoForm(forms.ModelForm):
+    def clean_anexos(self):
+        anexo = self.cleaned_data.get('anexos')
+        if anexo:
+            if anexo.size > 5 * 1024 * 1024:
+                raise ValidationError('Arquivo excede 5MB.')
+            if not anexo.name.lower().endswith(('.pdf', '.docx')):
+                raise ValidationError('Apenas PDF/DOCX permitidos.')
+        return anexo
+
     class Meta:
         model = RegistroEvolucao
         fields = '__all__'
