@@ -8,6 +8,8 @@ from django.db.models import Count, Subquery, OuterRef, Avg
 from django.db import models
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.utils import timezone
+from .choices import MESES
 from escola.models import ModalidadeEnsino, ProgramaEducacional, Recurso, Escola
 from escola.forms import EscolaForm
 from .models import (
@@ -343,9 +345,145 @@ class PDIAdmin(admin.ModelAdmin):
 @admin.register(Monitoramento)
 class MonitoramentoAdmin(admin.ModelAdmin):
     form = MonitoramentoForm
-    list_display = ['neurodivergente', 'data', 'meta', 'nivel']
-    list_filter = ['data', 'nivel']
+    list_display = ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
+    list_filter = ['neurodivergente']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
+    list_per_page = 20
+    
+    def changelist_view(self, request, extra_context=None):
+        # Adiciona os dados para o modal de relatório
+        extra_context = extra_context or {}
+        extra_context['meses'] = MESES
+        extra_context['anos'] = range(2020, 2051)
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def get_queryset(self, request):
+        """Retorna apenas o PEI mais recente por aluno na lista inicial,
+        ou todos os PEIs se um filtro de aluno estiver ativo."""
+        self.request = request
+        queryset = super().get_queryset(request).select_related('neurodivergente')
+
+        neurodivergente_id = request.GET.get('neurodivergente__id__exact')
+        if neurodivergente_id:
+            # Lista todos os PEIs do aluno filtrado
+            return queryset.filter(neurodivergente_id=neurodivergente_id).order_by('-ano', '-mes')
+
+        # Lista inicial: retorna apenas o PEI mais recente por aluno
+        latest_pei_ids = queryset.values('neurodivergente').annotate(
+            max_id=models.Max('id')
+        ).values_list('max_id', flat=True)
+
+        return queryset.filter(id__in=latest_pei_ids).order_by('neurodivergente__primeiro_nome')
+
+    def get_object(self, request, object_id, from_field=None):
+        """Personaliza a busca de objetos para garantir que qualquer PEI seja carregado,
+        independentemente do queryset usado na exibição agrupada."""
+        queryset = super().get_queryset(request)
+        return get_object_or_404(Monitoramento, pk=object_id)
+
+    def get_aluno_nome(self, obj):
+        """Gera o link correto para o nome do aluno:
+        - Lista inicial: redireciona para a lista de PEIs do aluno.
+        - Lista filtrada: redireciona para o detalhe do PEI."""
+        if not obj.neurodivergente:
+            return '-'
+
+        if hasattr(self, 'request') and 'neurodivergente__id__exact' not in self.request.GET:
+            # Link para a lista de PEIs do aluno
+            url = f"{reverse('admin:neurodivergentes_monitoramento_changelist')}?neurodivergente__id__exact={obj.neurodivergente.id}"
+        else:
+            # Link para o detalhe do PEI
+            url = reverse('admin:neurodivergentes_monitoramento_change', args=[obj.id])
+
+        nome_completo = f"{obj.neurodivergente.primeiro_nome} {obj.neurodivergente.ultimo_nome}"
+        return format_html(
+            '<a href="{}" style="color: #447e9b; text-decoration: none;">{}</a>',
+            url,
+            nome_completo
+        )
+    get_aluno_nome.short_description = 'Aluno/Paciente'
+    get_aluno_nome.admin_order_field = 'neurodivergente__primeiro_nome'
+
+    def get_total_peis(self, obj):
+        """Retorna o total de PEIs do aluno."""
+        if not obj.neurodivergente:
+            return '0'
+        return Monitoramento.objects.filter(neurodivergente=obj.neurodivergente).count()
+    get_total_peis.short_description = 'Total de PEIs'
+
+    def get_ultimo_pei(self, obj):
+        """Retorna o mês/ano do último PEI."""
+        if not obj.neurodivergente:
+            return '-'
+        ultimo = Monitoramento.objects.filter(
+            neurodivergente=obj.neurodivergente
+        ).order_by('-ano', '-mes').first()
+        
+        if ultimo:
+            return f"{ultimo.get_mes_display()}/{ultimo.ano}"
+        return '-'
+    get_ultimo_pei.short_description = 'Último PEI'
+
+    def get_list_display(self, request):
+        """Altera as colunas exibidas dependendo se estamos na lista inicial
+        ou na lista de PEIs de um aluno."""
+        if request.GET.get('neurodivergente__id__exact'):
+            # Na página de PEIs do aluno
+            return ['neurodivergente', 'get_mes_ano', 'get_metas', 'get_acoes']
+        # Na página inicial
+        return ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
+
+    def get_mes_ano(self, obj):
+        """Retorna o mês/ano formatado."""
+        return f"{obj.get_mes_display()}/{obj.ano}"
+    get_mes_ano.short_description = 'Mês/Ano'
+    get_mes_ano.admin_order_field = 'ano'
+
+    def get_metas(self, obj):
+        """Retorna as metas do PEI."""
+        return ", ".join([meta.nome for meta in obj.metas.all()])
+    get_metas.short_description = 'Metas/Habilidades'
+
+    def get_view_button(self, obj):
+        """Retorna o botão de visualização que leva para a lista de PEIs do aluno."""
+        if not obj.neurodivergente:
+            return ''
+        
+        url = f"{reverse('admin:neurodivergentes_monitoramento_changelist')}?neurodivergente__id__exact={obj.neurodivergente.id}"
+        return format_html(
+            '<a class="btn btn-info btn-sm" style="min-width: 100px;" href="{}"><i class="fas fa-eye me-1"></i> Ver PEIs</a>',
+            url
+        )
+    get_view_button.short_description = 'Ver PEIs'
+
+    def get_acoes(self, obj):
+        """Retorna os botões de ação para a lista de PEIs do aluno."""
+        editar_url = reverse('admin:neurodivergentes_monitoramento_change', args=[obj.id])
+        imprimir_url = reverse('neurodivergentes:imprimir_pei', args=[obj.id])
+        
+        return format_html(
+            '<div class="btn-group">' 
+            '<a href="{}" class="btn btn-sm btn-info" title="Editar"><i class="fas fa-edit"></i></a>' 
+            '<button type="button" class="btn btn-sm btn-primary" onclick="window.open(\'{}\')" title="Imprimir">' 
+            '<i class="fas fa-print"></i> Imprimir</button>' 
+            '</div>',
+            editar_url,
+            imprimir_url
+        )
+    get_acoes.short_description = 'Ações'
+
+    class Media:
+        css = {
+            'all': (
+                'admin/css/pei_forms.css',
+                'admin/css/pei_popup.css',
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+            )
+        }
+        js = (
+            'admin/js/pei_admin.js',
+            'admin/js/pei_popup.js',
+        )
 
 @admin.register(RegistroEvolucao)
 class RegistroEvolucaoAdmin(admin.ModelAdmin):

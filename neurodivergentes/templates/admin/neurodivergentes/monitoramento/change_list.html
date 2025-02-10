@@ -1,0 +1,119 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block object-tools-items %}
+    {% if has_add_permission %}
+        <li>
+            <a href="{% url 'admin:neurodivergentes_monitoramento_add' %}" class="addlink">
+                {% blocktranslate with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktranslate %}
+            </a>
+        </li>
+        {% if request.GET.neurodivergente__id__exact and request.GET.neurodivergente__id__exact != '' %}
+        <li>
+            <button type="button" class="btn btn-info" onclick="openRelatorioModal()">
+                <i class="fas fa-file-pdf"></i> Gerar Relatório Geral
+            </button>
+        </li>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {{ block.super }}
+    
+    {% if request.GET.neurodivergente__id__exact and request.GET.neurodivergente__id__exact != '' %}
+    <!-- Modal do Relatório Geral -->
+    <div class="modal" id="relatorioGeralModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gerar Relatório Geral</h5>
+                    <button type="button" class="close" onclick="closeRelatorioModal()" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="get" action="{% url 'neurodivergentes:gerar_relatorio_pei_pdf' request.GET.neurodivergente__id__exact %}" id="formRelatorioGeral" target="_blank">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="mes_inicial">Mês Inicial</label>
+                            <select name="mes_inicial" id="mes_inicial" class="form-control" required>
+                                <option value="">Selecione o mês inicial</option>
+                                {% for num, nome in meses %}
+                                    <option value="{{ num }}">{{ nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mes_final">Mês Final</label>
+                            <select name="mes_final" id="mes_final" class="form-control" required>
+                                <option value="">Selecione o mês final</option>
+                                {% for num, nome in meses %}
+                                    <option value="{{ num }}">{{ nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ano">Ano</label>
+                            <select name="ano" id="ano" class="form-control" required>
+                                <option value="">Selecione o ano</option>
+                                {% for ano in anos %}
+                                    <option value="{{ ano }}">{{ ano }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-info">Gerar Relatório</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script type="text/javascript">
+        function openRelatorioModal() {
+            var modal = document.getElementById('relatorioGeralModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function closeRelatorioModal() {
+            var modal = document.getElementById('relatorioGeralModal');
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+
+        // Fecha o modal se clicar fora dele
+        window.onclick = function(event) {
+            var modal = document.getElementById('relatorioGeralModal');
+            if (event.target == modal) {
+                closeRelatorioModal();
+            }
+        }
+
+        // Configura a validação do formulário
+        document.getElementById('formRelatorioGeral').onsubmit = function(e) {
+            var mesInicial = parseInt(document.getElementById('mes_inicial').value);
+            var mesFinal = parseInt(document.getElementById('mes_final').value);
+            var ano = document.getElementById('ano').value;
+            
+            if (!mesInicial || !mesFinal || !ano) {
+                e.preventDefault();
+                alert('Por favor, selecione o mês inicial, mês final e o ano.');
+                return false;
+            }
+
+            if (mesFinal < mesInicial) {
+                e.preventDefault();
+                alert('O mês final deve ser maior ou igual ao mês inicial.');
+                return false;
+            }
+
+            // Fecha o modal após submeter
+            setTimeout(function() {
+                closeRelatorioModal();
+            }, 100);
+        };
+    </script>
+{% endblock %}

@@ -2,6 +2,10 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import (
+    lista_pei,
+    pei_popup_view,
+    imprimir_pei,
+    gerar_relatorio_pei_pdf,
     pdi_popup_view,
     gerar_relatorio_pdf,
     gerar_relatorio_geral_html,
@@ -32,6 +36,11 @@ urlpatterns = [
     path('evolucao/<int:evolucao_id>/popup/', evolucao_popup_view, name='evolucao_popup'),
     path('evolucao/<int:evolucao_id>/imprimir/', imprimir_evolucao, name='imprimir_evolucao'),
     path('relatorio-evolucao-html/<int:neurodivergente_id>/', gerar_relatorio_evolucao_html, name='gerar_relatorio_evolucao_html'),
+    # URLs do PEI
+    path('aluno/<int:aluno_id>/pei/', lista_pei, name='lista_pei'),
+    path('pei/<int:pei_id>/popup/', pei_popup_view, name='pei_popup'),
+    path('pei/<int:pei_id>/imprimir/', imprimir_pei, name='imprimir_pei'),
+    path('relatorio-pei/<int:neurodivergente_id>/', gerar_relatorio_pei_pdf, name='gerar_relatorio_pei_pdf'),
 ]
 
 # Adicione esta linha para servir arquivos de mídia durante o desenvolvimento

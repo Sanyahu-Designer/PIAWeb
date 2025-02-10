@@ -5,7 +5,8 @@ from .models import (
     Neurodivergente, GrupoFamiliar, Neurodivergencia,
     PDI, PlanoEducacional,
     AdaptacaoCurricular, RegistroEvolucao,
-    Monitoramento, ParecerAvaliativo
+    Monitoramento, ParecerAvaliativo,
+    MetaHabilidade
 )
 from django.core.exceptions import ValidationError
 
@@ -169,22 +170,70 @@ class RegistroEvolucaoForm(forms.ModelForm):
         }
 
 class MonitoramentoForm(forms.ModelForm):
+    metas = forms.ModelMultipleChoiceField(
+        queryset=MetaHabilidade.objects.filter(ativo=True),
+        widget=forms.SelectMultiple(attrs={
+            'class': 'select2',
+            'style': 'width: 100%; color: #333333;'
+        }),
+        label='Metas/Habilidades',
+        help_text='Selecione uma ou mais metas/habilidades para este planejamento'
+    )
+
     class Meta:
         model = Monitoramento
-        fields = '__all__'
+        fields = ['neurodivergente', 'mes', 'ano', 'metas', 'observacoes', 'pedagogo_responsavel']
         widgets = {
-            'data': forms.DateInput(
-                attrs={'type': 'date'},
-                format='%Y-%m-%d'
-            ),
-            'meta': forms.TextInput(attrs={
-                'placeholder': 'Meta ou habilidade monitorada'
-            }),
+            'mes': forms.Select(attrs={'class': 'select2', 'style': 'width: 100%;'}),
+            'ano': forms.NumberInput(attrs={'min': 2020, 'max': 2050}),
             'observacoes': forms.Textarea(attrs={
                 'rows': 4,
                 'placeholder': 'Observações sobre o progresso'
             })
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pré-preenche com o mês/ano atual se for um novo registro
+        if not self.instance.pk:
+            self.initial.update({
+                'mes': timezone.now().month,
+                'ano': timezone.now().year
+            })
+
+    def clean(self):
+        cleaned_data = super().clean()
+        mes = cleaned_data.get('mes')
+        ano = cleaned_data.get('ano')
+        neurodivergente = cleaned_data.get('neurodivergente')
+        metas = cleaned_data.get('metas')
+
+        if mes and ano and neurodivergente:
+            # Verifica se já existe um PEI para este mês/ano/aluno
+            if Monitoramento.objects.filter(
+                neurodivergente=neurodivergente,
+                mes=mes,
+                ano=ano
+            ).exclude(pk=self.instance.pk if self.instance else None).exists():
+                raise forms.ValidationError(
+                    'Já existe um PEI para este aluno neste mês/ano.'
+                )
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        if commit:
+            instance.save()
+            # Limpa as metas existentes e adiciona as novas
+            instance.metas.clear()
+            metas = self.cleaned_data.get('metas')
+            if metas:
+                for meta in metas:
+                    instance.monitoramento_metas.create(meta=meta)
+        
+        return instance
 
 class ParecerAvaliativoForm(forms.ModelForm):
     class Meta:

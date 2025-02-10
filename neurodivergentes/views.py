@@ -1,14 +1,20 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.conf import settings
+from weasyprint import HTML, CSS
+from .choices import MESES
 from django.urls import reverse
 from django.contrib import messages
 from datetime import datetime
-from weasyprint import HTML
-from django.urls import reverse
-from weasyprint import HTML
+from weasyprint import HTML, CSS
+from django.conf import settings
+from django.core.paginator import Paginator
+import os
+from .models import Neurodivergente, Monitoramento
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1093,3 +1099,198 @@ def evolucao_popup_view(request, evolucao_id):
     }
     
     return render(request, 'admin/neurodivergentes/registroevolucao/popup_view.html', context)
+
+@login_required
+def lista_pei(request, aluno_id):
+    """View para listar os PEIs de um aluno específico."""
+    aluno = get_object_or_404(Neurodivergente, id=aluno_id)
+    
+    # Obtém os filtros
+    mes = request.GET.get('mes')
+    ano = request.GET.get('ano')
+    
+    # Query base
+    peis = Monitoramento.objects.filter(neurodivergente=aluno)
+    
+    # Aplica os filtros
+    if mes:
+        peis = peis.filter(mes=mes)
+    if ano:
+        peis = peis.filter(ano=ano)
+    
+    # Ordenação
+    peis = peis.order_by('-ano', '-mes')
+    
+    # Paginação
+    paginator = Paginator(peis, 10)
+    page = request.GET.get('page')
+    peis = paginator.get_page(page)
+    
+    # Lista de meses para o filtro
+    meses = MESES
+    
+    # Lista de anos (do mais recente para o mais antigo)
+    anos = sorted(set(Monitoramento.objects.filter(
+        neurodivergente=aluno).values_list('ano', flat=True)
+    ), reverse=True)
+    
+    context = {
+        'aluno': aluno,
+        'peis': peis,
+        'meses': meses,
+        'anos': anos,
+        'mes_selecionado': int(mes) if mes else None,
+        'ano_selecionado': int(ano) if ano else None,
+    }
+    
+    return render(request, 'neurodivergentes/pei_list.html', context)
+
+@login_required
+def pei_popup_view(request, pei_id):
+    """View para exibir o popup com detalhes do PEI"""
+    pei = get_object_or_404(
+        Monitoramento.objects.select_related(
+            'neurodivergente',
+            'pedagogo_responsavel'
+        ).prefetch_related('metas'),
+        id=pei_id
+    )
+    
+    context = {
+        'pei': pei,
+        'aluno': pei.neurodivergente
+    }
+    
+    return render(request, 'neurodivergentes/pei_detail.html', context)
+
+@login_required
+def imprimir_pei(request, pei_id):
+    """View para imprimir um PEI individual em PDF"""
+    pei = get_object_or_404(
+        Monitoramento.objects.select_related(
+            'neurodivergente',
+            'pedagogo_responsavel'
+        ).prefetch_related('metas'),
+        id=pei_id
+    )
+    
+    context = {
+        'pei': pei,
+        'aluno': pei.neurodivergente,
+        'data_impressao': timezone.now(),
+        'request': request
+    }
+    
+    # Configura o CSS com as fontes
+    css_string = '''
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: bold;
+        }
+    ''' % (
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+    )
+    
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/pei_detail.html', context, request=request)
+    
+    # Cria o PDF
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    css = CSS(string=css_string)
+    pdf = html.write_pdf(
+        stylesheets=[css],
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=pei_{pei.id}.pdf'
+    
+    return response
+
+@login_required
+def gerar_relatorio_pei_pdf(request, neurodivergente_id):
+    """View para gerar o relatório geral de PEIs em PDF"""
+    # Obtém os filtros
+    mes_inicial = request.GET.get('mes_inicial')
+    mes_final = request.GET.get('mes_final')
+    ano = request.GET.get('ano')
+    
+    if not mes_inicial or not mes_final or not ano:
+        messages.error(request, 'Por favor, selecione o mês inicial, mês final e ano para gerar o relatório.')
+        return redirect('neurodivergentes:lista_pei', neurodivergente_id=neurodivergente_id)
+    
+    # Converte para inteiros para comparação
+    mes_inicial = int(mes_inicial)
+    mes_final = int(mes_final)
+    
+    if mes_final < mes_inicial:
+        messages.error(request, 'O mês final deve ser maior ou igual ao mês inicial.')
+        return redirect('neurodivergentes:lista_pei', neurodivergente_id=neurodivergente_id)
+    
+    neurodivergente = get_object_or_404(Neurodivergente, id=neurodivergente_id)
+    
+    # Filtra os PEIs pelo período
+    peis = Monitoramento.objects.filter(
+        neurodivergente=neurodivergente,
+        mes__gte=mes_inicial,
+        mes__lte=mes_final,
+        ano=ano
+    ).select_related(
+        'pedagogo_responsavel'
+    ).prefetch_related(
+        'metas'
+    ).order_by('mes')
+    
+    if not peis.exists():
+        messages.warning(request, 'Nenhum PEI encontrado no período selecionado.')
+        return redirect('neurodivergentes:lista_pei', neurodivergente_id=neurodivergente_id)
+    
+    context = {
+        'aluno': neurodivergente,
+        'peis': peis,
+        'periodo': f"{dict(MESES)[mes_inicial]} a {dict(MESES)[mes_final]} de {ano}",
+        'data_impressao': timezone.now()
+    }
+    
+    # Configura o CSS com as fontes
+    css_string = '''
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: bold;
+        }
+    ''' % (
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+    )
+    
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/relatorio_pei_geral.html', context)
+    
+    # Cria o PDF
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    html = HTML(string=html_string, base_url=base_url)
+    css = CSS(string=css_string)
+    pdf = html.write_pdf(
+        stylesheets=[css],
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=relatorio_pei_{neurodivergente.id}.pdf'
+    
+    return response

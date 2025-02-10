@@ -41,11 +41,34 @@ INSTALLED_APPS = [
     'profissionais_app',
     'escola',
     'neurodivergentes',
+    'ckeditor',
 ]
 
 LOGIN_REDIRECT_URL = '/admin/'
 LOGIN_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# CKEditor settings
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': [
+            ['Bold', 'Italic', 'Underline'],
+            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['NumberedList', 'BulletedList'],
+            ['Undo', 'Redo'],
+        ],
+        'height': 300,
+        'width': '100%',
+        'removePlugins': 'elementspath,resize',
+        'toolbarCanCollapse': False,
+        'contentsCss': ['body { margin: 10px; }'],
+        'enterMode': 2,  # CKEDITOR.ENTER_BR
+        'shiftEnterMode': 1,  # CKEDITOR.ENTER_P
+        'extraPlugins': 'autogrow',
+        'autoGrow_minHeight': 300,
+        'autoGrow_maxHeight': 600,
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

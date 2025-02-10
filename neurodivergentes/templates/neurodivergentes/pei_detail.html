@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PEI - {{ aluno.nome_completo }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.5;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: #3498db;
+            color: white;
+            padding: 2em;
+            margin: -1.5cm -1.5cm 2em -1.5cm;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .header h2 {
+            margin: 10px 0 5px;
+            font-size: 20px;
+            font-weight: normal;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+        .pei-section {
+            background: white;
+            margin-bottom: 2em;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+        }
+        .pei-title {
+            background: #f8f9fa;
+            padding: 1em;
+            border-bottom: 2px solid #e1e8ed;
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .pei-content {
+            padding: 1.5em;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 1.5em;
+            gap: 2em;
+        }
+        .info-col {
+            flex: 1;
+        }
+        .section-title {
+            color: #3498db;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            text-transform: uppercase;
+        }
+        .section-content {
+            font-size: 14px;
+            color: #34495e;
+        }
+        .meta-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em;
+        }
+        .meta-item {
+            background: #f8f9fa;
+            padding: 0.5em 1em;
+            border-radius: 3px;
+            border-left: 3px solid #3498db;
+            font-size: 13px;
+        }
+        .observacoes {
+            background: #f8f9fa;
+            padding: 1em;
+            border-radius: 4px;
+            margin-top: 0.5em;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .footer {
+            margin-top: 2em;
+            padding-top: 1em;
+            border-top: 1px solid #e1e8ed;
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Plano Educacional Individualizado</h1>
+        <h2>{{ aluno.nome_completo }}</h2>
+        <p>Planejamento {{ pei.get_mes_display }}/{{ pei.ano }}</p>
+    </div>
+
+    <div class="pei-section">
+        <h3 class="pei-title">PEI - {{ pei.get_mes_display }}/{{ pei.ano }}</h3>
+        <div class="pei-content">
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Profissional Responsável</div>
+                    <div class="section-content">{{ pei.pedagogo_responsavel|default:"Não atribuído" }}</div>
+                </div>
+                
+                <div class="info-col">
+                    <div class="section-title">Metas/Habilidades</div>
+                    <div class="meta-list">
+                        {% for meta in pei.metas.all %}
+                        <div class="meta-item">{{ meta.nome }}</div>
+                        {% empty %}
+                        <div class="meta-item">Nenhuma meta registrada</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pei-section">
+        <h3 class="pei-title">Planejamento</h3>
+        <div class="pei-content">
+            <div class="observacoes">
+                {{ pei.observacoes|safe|default:"Nenhuma observação registrada" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Data de Impressão: {{ data_impressao|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>
