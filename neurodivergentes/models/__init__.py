@@ -7,7 +7,8 @@ from .neurodivergencias import (
 )
 from .anamnese import Anamnese, Medicacao, RotinaAtividade
 from .pdi import PDI, PlanoEducacional, AdaptacaoCurricular
-from .evolucao import RegistroEvolucao, Monitoramento
+from .evolucao import RegistroEvolucao
+from .pei import Monitoramento
 from .parecer import ParecerAvaliativo
 from .meta_habilidade import MetaHabilidade, PDIMetaHabilidade
 from escola.models import ModalidadeEnsino, ProgramaEducacional, Recurso, Escola

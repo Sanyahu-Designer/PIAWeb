@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'profissionais_app',
     'escola',
     'neurodivergentes',
-    'ckeditor',
+    'django_ckeditor_5',
 ]
 
 LOGIN_REDIRECT_URL = '/admin/'
@@ -49,26 +49,25 @@ LOGIN_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # CKEditor settings
-CKEDITOR_CONFIGS = {
+# Django CKEditor 5 settings
+CUSTOMIZE_CKEDITOR_5_CONFIGS = {
     'default': {
-        'toolbar': [
+        'toolbar': ['bold', 'italic', 'underline',
+                   '|', 'bulletedList', 'numberedList',
+                   '|', 'alignment',
+                   '|', 'undo', 'redo'],
+        'height': '300px',
+        'width': '100%',
+        'removePlugins': ['elementspath', 'resize'],
+        'toolbar_Basic': [
             ['Bold', 'Italic', 'Underline'],
-            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
             ['NumberedList', 'BulletedList'],
             ['Undo', 'Redo'],
         ],
-        'height': 300,
-        'width': '100%',
-        'removePlugins': 'elementspath,resize',
-        'toolbarCanCollapse': False,
-        'contentsCss': ['body { margin: 10px; }'],
-        'enterMode': 2,  # CKEDITOR.ENTER_BR
-        'shiftEnterMode': 1,  # CKEDITOR.ENTER_P
-        'extraPlugins': 'autogrow',
-        'autoGrow_minHeight': 300,
-        'autoGrow_maxHeight': 600,
-    },
+    }
 }
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -178,6 +177,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configuração para servir arquivos de mídia em produção
 FILE_UPLOAD_PERMISSIONS = 0o644
+
+# CKEditor 5 settings (mantendo as mesmas funcionalidades do CKEditor 4)
+CUSTOMIZE_CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': ['bold', 'italic', 'underline',
+                   '|', 'bulletedList', 'numberedList',
+                   '|', 'alignment',
+                   '|', 'undo', 'redo'],
+        'height': '300px',
+        'width': '100%',
+    }
+}
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
