@@ -61,7 +61,7 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
     form = NeurodivergenteForms
     inlines = [GrupoFamiliarInline]
     readonly_fields = ['foto_preview']
-    list_display = ['primeiro_nome', 'ultimo_nome', 'idade', 'cidade', 'estado', 'ver_evolucoes']
+    list_display = ['primeiro_nome', 'ultimo_nome', 'idade', 'cidade', 'estado']
     list_filter = ['estado', 'genero']
     search_fields = ['primeiro_nome', 'ultimo_nome', 'cpf']
     formfield_overrides = {
@@ -97,10 +97,6 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
         })
     )
 
-    def ver_evolucoes(self, obj):
-        url = reverse('admin:neurodivergentes_evolucao_list', args=[obj.id])
-        return mark_safe(f'<a href="{url}" class="button">Ver Evoluções</a>')
-    ver_evolucoes.short_description = 'Evoluções'
 
     class Media:
         css = {
