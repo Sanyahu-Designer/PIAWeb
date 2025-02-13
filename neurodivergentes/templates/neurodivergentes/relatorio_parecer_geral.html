@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Relatório Geral de Pareceres - {{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</title>
+    <style>
+    /* Estilos gerais */
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Cabeçalho */
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #4e73df;
+        padding-bottom: 20px;
+    }
+
+    .header h1 {
+        color: #4e73df;
+        margin: 0 0 10px 0;
+        font-size: 24px;
+    }
+
+    .header h2 {
+        color: #2e59d9;
+        margin: 0 0 10px 0;
+        font-size: 20px;
+    }
+
+    /* Seções */
+    .parecer-section {
+        margin-bottom: 30px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .parecer-title {
+        background-color: #4e73df;
+        color: white;
+        margin: 0;
+        padding: 15px 20px;
+        font-size: 18px;
+    }
+
+    .parecer-content {
+        padding: 20px;
+    }
+
+    /* Linhas de informação */
+    .info-row {
+        display: flex;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .info-col {
+        flex: 1;
+        min-width: 250px;
+        margin-right: 20px;
+        margin-bottom: 15px;
+    }
+
+    .section-title {
+        font-weight: bold;
+        color: #4e73df;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+
+    .section-content {
+        font-size: 16px;
+    }
+
+    .evolucao {
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.6;
+        background-color: #f8f9fc;
+        padding: 15px;
+        border-radius: 4px;
+    }
+
+    .empty-message {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 20px;
+    }
+
+
+    @page {
+        size: A4;
+        margin: 1.5cm;
+    }
+    body {
+        font-family: 'Roboto', Arial, sans-serif;
+        line-height: 1.5;
+        color: #2c3e50;
+        margin: 0;
+        padding: 0;
+    }
+    .header {
+        background: #3498db;
+        color: white;
+        padding: 2em;
+        margin: -1.5cm -1.5cm 2em -1.5cm;
+        text-align: center;
+    }
+    .header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .header h2 {
+        margin: 15px 0 10px;
+        font-size: 22px;
+        font-weight: normal;
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .header p {
+        margin: 5px 0 0;
+        font-size: 16px;
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .header .data-geracao {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #ffffff;
+        opacity: 0.9;
+    }
+    .parecer-section {
+        background: white;
+        margin-bottom: 2em;
+        border: 1px solid #e1e8ed;
+        border-radius: 4px;
+        page-break-inside: avoid;
+    }
+    .parecer-title {
+        background: #f8f9fa;
+        padding: 1em;
+        border-bottom: 2px solid #e1e8ed;
+        margin: 0;
+        font-size: 16px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .parecer-content {
+        padding: 1.5em;
+    }
+    .info-row {
+        display: flex;
+        margin-bottom: 1.5em;
+        gap: 2em;
+    }
+    .info-col {
+        flex: 1;
+    }
+    .section-title {
+        color: #3498db;
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 0.5em;
+        text-transform: uppercase;
+    }
+    .section-content {
+        font-size: 14px;
+        color: #34495e;
+    }
+    .evolucao {
+        background: #f8f9fa;
+        padding: 1em;
+        border-radius: 4px;
+        margin-top: 0.5em;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+    .footer {
+        position: running(footer);
+        text-align: center;
+        font-size: 12px;
+        color: #718096;
+        padding: 1em 0;
+        border-top: 1px solid #e1e8ed;
+    }
+    @media print {
+        .parecer-section {
+            page-break-inside: avoid;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>Relatório Geral de Pareceres</h1>
+        <h2>{{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</h2>
+        <p>Período: {{ periodo.inicio }} a {{ periodo.fim }}</p>
+        <p class="data-geracao">Gerado em: {{ data_impressao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <!-- Informações do Aluno -->
+    <div class="parecer-section">
+        <h3 class="parecer-title">Informações do Aluno</h3>
+        <div class="parecer-content">
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Nome Completo</div>
+                    <div class="section-content">{{ neurodivergente.primeiro_nome }} {{ neurodivergente.ultimo_nome }}</div>
+                </div>
+                <div class="info-col">
+                    <div class="section-title">Data de Nascimento</div>
+                    <div class="section-content">{{ neurodivergente.data_nascimento|date:"d/m/Y" }}</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Diagnósticos</div>
+                    <div class="section-content">
+                        {% for diagnostico in diagnosticos %}
+                            {{ diagnostico.condicao.nome }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo dos Pareceres -->
+    <div class="parecer-section">
+        <h3 class="parecer-title">Resumo dos Pareceres</h3>
+        <div class="parecer-content">
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Total de Pareceres no Período</div>
+                    <div class="section-content">{{ total_pareceres }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Pareceres -->
+    {% for parecer in pareceres %}
+    <div class="parecer-section">
+        <h3 class="parecer-title">Parecer - {{ parecer.data_avaliacao|date:"d/m/Y" }}</h3>
+        <div class="parecer-content">
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Profissional Responsável</div>
+                    <div class="section-content">{% if parecer.profissional_responsavel %}{{ parecer.profissional_responsavel.user.first_name }} {{ parecer.profissional_responsavel.user.last_name }}{% else %}Não informado{% endif %}</div>
+                </div>
+                <div class="info-col">
+                    <div class="section-title">Escola</div>
+                    <div class="section-content">{% if parecer.escola %}{{ parecer.escola.nome }}{% else %}Não informada{% endif %}</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Parecer Descritivo</div>
+                    <div class="evolucao">{% if parecer.evolucao %}{{ parecer.evolucao|linebreaks }}{% else %}Em atualização{% endif %}</div>
+                </div>
+            </div>
+
+            {% if parecer.anexos %}
+            <div class="info-row">
+                <div class="info-col">
+                    <div class="section-title">Anexos</div>
+                    <div class="section-content">
+                        <i class="fas fa-paperclip"></i> Possui anexos
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="parecer-section">
+        <div class="parecer-content">
+            <p class="empty-message">Nenhum parecer encontrado no período selecionado.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

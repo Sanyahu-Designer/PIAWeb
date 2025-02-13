@@ -1,0 +1,147 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Parecer - {{ parecer.neurodivergente }}</title>
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c5282;
+            padding-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+        
+        .section h3 {
+            color: #2c5282;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #4a5568;
+            min-width: 200px;
+            display: inline-block;
+        }
+        
+        .info-value {
+            display: inline-block;
+        }
+        
+        .evolucao {
+            white-space: pre-wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f7fafc;
+            border-radius: 4px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="no-print" style="position: fixed; top: 20px; right: 20px; padding: 10px; background: #2c5282; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        <i class="fas fa-print"></i> Imprimir
+    </button>
+
+    <div class="header">
+        <h1 style="color: #2c5282; margin-bottom: 10px;">Parecer Avaliativo</h1>
+        <h2 style="color: #4a5568; margin-top: 0;">{{ parecer.neurodivergente }}</h2>
+        <p style="color: #718096;">Data de Impressão: {{ data_impressao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <div class="section">
+        <h3>Informações Gerais</h3>
+        <div class="info-item">
+            <span class="info-label">Idade:</span>
+            <span class="info-value">{{ parecer.idade }} anos</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Escola:</span>
+            <span class="info-value">{{ parecer.escola }}</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Informações do Parecer</h3>
+        <div class="info-item">
+            <span class="info-label">Data do Parecer:</span>
+            <span class="info-value">{{ parecer.data_avaliacao|date:"d/m/Y" }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Profissional Responsável:</span>
+            <span class="info-value">{{ parecer.profissional_responsavel|default:"-" }}</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Parecer Descritivo</h3>
+        <div class="evolucao">
+            {{ parecer.evolucao|linebreaks }}
+        </div>
+    </div>
+
+    {% if parecer.anexos %}
+    <div class="section">
+        <h3>Anexos</h3>
+        <div class="info-item">
+            <span class="info-value">{{ parecer.anexos.name|cut:"neurodivergentes/pareceres/" }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Documento gerado em {{ data_impressao|date:"d/m/Y" }} às {{ data_impressao|date:"H:i" }}</p>
+    </div>
+</body>
+</html>

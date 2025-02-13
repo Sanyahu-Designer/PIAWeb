@@ -18,7 +18,10 @@ from .views import (
     lista_evolucao,
     evolucao_popup_view,
     imprimir_evolucao,
-    gerar_relatorio_evolucao_html
+    gerar_relatorio_evolucao_html,
+    imprimir_parecer,
+    gerar_relatorio_parecer_pdf,
+    gerar_relatorio_parecer_geral_pdf
 )
 from .admin_views import ParecerGraficosView
 from .graficos_parecer import dados_graficos_parecer
@@ -27,6 +30,15 @@ from .graficos_parecer import dados_graficos_parecer
 app_name = 'neurodivergentes'
 
 urlpatterns = [
+    path('parecer/<int:parecer_id>/imprimir/',
+         imprimir_parecer,
+         name='imprimir_parecer'),
+    path('relatorio-parecer/<int:neurodivergente_id>/',
+         gerar_relatorio_parecer_pdf,
+         name='gerar_relatorio_parecer_pdf'),
+    path('relatorio-parecer-geral-pdf/<int:neurodivergente_id>/',
+         gerar_relatorio_parecer_geral_pdf,
+         name='gerar_relatorio_parecer_geral_pdf'),
     path('parecer/<int:parecer_id>/graficos/', 
          ParecerGraficosView.as_view(), 
          name='parecer_graficos'),

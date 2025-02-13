@@ -677,10 +677,61 @@ class ParecerAvaliativoAdminForm(forms.ModelForm):
 @admin.register(ParecerAvaliativo)
 class ParecerAvaliativoAdmin(admin.ModelAdmin):
     form = ParecerAvaliativoAdminForm
-    list_display = ['neurodivergente', 'idade', 'escola', 'data_avaliacao', 'tem_anexos']
-    readonly_fields = ['idade', 'ver_graficos']
-    list_filter = ['data_avaliacao', 'escola']
+    list_display = ['get_aluno_nome', 'get_total_pareceres', 'get_ultimo_parecer', 'get_view_button']
+    list_filter = ['neurodivergente']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
+    list_per_page = 20
+    readonly_fields = ['idade', 'ver_graficos']
+    
+    class Media:
+        css = {
+            'all': (
+                'css/filtro_data.css',
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+            )
+        }
+        js = ('js/filtro_data.js',)
+
+    def get_list_display(self, request):
+        if 'neurodivergente__id__exact' in request.GET:
+            # Visualização de pareceres do aluno específico
+            return ['get_aluno_nome', 'get_profissional', 'get_data_parecer', 'tem_anexos', 'get_acoes']
+        # Visualização agrupada por aluno
+        return ['get_aluno_nome', 'get_total_pareceres', 'get_ultimo_parecer', 'get_view_button']
+        
+    def get_acoes(self, obj):
+        if not obj.pk:
+            return '-'
+        
+        # Botão de relatório individual
+        url_relatorio = reverse('neurodivergentes:imprimir_parecer', args=[obj.pk])
+        botao_individual = f'''
+            <a href="{url_relatorio}" 
+               target="_blank" 
+               title="Gerar Relatório Individual"
+               style="display: inline-block; 
+                      padding: 6px 12px; 
+                      background-color: #4e73df; 
+                      color: white; 
+                      border-radius: 4px; 
+                      text-decoration: none; 
+                      font-size: 13px;">
+                <i class="fas fa-file-pdf" style="margin-right: 5px;"></i>
+                Relatório Individual
+            </a>
+        '''
+        
+        return format_html(botao_individual)
+    get_acoes.short_description = 'Ações'
+    get_acoes.allow_tags = True
+    
+    def get_profissional(self, obj):
+        return obj.profissional_responsavel or '-'
+    get_profissional.short_description = 'Profissional Responsável'
+    
+    def get_data_parecer(self, obj):
+        return obj.data_avaliacao.strftime('%d/%m/%Y') if obj.data_avaliacao else '-'
+    get_data_parecer.short_description = 'Data do Parecer'
     
     fieldsets = [
         (None, {
@@ -689,18 +740,130 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
                 'idade',
                 'escola', 
                 'data_avaliacao',
+                'profissional_responsavel',
                 'ver_graficos',
                 'evolucao',
-                'profissional_responsavel',
                 'anexos'
             ]
         })
     ]
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if 'neurodivergente__id__exact' in request.GET:
+            return queryset
+        
+        # Pega o último parecer de cada aluno usando uma abordagem mais simples
+        from django.db.models import Max
+        latest_dates = ParecerAvaliativo.objects.values('neurodivergente').annotate(
+            max_data=Max('data_avaliacao')
+        )
+        
+        latest_pareceres = []
+        for item in latest_dates:
+            parecer = ParecerAvaliativo.objects.filter(
+                neurodivergente_id=item['neurodivergente'],
+                data_avaliacao=item['max_data']
+            ).first()
+            if parecer:
+                latest_pareceres.append(parecer.id)
+        
+        return queryset.filter(id__in=latest_pareceres).order_by('neurodivergente__primeiro_nome')
+
+    def get_object(self, request, object_id, from_field=None):
+        queryset = ParecerAvaliativo.objects.filter(pk=object_id)
+        return queryset.get()
+
+    def get_aluno_nome(self, obj):
+        if 'neurodivergente__id__exact' in self.request.GET:
+            return obj.neurodivergente.nome_completo
+        url = f'{reverse("admin:neurodivergentes_pareceravaliativo_changelist")}?neurodivergente__id__exact={obj.neurodivergente.id}'
+        return format_html('<a href="{}">{}</a>', url, obj.neurodivergente.nome_completo)
+    get_aluno_nome.short_description = 'Aluno/Paciente'
+    get_aluno_nome.admin_order_field = 'neurodivergente__primeiro_nome'
+
+    def get_total_pareceres(self, obj):
+        return ParecerAvaliativo.objects.filter(neurodivergente=obj.neurodivergente).count()
+    get_total_pareceres.short_description = 'Total de Pareceres'
+
+    def get_ultimo_parecer(self, obj):
+        ultimo = ParecerAvaliativo.objects.filter(
+            neurodivergente=obj.neurodivergente
+        ).order_by('-data_avaliacao').first()
+        return ultimo.data_avaliacao.strftime('%d/%m/%Y') if ultimo else '-'
+    get_ultimo_parecer.short_description = 'Último Parecer'
+
+    def get_view_button(self, obj):
+        if 'neurodivergente__id__exact' in self.request.GET:
+            return ''
+        url = f'{reverse("admin:neurodivergentes_pareceravaliativo_changelist")}?neurodivergente__id__exact={obj.neurodivergente.id}'
+        return format_html(
+            '<a class="button" href="{}" style="white-space:nowrap;">' 
+            '<i class="fas fa-eye"></i> Ver Pareceres</a>', 
+            url
+        )
+        
+        return format_html(''.join(botoes)) + format_html(
+            '<a class="button" href="{}" style="white-space:nowrap;">' 
+            '<i class="fas fa-eye"></i> Ver Pareceres</a>', 
+            url
+        )
+    get_view_button.short_description = 'Ações'
+
+    def changelist_view(self, request, extra_context=None):
+        self.request = request
+        
+        # Adiciona botão de relatório geral no topo se estiver na lista de pareceres de um aluno
+        if 'neurodivergente__id__exact' in request.GET:
+            neurodivergente_id = request.GET['neurodivergente__id__exact']
+            url_relatorio_geral = reverse('neurodivergentes:gerar_relatorio_parecer_geral_pdf', args=[neurodivergente_id])
+            
+            # Botão de relatório geral
+            botao_geral = f'''
+                <a href="javascript:void(0);" 
+                   onclick="FiltroData.abrirModalFiltroData('{url_relatorio_geral}');"
+                   class="addlink"
+                   style="margin-left: 5px;">
+                    <i class="fas fa-file-alt" style="margin-right: 5px;"></i>
+                    Relatório Geral
+                </a>
+            '''
+            
+            # Modal de filtro de data
+            modal_filtro = '''
+                <div id="modal-filtro-data" class="modal-filtro" style="display: none;">
+                    <div class="modal-content">
+                        <h2>Selecione o Período</h2>
+                        <form id="form-filtro-data">
+                            <div class="form-group">
+                                <label for="data_inicial">Data Inicial:</label>
+                                <input type="date" id="data_inicial" name="data_inicial" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="data_final">Data Final:</label>
+                                <input type="date" id="data_final" name="data_final" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" onclick="FiltroData.fecharModalFiltroData()" class="closelink">Cancelar</button>
+                                <button type="button" onclick="FiltroData.gerarRelatorio()" class="default">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            '''
+            
+            if not extra_context:
+                extra_context = {}
+            
+            extra_context['additional_buttons'] = format_html(botao_geral)
+            extra_context['modal_filtro'] = format_html(modal_filtro)
+        
+        return super().changelist_view(request, extra_context)
+
     def ver_graficos(self, obj):
         if obj and obj.pk:
             return format_html(
-                '<a class="button" href="{}" target="_blank" style="margin-bottom: 10px;">'
+                '<a class="button" href="{}" target="_blank" style="margin-bottom: 10px;">' 
                 '<i class="fas fa-chart-bar"></i> Ver Gráficos</a>',
                 reverse('neurodivergentes:parecer_graficos', args=[obj.pk])
             )

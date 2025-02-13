@@ -1216,6 +1216,279 @@ def imprimir_pei(request, pei_id):
     return response
 
 @login_required
+def gerar_relatorio_parecer_pdf(request, neurodivergente_id):
+    """View para gerar o relatório geral de pareceres em PDF"""
+    # Obtém os filtros
+    data_inicial = request.GET.get('data_inicial')
+    data_final = request.GET.get('data_final')
+    
+    if not data_inicial or not data_final:
+        messages.error(request, 'Por favor, selecione um período para gerar o relatório.')
+        return HttpResponseRedirect(reverse('admin:neurodivergentes_pareceravaliativo_changelist') + f'?neurodivergente__id__exact={neurodivergente_id}')
+    
+    # Converte as datas para datetime
+    try:
+        data_inicial_dt = datetime.strptime(data_inicial + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
+        data_final_dt = datetime.strptime(data_final + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+    except Exception as date_error:
+        logger.error(f"Erro ao converter datas: {str(date_error)}")
+        messages.error(request, 'Formato de data inválido.')
+        return HttpResponseRedirect(reverse('admin:neurodivergentes_pareceravaliativo_changelist') + f'?neurodivergente__id__exact={neurodivergente_id}')
+    
+    # Busca o neurodivergente
+    neurodivergente = get_object_or_404(Neurodivergente, id=neurodivergente_id)
+    
+    # Filtra os pareceres pelo período
+    pareceres = ParecerAvaliativo.objects.filter(
+        neurodivergente=neurodivergente,
+        data_avaliacao__gte=data_inicial_dt,
+        data_avaliacao__lte=data_final_dt
+    ).select_related(
+        'profissional_responsavel'
+    ).order_by('data_avaliacao')
+    
+    if not pareceres.exists():
+        messages.warning(request, 'Nenhum parecer encontrado no período selecionado.')
+        return HttpResponseRedirect(reverse('admin:neurodivergentes_pareceravaliativo_changelist') + f'?neurodivergente__id__exact={neurodivergente_id}')
+    
+    context = {
+        'aluno': neurodivergente,
+        'pareceres': pareceres,
+        'periodo': f"{data_inicial_dt.strftime('%d/%m/%Y')} a {data_final_dt.strftime('%d/%m/%Y')}",
+        'data_impressao': timezone.now()
+    }
+    
+    # Configura o CSS com as fontes
+    css_string = '''
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: bold;
+        }
+    ''' % (
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+    )
+    
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/relatorio_parecer_geral.html', context)
+    
+    # Cria o PDF
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    html = HTML(string=html_string, base_url=base_url)
+    css = CSS(string=css_string)
+    pdf = html.write_pdf(
+        stylesheets=[css],
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=relatorio_pareceres_{neurodivergente.id}.pdf'
+    
+    return response
+
+import logging
+from datetime import datetime
+from django.utils import timezone
+from django.urls import reverse
+from django.contrib import messages
+from django.db.models import Prefetch
+from weasyprint import HTML, CSS
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+@login_required
+def gerar_relatorio_parecer_geral_pdf(request, neurodivergente_id):
+    try:
+        # Obtém as datas do filtro
+        data_inicial = request.GET.get('data_inicial')
+        data_final = request.GET.get('data_final')
+        
+        logger.info(f"Parâmetros recebidos - data_inicial: {data_inicial}, data_final: {data_final}, neurodivergente_id: {neurodivergente_id}")
+        
+        if not data_inicial or not data_final:
+            logger.warning("Datas não fornecidas")
+            messages.error(request, 'Por favor, selecione um período para gerar o relatório.')
+            return redirect('admin:neurodivergentes_pareceravaliativo_changelist')
+        
+        # Converte as datas para datetime
+        try:
+            data_inicial_dt = datetime.strptime(data_inicial + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
+            data_final_dt = datetime.strptime(data_final + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+        except Exception as date_error:
+            logger.error(f"Erro ao converter datas: {str(date_error)}")
+            messages.error(request, 'Formato de data inválido.')
+            return redirect(f"{reverse('admin:neurodivergentes_pareceravaliativo_changelist')}?neurodivergente__id__exact={neurodivergente_id}")
+        
+        # Busca o neurodivergente com prefetch para otimizar
+        try:
+            neurodivergente = Neurodivergente.objects.prefetch_related(
+                'neurodivergencias',
+                Prefetch(
+                    'neurodivergencias__diagnosticos',
+                    queryset=DiagnosticoNeurodivergente.objects.select_related('condicao')
+                )
+            ).get(id=neurodivergente_id)
+            
+            if not neurodivergente:
+                logger.error(f"Neurodivergente não encontrado: {neurodivergente_id}")
+                messages.error(request, 'Aluno não encontrado.')
+                return redirect(f"{reverse('admin:neurodivergentes_pareceravaliativo_changelist')}?neurodivergente__id__exact={neurodivergente_id}")
+                
+        except Neurodivergente.DoesNotExist:
+            logger.error(f"Neurodivergente não encontrado: {neurodivergente_id}")
+            messages.error(request, 'Aluno não encontrado.')
+            return redirect(f"{reverse('admin:neurodivergentes_pareceravaliativo_changelist')}?neurodivergente__id__exact={neurodivergente_id}")
+        except Exception as neurodiv_error:
+            logger.error(f"Erro ao buscar neurodivergente: {str(neurodiv_error)}")
+            messages.error(request, 'Erro ao encontrar informações do aluno.')
+            return redirect(f"{reverse('admin:neurodivergentes_pareceravaliativo_changelist')}?neurodivergente__id__exact={neurodivergente_id}")
+        
+        # Busca pareceres no período com todos os relacionamentos necessários
+        pareceres = ParecerAvaliativo.objects.filter(
+            neurodivergente=neurodivergente,
+            data_avaliacao__range=(data_inicial_dt, data_final_dt)
+        ).select_related(
+            'profissional_responsavel__user',  # Inclui o usuário do profissional
+            'escola'
+        ).order_by('data_avaliacao')
+        
+        # Busca neurodivergências e diagnósticos
+        try:
+            neurodivergencias = Neurodivergencia.objects.filter(
+                neurodivergente=neurodivergente
+            ).prefetch_related('diagnosticos__condicao')
+            logger.info(f"Neurodivergências encontradas: {neurodivergencias.count()}")
+        except Exception as neurodiv_error:
+            logger.error(f"Erro ao buscar neurodivergências: {str(neurodiv_error)}")
+            neurodivergencias = []
+        
+        # Busca diagnósticos
+        try:
+            diagnosticos = DiagnosticoNeurodivergente.objects.filter(
+                neurodivergencia__neurodivergente=neurodivergente
+            ).select_related('condicao')
+            logger.info(f"Diagnósticos encontrados: {diagnosticos.count()}")
+        except Exception as diag_error:
+            logger.error(f"Erro ao buscar diagnósticos: {str(diag_error)}")
+            diagnosticos = []
+        
+        # Prepara contexto com todos os dados
+        context = {
+            'neurodivergente': neurodivergente,
+            'neurodivergencias': neurodivergencias,
+            'pareceres': pareceres,
+            'diagnosticos': diagnosticos,
+            'periodo': {
+                'inicio': datetime.strptime(data_inicial, '%Y-%m-%d').strftime('%d/%m/%Y'),
+                'fim': datetime.strptime(data_final, '%Y-%m-%d').strftime('%d/%m/%Y')
+            },
+            'total_pareceres': pareceres.count(),
+            'data_impressao': timezone.now()
+        }
+        
+        # Log de diagnóstico
+        logger.info(f"Dados do relatório - Pareceres: {pareceres.count()}")
+        
+        # Configura o CSS com as fontes
+        css_string = '''
+            @font-face {
+                font-family: 'Roboto';
+                src: url('%s') format('truetype');
+                font-weight: normal;
+            }
+            @font-face {
+                font-family: 'Roboto';
+                src: url('%s') format('truetype');
+                font-weight: bold;
+            }
+        ''' % (
+            os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+            os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+        )
+        
+        # Renderiza o template HTML
+        html_string = render_to_string('neurodivergentes/relatorio_parecer_geral.html', context)
+        
+        # Cria o PDF
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        html = HTML(string=html_string, base_url=base_url)
+        css = CSS(string=css_string)
+        pdf = html.write_pdf(
+            stylesheets=[css],
+            presentational_hints=True
+        )
+        
+        try:
+            # Retorna o PDF como resposta HTTP para visualização no navegador
+            response = HttpResponse(pdf, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename=relatorio_pareceres_{neurodivergente.id}.pdf'
+            
+            return response
+        except Exception as pdf_error:
+            logger.error(f"Erro ao gerar PDF: {str(pdf_error)}", exc_info=True)
+            messages.error(request, 'Erro ao gerar o PDF do relatório.')
+            return redirect(f"{reverse('admin:neurodivergentes_pareceravaliativo_changelist')}?neurodivergente__id__exact={neurodivergente_id}")
+    
+    except Exception as e:
+        # Log de erro detalhado
+        logger.error(f"Erro inesperado ao gerar relatório HTML: {str(e)}", exc_info=True)
+        messages.error(request, 'Erro ao gerar o relatório. Por favor, tente novamente.')
+        return redirect(f"{reverse('admin:neurodivergentes_pareceravaliativo_changelist')}?neurodivergente__id__exact={neurodivergente_id}")
+
+@login_required
+def imprimir_parecer(request, parecer_id):
+    """View para gerar o relatório individual do parecer em PDF"""
+    parecer = get_object_or_404(ParecerAvaliativo, id=parecer_id)
+    
+    context = {
+        'parecer': parecer,
+        'data_impressao': timezone.now()
+    }
+    
+    # Configura o CSS com as fontes
+    css_string = '''
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: bold;
+        }
+    ''' % (
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+    )
+    
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/relatorio_parecer.html', context)
+    
+    # Cria o PDF
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    html = HTML(string=html_string, base_url=base_url)
+    css = CSS(string=css_string)
+    pdf = html.write_pdf(
+        stylesheets=[css],
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=parecer_{parecer.id}.pdf'
+    
+    return response
+
+@login_required
 def gerar_relatorio_pei_pdf(request, neurodivergente_id):
     """View para gerar o relatório geral de PEIs em PDF"""
     # Obtém os filtros
