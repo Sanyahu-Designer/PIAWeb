@@ -1,25 +1,33 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from ..models import Neurodivergente
 from escola.models import Escola
+from profissionais_app.models import Profissional
 
 class ParecerAvaliativo(models.Model):
     neurodivergente = models.ForeignKey(
         Neurodivergente,
         on_delete=models.CASCADE,
-        related_name='pareceres'
+        related_name='pareceres',
+        verbose_name='Aluno/Paciente'
     )
     escola = models.ForeignKey(
         Escola,
         on_delete=models.PROTECT,
         related_name='pareceres'
     )
-    data_avaliacao = models.DateField('Data da Avaliação')
-    evolucao = models.TextField('Descrição da Evolução')
-    pontos_fortes = models.TextField('Pontos Fortes Observados')
-    desafios = models.TextField('Desafios Identificados')
-    recomendacoes = models.TextField('Recomendações')
-    conclusoes = models.TextField('Conclusões')
+    evolucao = models.TextField('Parecer Descritivo')
+    data_avaliacao = models.DateField('Data do Parecer')
+    profissional_responsavel = models.ForeignKey(
+        Profissional,
+        on_delete=models.PROTECT,
+        related_name='pareceres_responsavel',
+        verbose_name='Profissional Responsável',
+        limit_choices_to={'profissao__in': ['educador_especial', 'pedagogo', 'psicopedagogo', 'neuropsicopedagogo']},
+        null=True,
+        blank=True
+    )
     anexos = models.FileField(
         'Anexos',
         upload_to='neurodivergentes/pareceres/',
@@ -36,6 +44,22 @@ class ParecerAvaliativo(models.Model):
 
     def __str__(self):
         return f"Parecer de {self.neurodivergente} - {self.data_avaliacao}"
+
+    @property
+    def idade(self):
+        """Calcula a idade do neurodivergente na data do parecer"""
+        if self.neurodivergente and self.neurodivergente.data_nascimento:
+            nascimento = self.neurodivergente.data_nascimento
+            data_ref = timezone.localdate()
+            idade = data_ref.year - nascimento.year
+            # Ajusta a idade se ainda não fez aniversário no ano
+            if data_ref.month < nascimento.month or \
+               (data_ref.month == nascimento.month and data_ref.day < nascimento.day):
+                idade -= 1
+            return idade
+        return None
+
+    idade.fget.short_description = 'Idade'
 
     def clean(self):
         # Verificar se a escola está ativa

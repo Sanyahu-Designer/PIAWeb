@@ -1,0 +1,427 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+#content {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 15px !important;
+    box-sizing: border-box;
+}
+
+#content-main {
+    width: 100% !important;
+}
+
+.graficos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.grafico-box {
+    height: 500px;
+    padding: 40px 60px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.axis-label {
+    font-weight: 500;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.grafico-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.periodo-analise {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.periodo-analise label {
+    margin-right: 10px;
+}
+
+.periodo-analise input[type="date"] {
+    margin-right: 20px;
+}
+
+.periodo-analise button {
+    background: #79aec8;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.periodo-analise button:hover {
+    background: #417690;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>Gráficos do Parecer - {{ parecer.neurodivergente }}</h2>
+        
+        <div class="form-row">
+            <div>
+                <label for="data_inicio">Período de Análise:</label>
+                <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0;">
+                    <input type="date" id="data_inicio" name="data_inicio" class="vDateField">
+                    <span>até</span>
+                    <input type="date" id="data_fim" name="data_fim" class="vDateField">
+                    <input type="button" value="Atualizar Gráficos" onclick="atualizarGraficos()">
+                </div>
+            </div>
+        </div>
+
+        <div class="graficos-container">
+            <div class="grafico-box">
+                <h3>Frequência de Atendimento</h3>
+                <canvas id="graficoFrequencia"></canvas>
+            </div>
+
+            <div class="grafico-box">
+                <h3>Monitoramento PDI</h3>
+                <canvas id="graficoMonitoramento"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chartFrequencia = null;
+let chartMonitoramento = null;
+
+function criarGraficoFrequencia(dados) {
+    console.log('Criando gráfico de frequência com dados:', dados);
+    
+    try {
+        const canvas = document.getElementById('graficoFrequencia');
+        if (!canvas) {
+            throw new Error('Canvas graficoFrequencia não encontrado');
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Contexto 2d não disponível');
+        }
+        
+        if (chartFrequencia) {
+            console.log('Destruindo gráfico anterior');
+            chartFrequencia.destroy();
+        }
+        
+        chartFrequencia = new Chart(ctx, {
+            type: 'bar',
+            data: dados,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 20,
+                        right: 20,
+                        top: 30,
+                        bottom: 30
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        padding: 20,
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 13
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label === 'Atendimentos') {
+                                    return `Dias de atendimento: ${context.raw}`;
+                                }
+                                return `Média: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Quantidade em Dias',
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            },
+                            padding: {
+                                bottom: 25
+                            }
+                        },
+                        ticks: {
+                            padding: 12,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            drawBorder: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Mês/Ano',
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            },
+                            padding: {
+                                top: 25
+                            }
+                        },
+                        ticks: {
+                            padding: 12,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log('Gráfico de frequência criado com sucesso');
+    } catch (error) {
+        console.error('Erro ao criar gráfico de frequência:', error);
+        throw error;
+    }
+}
+
+function criarGraficoMonitoramento(dados) {
+    const ctx = document.getElementById('graficoMonitoramento').getContext('2d');
+    
+    if (chartMonitoramento) {
+        chartMonitoramento.destroy();
+    }
+    
+    chartMonitoramento = new Chart(ctx, {
+        type: 'line',
+        data: dados,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 20,
+                    right: 40,  // Aumentado para evitar corte dos pontos
+                    top: 30,
+                    bottom: 30
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    padding: 20,
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 13
+                        }
+                    }
+                },
+                tooltip: {
+                    padding: 12,
+                    callbacks: {
+                        title: function(context) {
+                            return dados.descricoes[context[0].dataIndex];
+                        },
+                        label: function(context) {
+                            return `Progresso: ${context.raw}%`;
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 6,  // Aumenta o tamanho dos pontos
+                    hoverRadius: 8  // Aumenta o tamanho no hover
+                },
+                line: {
+                    tension: 0.3  // Suaviza a linha
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Progresso (%)',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        },
+                        padding: {
+                            bottom: 25
+                        }
+                    },
+                    ticks: {
+                        padding: 12,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Metas/Habilidades',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        },
+                        padding: {
+                            top: 25
+                        }
+                    },
+                    ticks: {
+                        padding: 12,
+                        font: {
+                            size: 12
+                        },
+                        maxRotation: 45,  // Rotaciona os labels para melhor legibilidade
+                        minRotation: 45,
+                        autoSkip: false  // Não pula labels
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarGraficos() {
+    const dataInicio = document.getElementById('data_inicio').value;
+    const dataFim = document.getElementById('data_fim').value;
+    const aluno_id = '{{ parecer.neurodivergente.id }}';
+
+    if (!dataInicio || !dataFim) {
+        alert('Por favor, selecione o período de análise.');
+        return;
+    }
+
+    if (!aluno_id) {
+        console.error('ID do aluno não encontrado');
+        alert('Erro: ID do aluno não encontrado');
+        return;
+    }
+
+    console.log('Iniciando atualização dos gráficos...');
+    fetch(`/neurodivergentes/api/graficos-parecer/?aluno_id=${aluno_id}&data_inicio=${dataInicio}&data_fim=${dataFim}`)
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dados recebidos:', data);
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            if (!data.dados_frequencia?.datasets || !data.dados_monitoramento?.datasets) {
+                throw new Error('Formato de dados inválido recebido do servidor');
+            }
+            
+            // Garante que os valores booleanos estão corretos
+            data.dados_frequencia.datasets.forEach(dataset => {
+                if ('fill' in dataset) dataset.fill = Boolean(dataset.fill);
+            });
+            
+            data.dados_monitoramento.datasets.forEach(dataset => {
+                if ('fill' in dataset) dataset.fill = Boolean(dataset.fill);
+            });
+            
+            criarGraficoFrequencia(data.dados_frequencia);
+            criarGraficoMonitoramento(data.dados_monitoramento);
+            console.log('Gráficos atualizados com sucesso');
+        })
+        .catch(error => {
+            console.error('Erro ao atualizar gráficos:', error);
+            alert(`Erro ao atualizar os gráficos: ${error.message}`);
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando gráficos...');
+    
+    try {
+        const hoje = new Date();
+        const tresMesesAtras = new Date();
+        tresMesesAtras.setMonth(hoje.getMonth() - 3);
+        
+        const dataFim = hoje.toISOString().split('T')[0];
+        const dataInicio = tresMesesAtras.toISOString().split('T')[0];
+        
+        console.log('Definindo datas:', { dataInicio, dataFim });
+        
+        document.getElementById('data_fim').value = dataFim;
+        document.getElementById('data_inicio').value = dataInicio;
+        
+        console.log('Chamando atualizarGraficos()');
+        atualizarGraficos();
+    } catch (error) {
+        console.error('Erro na inicialização:', error);
+    }
+});
+
+// Garante que o código só é executado depois que o Chart.js estiver carregado
+window.onload = function() {
+    console.log('Window carregada, Chart.js disponível:', !!window.Chart);
+};
+</script>
+{% endblock %}

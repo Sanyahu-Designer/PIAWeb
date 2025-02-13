@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from .graficos_parecer import dados_graficos_parecer
 from .views import (
     lista_pei,
     pei_popup_view,
@@ -19,10 +20,17 @@ from .views import (
     imprimir_evolucao,
     gerar_relatorio_evolucao_html
 )
+from .admin_views import ParecerGraficosView
+from .graficos_parecer import dados_graficos_parecer
+
 
 app_name = 'neurodivergentes'
 
 urlpatterns = [
+    path('parecer/<int:parecer_id>/graficos/', 
+         ParecerGraficosView.as_view(), 
+         name='parecer_graficos'),
+    path('api/graficos-parecer/', dados_graficos_parecer, name='dados_graficos_parecer'),
     path('pdi/<int:pdi_id>/popup/', pdi_popup_view, name='pdi_popup_view'),
     path('relatorio/<int:neurodivergente_id>/', gerar_relatorio_pdf, name='gerar_relatorio_pdf'),
     path('relatorio-geral-html/<int:neurodivergente_id>/', gerar_relatorio_geral_html, name='gerar_relatorio_geral_html'),

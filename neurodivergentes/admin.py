@@ -3,12 +3,15 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.html import format_html
 from django.db.models import Count, Subquery, OuterRef, Avg
 from django.db import models
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils import timezone
+from django.template import loader
 from .choices import MESES
 from escola.models import ModalidadeEnsino, ProgramaEducacional, Recurso, Escola
 from escola.forms import EscolaForm
@@ -644,13 +647,66 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
             'js/neurodivergentes_admin.js',
         )
 
+from django import forms
+
+
+
+class ParecerAvaliativoAdminForm(forms.ModelForm):
+    class Meta:
+        model = ParecerAvaliativo
+        fields = '__all__'
+        widgets = {
+            'neurodivergente': forms.Select(attrs={'class': 'vLargeTextField'}),
+            'escola': forms.Select(attrs={'class': 'vLargeTextField'}),
+            'data_avaliacao': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'vDateField'
+                },
+                format='%Y-%m-%d'
+            ),
+            'evolucao': forms.Textarea(attrs={
+                'rows': 4,
+                'class': 'vLargeTextField',
+                'placeholder': 'Descreva a evolução do aluno'
+            }),
+            'profissional_responsavel': forms.Select(attrs={'class': 'vLargeTextField'}),
+            'anexos': forms.ClearableFileInput(attrs={'class': 'vFileUploadField'})
+        }
+
 @admin.register(ParecerAvaliativo)
 class ParecerAvaliativoAdmin(admin.ModelAdmin):
-    form = ParecerAvaliativoForm
-    list_display = ['neurodivergente', 'escola', 'data_avaliacao', 'tem_anexos']
+    form = ParecerAvaliativoAdminForm
+    list_display = ['neurodivergente', 'idade', 'escola', 'data_avaliacao', 'tem_anexos']
+    readonly_fields = ['idade', 'ver_graficos']
     list_filter = ['data_avaliacao', 'escola']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
+    
+    fieldsets = [
+        (None, {
+            'fields': [
+                'neurodivergente',
+                'idade',
+                'escola', 
+                'data_avaliacao',
+                'ver_graficos',
+                'evolucao',
+                'profissional_responsavel',
+                'anexos'
+            ]
+        })
+    ]
 
+    def ver_graficos(self, obj):
+        if obj and obj.pk:
+            return format_html(
+                '<a class="button" href="{}" target="_blank" style="margin-bottom: 10px;">'
+                '<i class="fas fa-chart-bar"></i> Ver Gráficos</a>',
+                reverse('neurodivergentes:parecer_graficos', args=[obj.pk])
+            )
+        return ''
+    ver_graficos.short_description = ''
+    
     def tem_anexos(self, obj):
         return bool(obj.anexos)
     tem_anexos.boolean = True

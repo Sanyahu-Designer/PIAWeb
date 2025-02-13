@@ -14,7 +14,7 @@ from weasyprint import HTML, CSS
 from django.conf import settings
 from django.core.paginator import Paginator
 import os
-from .models import Neurodivergente, Monitoramento
+from .models import Neurodivergente, Monitoramento, PDI, PDIMetaHabilidade, evolucao, pei
 import logging
 
 logger = logging.getLogger(__name__)
