@@ -8,4 +8,6 @@ urlpatterns = [
     path('', include('pia_config.urls')),  # Define a página inicial como a página de login
     path('profissionais/', include('profissionais.urls')),
     path('escolas/', include('escola.urls')),
+    path('admin/autocomplete/', admin.site.autocomplete_view),  # Adiciona URLs de autocomplete
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

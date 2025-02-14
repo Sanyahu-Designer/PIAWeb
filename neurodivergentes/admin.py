@@ -191,6 +191,7 @@ class PDIAdmin(admin.ModelAdmin):
     list_filter = ['neurodivergente']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     list_per_page = 20
+    autocomplete_fields = ['neurodivergente']
 
     def get_queryset(self, request):
         """

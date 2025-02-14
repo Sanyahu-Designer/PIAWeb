@@ -1,0 +1,85 @@
+{% load static i18n %}
+<div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+     data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+    {{ inline_admin_formset.formset.management_form }}
+    {{ inline_admin_formset.formset.non_form_errors }}
+    
+    {% for inline_admin_form in inline_admin_formset %}
+      <div class="inline-related{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}" 
+           id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+        
+        <div class="adaptacao-form">
+          <h3 class="adaptacao-titulo">{% if not forloop.last %}Adaptação #{{ forloop.counter }}{% else %}Nova Adaptação{% endif %}</h3>
+          
+          <div class="adaptacao-section">
+            <div class="section-title">Filtros</div>
+            <div class="adaptacao-filters">
+              <div class="filter-group">
+                <label for="disciplina-filter-{{ forloop.counter0 }}">{% trans "Disciplina" %}:</label>
+                <select id="disciplina-filter-{{ forloop.counter0 }}" class="select2 disciplina-filter">
+                  <option value="">{% trans "Selecione uma disciplina" %}</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <label for="ano-filter-{{ forloop.counter0 }}">{% trans "Ano" %}:</label>
+                <select id="ano-filter-{{ forloop.counter0 }}" class="select2 ano-filter" disabled>
+                  <option value="">{% trans "Selecione um ano" %}</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <label for="trimestre-filter-{{ forloop.counter0 }}">{% trans "Trimestre" %}:</label>
+                <select id="trimestre-filter-{{ forloop.counter0 }}" class="select2 trimestre-filter" disabled>
+                  <option value="">{% trans "Selecione um trimestre" %}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="adaptacao-section">
+            <div class="section-title">Habilidade e Adaptação</div>
+            <div class="form-fields">
+              {% for fieldset in inline_admin_form %}
+                {% for line in fieldset %}
+                  {% for field in line %}
+                    <div class="form-row field-{{ field.field.name }}">
+                      <div class="field-box">
+                        <div class="field-label">
+                          {{ field.field.label_tag }}
+                          {% if field.field.help_text %}
+                            <img src="{% static 'admin/img/icon-unknown.svg' %}" class="help help-tooltip" width="10" height="10"
+                                 alt="({{ field.field.help_text|striptags }})" title="{{ field.field.help_text|striptags }}">
+                          {% endif %}
+                        </div>
+                        <div class="field-content">
+                          {{ field.field }}
+                          {{ field.field.errors }}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+            </div>
+          </div>
+          
+          {% if inline_admin_formset.formset.can_delete and inline_admin_formset.has_delete_permission and inline_admin_form.original %}
+            <div class="delete-row">
+              <label>{{ inline_admin_form.deletion_field.field.label }}</label>
+              {{ inline_admin_form.deletion_field.field }}
+            </div>
+          {% endif %}
+        </div>
+        
+        {% if not forloop.last %}
+          <hr class="adaptacao-separator">
+        {% endif %}
+      </div>
+    {% endfor %}
+    
+    <div class="add-row">
+      <a href="#" class="add-adaptacao">{% trans "Adicionar outra adaptação" %}</a>
+    </div>
+  </div>
+</div>

@@ -30,6 +30,7 @@ class RecursoAdmin(admin.ModelAdmin):
 @admin.register(Escola)
 class EscolaAdmin(admin.ModelAdmin):
     form = EscolaForm
+    search_fields = ['nome', 'codigo_inep']
     
     fieldsets = (
         ('Informações Básicas', {

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'profissionais_app',
     'escola',
     'neurodivergentes',
+    'adaptacao_curricular',
     'django_ckeditor_5',
 ]
 
