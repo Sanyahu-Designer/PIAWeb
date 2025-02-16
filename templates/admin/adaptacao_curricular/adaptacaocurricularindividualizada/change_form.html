@@ -1,0 +1,58 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    .submit-row {
+        padding: 12px;
+        margin: 0;
+        border-top: 1px solid #eee;
+    }
+    .submit-row a.button {
+        float: right;
+        padding: 10px 15px;
+        margin: 0 0 0 8px;
+        background: #417690;
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+    .submit-row a.button:hover {
+        background: #205067;
+    }
+    .relatorios-disciplina {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f8f8;
+        border: 1px solid #eee;
+        border-radius: 4px;
+    }
+    .relatorios-disciplina h3 {
+        margin: 0 0 15px 0;
+        color: #666;
+    }
+    .relatorios-disciplina .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    {{ block.super }}
+    {% if disciplina_buttons %}
+        <div class="relatorios-disciplina">
+            <h3>Gerar Relatório por Disciplina</h3>
+            <div class="buttons">
+                {% for button in disciplina_buttons %}
+                    <a href="{{ button.url }}" class="button" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-file-pdf"></i> {{ button.nome }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

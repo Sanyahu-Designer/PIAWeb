@@ -1,0 +1,98 @@
+{% extends 'admin/edit_inline/stacked.html' %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/vendor/select2/select2.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'adaptacao_curricular/css/adaptacao.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript" src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'adaptacao_curricular/js/adaptacao.js' %}"></script>
+{% endblock %}
+
+{% block inline_field_sets %}
+<div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+     data-inline-type="stacked"
+     data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+  <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
+  {{ inline_admin_formset.formset.management_form }}
+  {{ inline_admin_formset.formset.non_form_errors }}
+
+  {% for inline_admin_form in inline_admin_formset %}
+    <div class="inline-related{% if inline_admin_form.original or inline_admin_form.show_url %} has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}" id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+      <h3>
+        <b>{{ inline_admin_formset.opts.verbose_name|capfirst }}:</b>
+        <span class="inline_label">{% if inline_admin_form.original %}{{ inline_admin_form.original }}{% endif %}</span>
+        {% if inline_admin_form.original %}
+          {% if inline_admin_formset.formset.can_delete %}
+            <span class="delete">{{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}</span>
+          {% endif %}
+          <a href="{% url 'adaptacao_curricular:imprimir_adaptacao_habilidade' inline_admin_form.original.id %}" class="button" style="margin-left: 10px; padding: 3px 8px; background: #417690; color: white; text-decoration: none; border-radius: 4px; display: inline-block; vertical-align: middle; font-size: 12px;">
+            <i class="fas fa-file-pdf"></i> Gerar Relatório
+          </a>
+        {% endif %}
+      </h3>
+      {% if inline_admin_form.form.non_field_errors %}
+        {{ inline_admin_form.form.non_field_errors }}
+      {% endif %}
+      {% for fieldset in inline_admin_form %}
+        {% for line in fieldset %}
+          {% for field in line %}
+            <div class="form-row{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
+              {% if field.is_readonly %}
+                <div class="readonly">{{ field.contents }}</div>
+              {% else %}
+                {{ field.field.errors.as_ul }}
+                {{ field.field.label_tag }}
+                {{ field.field }}
+                {% if field.field.name == 'habilidade' %}
+                  <div class="habilidade-detalhes" style="display: none;">
+                    <div class="habilidade-info-header">
+                      <div class="habilidade-codigo-display"><span class="habilidade-codigo"></span></div>
+                      <div class="habilidade-disciplina-display"><span class="habilidade-disciplina"></span></div>
+                    </div>
+                    <div class="habilidade-info-content">
+                      <div class="habilidade-meta">
+                        <span class="habilidade-ano"></span> - <span class="habilidade-trimestre"></span>
+                      </div>
+                      <div class="habilidade-objeto-display">
+                        <strong>Objeto do Conhecimento:</strong>
+                        <span class="habilidade-objeto"></span>
+                      </div>
+                      <div class="habilidade-descricao-display">
+                        <strong>Descrição:</strong>
+                        <span class="habilidade-descricao"></span>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+      {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
+      {{ inline_admin_form.fk_field.field }}
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script type="text/javascript">
+    django.jQuery(function($) {
+        if (typeof initializeAllFields === 'function') {
+            setTimeout(function() {
+                initializeAllFields();
+            }, 100);
+        } else {
+            console.error('initializeAllFields não está definida');
+        }
+    });
+</script>
+{% endblock %}

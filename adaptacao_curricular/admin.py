@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django import forms
-from django.urls import path
+from django.urls import path, reverse
 from django.http import JsonResponse
 from django.db import models
 from django.core.exceptions import PermissionDenied
+from django.utils.html import format_html
 from profissionais_app.models import Profissional
 from .models import (
     BNCCDisciplina,
@@ -64,14 +65,13 @@ class AdaptacaoHabilidadeInline(admin.StackedInline):
     extra = 1
     fields = ('habilidade', 'descritivo_adaptacao')
     can_delete = True
-    show_change_link = False
+    show_change_link = True
     classes = ('adaptacao-inline',)
-    template = 'admin/adaptacao_curricular/edit_inline/stacked.html'
+    template = 'admin/adaptacao_curricular/edit_inline/adaptacao_stacked.html'
     
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        return formset
-
+    def has_change_permission(self, request, obj=None):
+        return True
+    
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
         formset.form.base_fields['habilidade'].widget.can_add_related = False
@@ -82,6 +82,131 @@ class AdaptacaoHabilidadeInline(admin.StackedInline):
 class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
     search_fields = ['aluno__primeiro_nome', 'aluno__ultimo_nome', 'escola__nome']
     autocomplete_fields = ['aluno', 'escola', 'profissional_responsavel']
+    inlines = [AdaptacaoHabilidadeInline]
+    change_form_template = 'admin/adaptacao_curricular/adaptacaocurricularindividualizada/change_form.html'
+    list_display = ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_view_button']
+    list_filter = ['aluno', 'escola']
+    list_per_page = 20
+
+    def get_queryset(self, request):
+        """
+        Retorna apenas a adaptação mais recente por aluno na lista inicial,
+        ou todas as adaptações se um filtro de aluno estiver ativo.
+        """
+        self.request = request
+        queryset = super().get_queryset(request).select_related('aluno', 'escola')
+
+        aluno_id = request.GET.get('aluno__id__exact')
+        if aluno_id:
+            # Lista todas as adaptações do aluno filtrado
+            return queryset.filter(aluno_id=aluno_id).order_by('-data_cadastro')
+
+        # Lista inicial: retorna apenas a adaptação mais recente por aluno
+        latest_adaptacao_ids = queryset.values('aluno').annotate(
+            max_id=models.Max('id')
+        ).values_list('max_id', flat=True)
+
+        return queryset.filter(id__in=latest_adaptacao_ids).order_by('aluno__primeiro_nome')
+
+    def get_list_display(self, request):
+        """
+        Altera as colunas exibidas dependendo se estamos na lista inicial
+        ou na lista de adaptações de um aluno.
+        """
+        if request.GET.get('aluno__id__exact'):
+            # Lista de adaptações do aluno
+            return ['get_aluno_nome', 'escola', 'data_cadastro', 'get_acoes']
+        # Lista inicial
+        return ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_view_button']
+
+    def get_aluno_nome(self, obj):
+        """
+        Retorna o nome do aluno.
+        """
+        if not obj.aluno:
+            return '-'
+        return f"{obj.aluno.primeiro_nome} {obj.aluno.ultimo_nome}"
+    get_aluno_nome.short_description = 'Aluno'
+    get_aluno_nome.admin_order_field = 'aluno__primeiro_nome'
+
+    def get_total_adaptacoes(self, obj):
+        """
+        Retorna o total de adaptações do aluno.
+        """
+        if not obj.aluno:
+            return '0'
+        return AdaptacaoCurricularIndividualizada.objects.filter(aluno=obj.aluno).count()
+    get_total_adaptacoes.short_description = 'Total de Adaptações'
+
+    def get_ultima_adaptacao(self, obj):
+        """
+        Retorna a data da última adaptação do aluno.
+        """
+        if not obj.aluno:
+            return '-'
+        ultima = AdaptacaoCurricularIndividualizada.objects.filter(
+            aluno=obj.aluno
+        ).order_by('-data_cadastro').first()
+        return ultima.data_cadastro if ultima else '-'
+    get_ultima_adaptacao.short_description = 'Última Adaptação'
+    get_ultima_adaptacao.admin_order_field = 'data_cadastro'
+
+    def get_view_button(self, obj):
+        """
+        Retorna o botão de visualização que leva para a lista de adaptações do aluno.
+        """
+        if not obj.aluno:
+            return '-'
+        url = f"{reverse('admin:adaptacao_curricular_adaptacaocurricularindividualizada_changelist')}?aluno__id__exact={obj.aluno.id}"
+        return format_html(
+            '<a class="button" href="{}" style="white-space: nowrap;">'
+            '<i class="fas fa-eye" style="margin-right: 4px;"></i>Ver Adaptações</a>',
+            url
+        )
+    get_view_button.short_description = 'Ver Adaptações'
+
+    def get_acoes(self, obj):
+        """
+        Retorna os botões de ação para a lista de adaptações do aluno.
+        """
+        edit_url = reverse('admin:adaptacao_curricular_adaptacaocurricularindividualizada_change', args=[obj.id])
+        return format_html(
+            '<a class="button" href="{}" style="white-space: nowrap;">'
+            '<i class="fas fa-edit" style="margin-right: 4px;"></i>Editar</a>',
+            edit_url
+        )
+    get_acoes.short_description = 'Ações'
+
+    class Media:
+        css = {
+            'all': (
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+            )
+        }
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        obj = self.get_object(request, object_id)
+        if obj:
+            # Agrupa adaptações por disciplina
+            adaptacoes_por_disciplina = {}
+            for adaptacao in obj.adaptacoes.select_related('habilidade__disciplina').all():
+                disciplina = adaptacao.habilidade.disciplina
+                if disciplina not in adaptacoes_por_disciplina:
+                    adaptacoes_por_disciplina[disciplina] = []
+                adaptacoes_por_disciplina[disciplina].append(adaptacao)
+            
+            # Cria os botões para cada disciplina
+            disciplina_buttons = [{
+                'nome': disciplina.nome,
+                'id': disciplina.id,
+                'url': reverse('adaptacao_curricular:imprimir_adaptacao_disciplina', 
+                              args=[obj.id, disciplina.id])
+            } for disciplina in adaptacoes_por_disciplina.keys()]
+            
+            extra_context['disciplina_buttons'] = disciplina_buttons
+        
+        return super().change_view(request, object_id, form_url, extra_context)
     def buscar_habilidades(self, request):
         if not request.user.is_authenticated:
             raise PermissionDenied
@@ -141,7 +266,7 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
                 'admin/css/widgets.css',
                 'admin/css/vendor/select2/select2.min.css',
                 'admin/css/autocomplete.css',
-                'admin/css/adaptacao.css',
+                'adaptacao_curricular/css/adaptacao.css',
             )
         }
         js = (
@@ -149,7 +274,7 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
             'admin/js/vendor/select2/i18n/pt-BR.js',
             'admin/js/jquery.init.js',
             'admin/js/autocomplete.js',
-            'admin/js/adaptacao.js',
+            'adaptacao_curricular/js/adaptacao.js',
         )
     
     def get_form(self, request, obj=None, **kwargs):

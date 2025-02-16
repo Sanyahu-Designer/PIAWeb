@@ -1,0 +1,13 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n admin_urls %}
+
+{% block submit_buttons_bottom %}
+    <div class="submit-row">
+        {% if original %}
+            <a href="{% url 'adaptacao_curricular:imprimir_adaptacao' original.pk %}" class="button" style="float: right; margin-right: 5px; background: #417690;">
+                <i class="fas fa-file-pdf"></i> Gerar Relatório
+            </a>
+        {% endif %}
+        {{ block.super }}
+    </div>
+{% endblock %}

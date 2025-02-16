@@ -49,6 +49,10 @@ class BNCCHabilidade(models.Model):
         ordering = ['disciplina', 'ano', 'trimestre', 'codigo']
 
 class AdaptacaoCurricularIndividualizada(models.Model):
+    class Meta:
+        verbose_name = 'Adaptação Curricular Individualizada'
+        verbose_name_plural = 'Adaptações Curriculares Individualizadas'
+
     MODALIDADE_CHOICES = [
         ('EI', 'Educação Infantil'),
         ('EF', 'Ensino Fundamental'),

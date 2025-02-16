@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Adaptação Curricular - {{ disciplina.nome }}</title>
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --text-color: #333;
+            --border-color: #e3e6f0;
+            --background-color: #f8f9fc;
+        }
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 9pt;
+                color: #666;
+                margin-top: 0.3cm;
+            }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            color: var(--text-color);
+        }
+
+        .habilidade {
+            break-inside: avoid;
+        }
+
+        .header {
+            margin-bottom: 0.3rem;
+            padding: 0.3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .content {
+            margin-top: -1rem;
+        }
+        
+        @media screen {
+            .header {
+                background-color: var(--primary-color);
+                color: white;
+            }
+        }
+
+        .header-main {
+            text-align: center;
+        }
+
+        .header-main h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .header-main h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header-dates {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .date-separator {
+            color: var(--primary-color);
+            font-weight: normal;
+            opacity: 0.7;
+            padding: 0 0.5rem;
+        }
+
+        .info-grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-dates {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .info-grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .content {
+            margin-top: 0;
+        }
+
+        .section {
+            background: white;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 0.3rem;
+            page-break-inside: avoid;
+        }
+
+        .section-header {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .section-body {
+            padding: 0.3rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            color: var(--text-color);
+        }
+
+        .habilidade {
+            background: white;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 0.5rem;
+        }
+
+        .habilidade-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 0.35rem;
+            border-top-right-radius: 0.35rem;
+        }
+
+        .habilidade-content {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-bottom-left-radius: 0.35rem;
+            border-bottom-right-radius: 0.35rem;
+        }
+
+        .habilidade-section {
+            margin-bottom: 0.5rem;
+        }
+
+        .habilidade-title {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .habilidade-text {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .bncc-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            padding: 0.3rem;
+        }
+
+        .bncc-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: 0.35rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .bncc-label {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .bncc-value {
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .adaptacao-text {
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: 0.35rem;
+            border: 1px solid var(--border-color);
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .no-break-wrapper {
+            break-inside: avoid;
+        }
+        @media print {
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .habilidade {
+                page-break-inside: avoid;
+            }
+            .header {
+                background-color: white;
+                padding: 0 0 1rem 0;
+                border-bottom: 2px solid var(--primary-color);
+            }
+            .header-main {
+                margin-bottom: 1rem;
+            }
+            .header-main h1 {
+                color: var(--primary-color);
+            }
+            .header-main h2 {
+                color: var(--text-color);
+            }
+            .header-dates {
+                color: var(--text-color);
+            }
+            .section, .habilidade {
+                box-shadow: none;
+                border: 1px solid var(--border-color);
+                break-inside: avoid;
+            }
+            .print-button {
+                display: none;
+            }
+            .bncc-field, .adaptacao-text {
+                background-color: white;
+                border: 1px solid var(--border-color);
+            }
+            .container {
+                margin: 0;
+                padding: 1rem;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="print-button">
+        <i class="fas fa-print"></i> Imprimir Relatório
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-main">
+                <h1>Adaptação Curricular Individualizada</h1>
+                <h2>{{ disciplina.nome }}</h2>
+            </div>
+            <div class="header-dates">
+                <span>Data da Adaptação Curricular: {{ adaptacao.data_cadastro|date:"d/m/Y" }}</span>
+                <span class="date-separator">|</span>
+                <span>Data do Relatório: {{ data_geracao|date:"d/m/Y" }}</span>
+            </div>
+        </div>
+
+        <div class="content">
+<div class="section">
+            <div class="section-header">
+                <h2>Profissional Responsável</h2>
+            </div>
+            <div class="section-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-value">{{ adaptacao.profissional_responsavel.user.get_full_name }}</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="section">          <div class="section-header">
+                <h2>Informações do Aluno</h2>
+            </div>
+            <div class="section-body">
+                <div class="info-grid-2col">
+                    <div class="info-item">
+                        <span class="info-label">Nome do Aluno</span>
+                        <span class="info-value">{{ adaptacao.aluno.nome_completo }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Escola</span>
+                        <span class="info-value">{{ adaptacao.escola.nome }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ano</span>
+                        <span class="info-value">{{ adaptacao.get_ano_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Trimestre</span>
+                        <span class="info-value">{{ adaptacao.get_trimestre_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if adaptacoes_habilidade %}
+        <div class="section">
+            <div class="section-header">
+                <h2>Habilidades e Adaptações</h2>
+            </div>
+            <div class="section-body">
+                {% for adaptacao_hab in adaptacoes_habilidade %}
+                <div class="habilidade">
+                    <div class="habilidade-header">
+                        <strong>{{ adaptacao_hab.habilidade.codigo }}</strong>
+                        <span>{{ adaptacao_hab.habilidade.get_ano_display }} | {{ adaptacao_hab.habilidade.get_trimestre_display }}</span>
+                    </div>
+                    <div class="habilidade-content">
+                        <div class="habilidade-section">
+                            <div class="habilidade-title">HABILIDADE BNCC</div>
+                            <div class="bncc-info">
+                                <div class="bncc-field">
+                                    <div class="bncc-label">Objeto do Conhecimento</div>
+                                    <div class="bncc-value">{{ adaptacao_hab.habilidade.objeto_conhecimento }}</div>
+                                </div>
+                                <div class="bncc-field">
+                                    <div class="bncc-label">Descrição da Habilidade</div>
+                                    <div class="bncc-value">{{ adaptacao_hab.habilidade.descricao }}</div>
+                                </div>
+                            </div>
+                    </div>
+
+                        <div class="habilidade-section">
+                            <div class="habilidade-title">ADAPTAÇÃO CURRICULAR</div>
+                            <div class="adaptacao-text">
+                                {{ adaptacao_hab.descritivo_adaptacao }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,5 +1,10 @@
 {% extends "admin/base.html" %}
 {% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+{% endblock %}
 {% block footer %}
 <footer class="main-footer">
     <div class="float-right d-none d-sm-inline">

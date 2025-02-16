@@ -17,6 +17,7 @@ urlpatterns = [
     path('escolas/', include('escola.urls')),
     path('profissionais/', include('profissionais_app.urls')),
     path('neurodivergentes/', include('neurodivergentes.urls')),
+    path('adaptacao-curricular/', include('adaptacao_curricular.urls')),
 ]
 
 # Servir arquivos de mídia em produção
