@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Anamnese - {{ anamnese.neurodivergente.nome_completo }}</title>
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @page {
+            size: A4;
+            margin: 1.5cm 2cm;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.5;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: #3498db;
+            color: white;
+            padding: 1.2em 1.5em;
+            margin: -0.5cm -2cm 2em -2cm;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 5px 0;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            word-wrap: break-word;
+        }
+
+        .header h2 {
+            margin: 5px 0;
+            font-size: 20px;
+            font-weight: normal;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        .container {
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 1.5em;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+            page-break-inside: avoid;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .section-title {
+            background: #f8f9fa;
+            padding: 1em;
+            border-bottom: 2px solid #e1e8ed;
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .section-content {
+            padding: 1.2em;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 1em;
+            flex-wrap: wrap;
+        }
+
+        .info-col {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 0.5em;
+            padding-right: 1em;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #3498db;
+            font-size: 14px;
+            margin-bottom: 0.3em;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #34495e;
+            white-space: pre-wrap;
+        }
+
+        .text-field {
+            margin-bottom: 1em;
+        }
+
+        .text-label {
+            font-weight: bold;
+            color: #3498db;
+            font-size: 14px;
+            margin-bottom: 0.3em;
+        }
+
+        .text-content {
+            background: #f8f9fa;
+            padding: 1em;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+            border: 1px solid #e1e8ed;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75em;
+            text-align: left;
+            border: 1px solid #e1e8ed;
+            font-size: 13px;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 2em;
+            padding-top: 1em;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        @media print {
+            .print-button {
+                display: none;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        .print-button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="print-button">
+        Imprimir Relatório
+    </button>
+
+    <div class="header">
+        <h1>ANAMNESE</h1>
+        <h2>{{ anamnese.neurodivergente.nome_completo }}</h2>
+        <p>Data de Nascimento: {{ anamnese.neurodivergente.data_nascimento|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="container">
+        <!-- Informações Básicas -->
+        <div class="section">
+            <h2 class="section-title">Informações Básicas</h2>
+            <div class="section-content">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Aluno/Paciente:</div>
+                        <div class="info-value">{{ anamnese.neurodivergente.nome_completo }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Profissional Responsável:</div>
+                        <div class="info-value">{% if anamnese.profissional_responsavel %}{{ anamnese.profissional_responsavel }}{% else %}Não informado{% endif %}</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Data de Cadastro:</div>
+                        <div class="info-value">{{ anamnese.created_at|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Última Atualização:</div>
+                        <div class="info-value">{{ anamnese.updated_at|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nascimento e Primeira Infância -->
+        <div class="section">
+            <h2 class="section-title">Nascimento e Primeira Infância</h2>
+            <div class="section-content">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Tipo de Parto:</div>
+                        <div class="info-value">{{ anamnese.get_tipo_parto_display }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Tempo de Gestação:</div>
+                        <div class="info-value">{{ anamnese.tempo_gestacao }} semanas</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Prematuridade:</div>
+                        <div class="info-value">{{ anamnese.get_prematuridade_display }}</div>
+                    </div>
+                    {% if anamnese.prematuridade %}
+                    <div class="info-col">
+                        <div class="info-label">Tempo de Prematuridade:</div>
+                        <div class="info-value">{{ anamnese.tempo_prematuridade }} semanas</div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Observações sobre o Parto:</div>
+                    <div class="text-content">{{ anamnese.observacoes_parto|default:"Não informado" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Status dos Pais:</div>
+                        <div class="info-value">{{ anamnese.get_status_pais_display }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Médicas -->
+        <div class="section">
+            <h2 class="section-title">Informações Médicas</h2>
+            <div class="section-content">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Benefícios Sociais:</div>
+                        <div class="info-value">{{ anamnese.beneficios_sociais|default:"Não informado" }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Convênio Médico:</div>
+                        <div class="info-value">{{ anamnese.get_convenio_medico_display }}</div>
+                    </div>
+                </div>
+                {% if anamnese.convenio_medico %}
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Nome do Convênio:</div>
+                        <div class="info-value">{{ anamnese.nome_convenio }}</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Medicações -->
+                {% if anamnese.medicacoes.all %}
+                <div class="text-label">Medicações:</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Dosagem</th>
+                            <th>Frequência</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicacao in anamnese.medicacoes.all %}
+                        <tr>
+                            <td>{{ medicacao.nome }}</td>
+                            <td>{{ medicacao.dosagem }}</td>
+                            <td>{{ medicacao.frequencia }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Histórico -->
+        <div class="section">
+            <h2 class="section-title">Histórico</h2>
+            <div class="section-content">
+                <div class="text-field">
+                    <div class="text-label">Queixa Inicial:</div>
+                    <div class="text-content">{{ anamnese.queixa_inicial }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">História de Vida:</div>
+                    <div class="text-content">{{ anamnese.historia_vida }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Comportamento no Ambiente Familiar:</div>
+                    <div class="text-content">{{ anamnese.comportamento_familiar|default:"Não informado" }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Comportamento no Ambiente Social e Escolar:</div>
+                    <div class="text-content">{{ anamnese.comportamento_social|default:"Não informado" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desenvolvimento -->
+        <div class="section">
+            <h2 class="section-title">Desenvolvimento</h2>
+            <div class="section-content">
+                <div class="text-field">
+                    <div class="text-label">Autonomia:</div>
+                    <div class="text-content">{{ anamnese.autonomia }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Comunicação:</div>
+                    <div class="text-content">{{ anamnese.comunicacao }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Restrições Alimentares:</div>
+                        <div class="info-value">{{ anamnese.get_restricoes_alimentares_display }}</div>
+                    </div>
+                    {% if anamnese.restricoes_alimentares %}
+                    <div class="info-col">
+                        <div class="info-label">Descrição das Restrições Alimentares:</div>
+                        <div class="info-value">{{ anamnese.descricao_restricoes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rotina -->
+        {% if anamnese.rotinas.all %}
+        <div class="section">
+            <h2 class="section-title">Rotina Diária</h2>
+            <div class="section-content">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Horário</th>
+                            <th>Atividade</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rotina in anamnese.rotinas.all %}
+                        <tr>
+                            <td>{{ rotina.horario|time:"H:i" }}</td>
+                            <td>{{ rotina.atividade }}</td>
+                            <td>{{ rotina.observacoes|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Percepção dos Responsáveis -->
+        <div class="section">
+            <h2 class="section-title">Percepção dos Responsáveis</h2>
+            <div class="section-content">
+                <div class="text-field">
+                    <div class="text-label">Aspectos Cognitivos:</div>
+                    <div class="text-content">{{ anamnese.aspectos_cognitivos }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Aspectos Psicomotores:</div>
+                    <div class="text-content">{{ anamnese.aspectos_psicomotores }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Aspectos Emocionais/Sociais:</div>
+                    <div class="text-content">{{ anamnese.aspectos_emocionais }}</div>
+                </div>
+                <div class="text-field">
+                    <div class="text-label">Aspectos Sensoriais:</div>
+                    <div class="text-content">{{ anamnese.aspectos_sensoriais }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Relatório gerado em {{ data_impressao|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>

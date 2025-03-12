@@ -37,7 +37,8 @@ import os
 from .models import (
     Neurodivergente, PDI, PlanoEducacional, RegistroEvolucao,
     Monitoramento, ParecerAvaliativo, CondicaoNeurodivergente,
-    Escola, Neurodivergencia, PDIMetaHabilidade, DiagnosticoNeurodivergente
+    Escola, Neurodivergencia, PDIMetaHabilidade, DiagnosticoNeurodivergente,
+    Anamnese
 )
 from django.db.models import Prefetch
 from django.http import HttpResponse
@@ -1555,5 +1556,47 @@ def gerar_relatorio_pei_pdf(request, neurodivergente_id):
     # Retorna o PDF como resposta HTTP
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=relatorio_pei_{neurodivergente.id}.pdf'
+    
+    return response
+
+
+@login_required
+def imprimir_anamnese(request, anamnese_id):
+    """View para imprimir uma anamnese individual em PDF"""
+    anamnese = get_object_or_404(
+        Anamnese.objects.select_related(
+            'neurodivergente',
+            'profissional_responsavel'
+        ).prefetch_related(
+            'medicacoes',
+            'rotinas'
+        ),
+        id=anamnese_id
+    )
+    
+    context = {
+        'anamnese': anamnese,
+        'aluno': anamnese.neurodivergente,
+        'data_impressao': timezone.now(),
+        'request': request
+    }
+    
+    # Configura as fontes
+    font_config = FontConfiguration()
+    
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/relatorio_anamnese.html', context, request=request)
+    
+    # Cria o PDF
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    html = HTML(string=html_string, base_url=base_url)
+    pdf = html.write_pdf(
+        font_config=font_config,
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=anamnese_{anamnese.id}.pdf'
     
     return response

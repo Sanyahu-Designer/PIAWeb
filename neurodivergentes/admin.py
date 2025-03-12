@@ -582,13 +582,20 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
         )
     get_view_button.short_description = 'Ver Evoluções'
 
+    def get_neurodivergente(self, obj):
+        """
+        Retorna o neurodivergente, mas com um nome de coluna personalizado
+        """
+        return obj.neurodivergente
+    get_neurodivergente.short_description = 'Aluno/Paciente'
+    
     def get_list_display(self, request):
         """
         Altera as colunas exibidas dependendo se estamos na lista inicial ou na lista de evoluções de um aluno.
         """
         if request.GET.get('neurodivergente__id__exact'):
             # Na página de evoluções do aluno
-            return ['neurodivergente', 'get_data_formatada', 'descricao_resumida', 'profissional', 'tem_anexos', 'get_acoes']
+            return ['get_neurodivergente', 'get_data_formatada', 'descricao_resumida', 'profissional', 'tem_anexos', 'get_acoes']
         # Na página inicial
         return ['get_aluno_nome', 'get_total_evolucoes', 'get_ultima_evolucao', 'get_view_button']
 
@@ -618,12 +625,15 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
         """
         editar_url = reverse('admin:neurodivergentes_registroevolucao_change', args=[obj.id])
         
+        # Construir URL para imprimir evolução
+        imprimir_url = reverse('neurodivergentes:imprimir_evolucao', args=[obj.id])
+        
         return format_html(
             '<div class="btn-group">'
             '<a href="{}" class="btn btn-info btn-sm" title="Editar"><i class="fas fa-edit"></i></a>'
-            '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirEvolucao({})"><i class="fas fa-print"></i> Imprimir</button>'
+            '<a href="{}" class="btn btn-primary btn-sm" target="_blank" title="Imprimir"><i class="fas fa-print"></i> Imprimir</a>'
             '</div>',
-            editar_url, obj.id
+            editar_url, imprimir_url
         )
     get_acoes.short_description = 'Ações'
 
@@ -884,12 +894,20 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
 
 @admin.register(Anamnese)
 class AnamneseAdmin(admin.ModelAdmin):
-    list_display = ['neurodivergente', 'tipo_parto', 'prematuridade']
+    list_display = ['neurodivergente', 'tipo_parto', 'prematuridade', 'acoes']
     list_filter = ['tipo_parto', 'prematuridade']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
     }
+    
+    def acoes(self, obj):
+        imprimir_url = reverse('neurodivergentes:imprimir_anamnese', args=[obj.id])
+        return format_html(
+            '<a class="button" href="{}" target="_blank">Imprimir</a>',
+            imprimir_url
+        )
+    acoes.short_description = 'Ações'
     
 #@admin.register(PlanoEducacional)
 #class PlanoEducacionalAdmin(admin.ModelAdmin):

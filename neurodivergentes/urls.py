@@ -21,7 +21,8 @@ from .views import (
     gerar_relatorio_evolucao_html,
     imprimir_parecer,
     gerar_relatorio_parecer_pdf,
-    gerar_relatorio_parecer_geral_pdf
+    gerar_relatorio_parecer_geral_pdf,
+    imprimir_anamnese
 )
 from .admin_views import ParecerGraficosView
 from .graficos_parecer import dados_graficos_parecer
@@ -61,6 +62,7 @@ urlpatterns = [
     path('pei/<int:pei_id>/popup/', pei_popup_view, name='pei_popup'),
     path('pei/<int:pei_id>/imprimir/', imprimir_pei, name='imprimir_pei'),
     path('relatorio-pei/<int:neurodivergente_id>/', gerar_relatorio_pei_pdf, name='gerar_relatorio_pei_pdf'),
+    path('anamnese/<int:anamnese_id>/imprimir/', imprimir_anamnese, name='imprimir_anamnese'),
 ]
 
 # Adicione esta linha para servir arquivos de mídia durante o desenvolvimento

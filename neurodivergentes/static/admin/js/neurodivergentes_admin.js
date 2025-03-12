@@ -1,4 +1,110 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Função para corrigir o formato de data do campo data_identificacao na aba Diagnóstico
+    function fixDiagnosticoDateFormat() {
+        // Seleciona todos os formulários de diagnóstico
+        const diagnosticoForms = document.querySelectorAll('.diagnosticos-container form, .inline-related form, form');
+        
+        // Função para converter data do formato dd/mm/yyyy para yyyy-MM-dd
+        function convertDateFormat(dateStr) {
+            if (!dateStr) return '';
+            
+            // Verifica se a data já está no formato yyyy-MM-dd
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr;
+            }
+            
+            // Converte de dd/mm/yyyy para yyyy-MM-dd
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+            
+            return dateStr;
+        }
+        
+        // Função para exibir data no formato brasileiro
+        function formatDateForDisplay(input) {
+            // Adiciona um placeholder para indicar o formato esperado
+            input.setAttribute('placeholder', 'dd/mm/aaaa');
+            
+            // Se o navegador não suportar o tipo date, usar texto simples
+            if (input.type !== 'date') {
+                input.type = 'text';
+            }
+        }
+        
+        diagnosticoForms.forEach(form => {
+            // Procura especificamente pelo campo data_identificacao ou qualquer campo de data
+            const dateFields = form.querySelectorAll('input[type="date"], input[name*="data_identificacao"], input[name*="data_diagnostico"]');
+            
+            dateFields.forEach(field => {
+                // Adiciona log para verificar se o campo está sendo processado
+                console.log("Campo de data encontrado: " + field.name);
+
+                // Formata o campo para exibição
+                formatDateForDisplay(field);
+                
+                // Adiciona evento para converter o formato quando o campo perde o foco
+                field.addEventListener('blur', function() {
+                    if (this.value && this.value.includes('/')) {
+                        this.value = convertDateFormat(this.value);
+                    }
+                });
+                
+                // Adiciona evento para converter o formato antes do envio do formulário
+                if (form && !form._dateSubmitListenerAdded) {
+                    form.addEventListener('submit', function(e) {
+                        const dateInputs = this.querySelectorAll('input[type="date"], input[name*="data_identificacao"], input[name*="data_diagnostico"]');
+                        dateInputs.forEach(input => {
+                            if (input.value && input.value.includes('/')) {
+                                input.value = convertDateFormat(input.value);
+                            }
+                        });
+                    });
+                    form._dateSubmitListenerAdded = true;
+                }
+            });
+        });
+        
+        // Observa mudanças no DOM para processar campos adicionados dinamicamente
+        const observer = new MutationObserver(function(mutations) {
+            let needsProcessing = false;
+            
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length) {
+                    needsProcessing = true;
+                }
+            });
+            
+            if (needsProcessing) {
+                const newDateFields = document.querySelectorAll('input[type="date"], input[name*="data_identificacao"], input[name*="data_diagnostico"]');
+                newDateFields.forEach(field => {
+                    if (!field._dateEventAdded) {
+                        formatDateForDisplay(field);
+                        
+                        field.addEventListener('blur', function() {
+                            if (this.value && this.value.includes('/')) {
+                                this.value = convertDateFormat(this.value);
+                            }
+                        });
+                        
+                        field._dateEventAdded = true;
+                    }
+                });
+            }
+        });
+        
+        // Observa o documento inteiro para alterações nos campos de data
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+    
+    // Executa a função de correção de formato de data
+    fixDiagnosticoDateFormat();
+    console.log("Função fixDiagnosticoDateFormat executada");
+
     // Adiciona cabeçalhos às seções
     const sections = {
         'tab-dados-pessoais': 'Dados Pessoais',
@@ -26,22 +132,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializa máscaras para campos formatados
     if (typeof jQuery !== 'undefined') {
         jQuery(function($) {
-            // Máscara para celular
-            $('#id_celular').mask('(00) 00000-0000', {
-                onKeyPress: function(phone, e, field, options) {
-                    const masks = ['(00) 00000-0000'];
-                    const mask = masks[0];
-                    $('#id_celular').mask(mask, options);
-                }
-            });
-            
-            // Máscara para CEP
-            $('#id_cep').mask('00000-000');
+            // Verifica se a função mask está disponível antes de usá-la
+            if (typeof $.fn.mask === 'function') {
+                try {
+                    // Máscara para celular
+                    $('#id_celular').mask('(00) 00000-0000', {
+                        onKeyPress: function(phone, e, field, options) {
+                            const masks = ['(00) 00000-0000'];
+                            const mask = masks[0];
+                            $('#id_celular').mask(mask, options);
+                        }
+                    });
+                    
+                    // Máscara para CEP
+                    $('#id_cep').mask('00000-000');
 
-            // Máscaras adicionais
-            $('[data-mask]').each(function() {
-                $(this).mask($(this).attr('data-mask'));
-            });
+                    // Máscaras adicionais
+                    $('[data-mask]').each(function() {
+                        $(this).mask($(this).attr('data-mask'));
+                    });
+
+                    // Adiciona log para verificar se o plugin jQuery Mask foi inicializado
+                    console.log("jQuery Mask plugin inicializado corretamente");
+                } catch (e) {
+                    console.warn('Erro ao aplicar máscaras:', e);
+                }
+            } else {
+                console.warn('jQuery Mask plugin não está disponível');
+            }
         });
     }
 

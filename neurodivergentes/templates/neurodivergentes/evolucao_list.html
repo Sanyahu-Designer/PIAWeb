@@ -87,11 +87,12 @@
                                            class="btn btn-sm btn-info" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-primary" 
-                                                onclick="imprimirEvolucao('{% url 'neurodivergentes:imprimir_evolucao' evolucao.id %}')"
-                                                title="Imprimir">
+                                        <a href="{% url 'neurodivergentes:imprimir_evolucao' evolucao.id %}" 
+                                           class="btn btn-sm btn-primary"
+                                           target="_blank"
+                                           title="Imprimir">
                                             <i class="fas fa-print"></i> Imprimir
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
