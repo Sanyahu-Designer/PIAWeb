@@ -1,110 +1,19 @@
 {% extends 'admin/base.html' %}
 {% load static %}
 
+{% block extrastyle %}
+    {{ block.super }}
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block extrahead %}
-{{ block.super }}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Função para alternar tema
-    function toggleTheme() {
-        const body = document.body;
-        const isDark = localStorage.getItem('jazzyminTheme') === 'dark';
-        
-        if (isDark) {
-            localStorage.setItem('jazzyminTheme', 'light');
-            document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-                if (link.href.includes('darkly')) {
-                    link.href = link.href.replace('darkly', 'flatly');
-                }
-            });
-        } else {
-            localStorage.setItem('jazzyminTheme', 'dark');
-            document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-                if (link.href.includes('flatly')) {
-                    link.href = link.href.replace('flatly', 'darkly');
-                }
-            });
-        }
-    }
-
-    // Adiciona evento de clique ao botão de tema
-    const themeButton = document.querySelector('#theme-toggle');
-    if (themeButton) {
-        themeButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            toggleTheme();
-        });
-    }
-
-    // Aplica o tema salvo ao carregar a página
-    const savedTheme = localStorage.getItem('jazzyminTheme');
-    if (savedTheme === 'dark') {
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-            if (link.href.includes('flatly')) {
-                link.href = link.href.replace('flatly', 'darkly');
-            }
-        });
-    }
-});
-</script>
-
-<style>
-/* Estilo para o botão de tema */
-#theme-toggle {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 8px 15px;
-}
-
-#theme-toggle:hover {
-    opacity: 0.8;
-}
-
-/* Transição suave para mudança de tema */
-body {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Estilos do rodapé */
-.main-footer {
-    font-size: 14px !important;
-    padding: 1rem;
-    text-align: center;
-    border-top: 1px solid #dee2e6;
-    color: #869099;
-    background: white;
-}
-
-.main-footer strong,
-.main-footer .float-right {
-    font-size: 14px !important;
-    font-weight: normal;
-}
-
-.version {
-    display: none !important;
-}
-</style>
-{% endblock %}
-
-{% block branding %}
-<h1 id="site-name">
-    <a href="{% url 'admin:index' %}">
-        {% if site_logo %}
-            <img src="{% static site_logo %}" alt="{{ site_header }}" height="40px">
-        {% else %}
-            {{ site_header }}
-        {% endif %}
-    </a>
-</h1>
-{% endblock %}
-
-{% block footer %}
-<footer class="main-footer">
-    <div class="float-right d-none d-sm-inline">
-        <b>Versão Alpha</b> 1.0.0
-    </div>
-    <strong>Todos os Direitos Reservados © {% now "Y" %} PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03</strong>
-</footer>
+    {{ block.super }}
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Notifications -->
+    <script src="{% static 'js/notifications.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
 {% endblock %}

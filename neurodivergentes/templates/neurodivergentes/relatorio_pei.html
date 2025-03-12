@@ -1,149 +1,171 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <title>Relatório de PEI - {{ aluno.nome_completo }}</title>
     <style>
-        :root {
-            --primary-color: #4e73df;
-            --text-color: #333;
-            --border-color: #e3e6f0;
-            --background-color: #f8f9fc;
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{{ request.scheme }}://{{ request.get_host }}{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{{ request.scheme }}://{{ request.get_host }}{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
         }
 
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: white;
-            color: var(--text-color);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 1rem;
-            padding: 0.5rem;
+        @page {
+            size: A4;
+            margin: 1.5cm;
         }
         
-        @media screen {
-            .header {
-                background-color: var(--primary-color);
-                color: white;
-                padding: 2rem;
-            }
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.5;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            background: #3498db;
+            color: white;
+            padding: 2em;
+            margin: -1.5cm -1.5cm 2em -1.5cm;
+            text-align: center;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 1.5rem;
-            margin-bottom: 0.3rem;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            margin: 10px 0 5px;
+            font-size: 20px;
+            font-weight: normal;
         }
 
         .header p {
-            margin: 0;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .header .student-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
+            margin: 5px 0 0;
+            font-size: 14px;
         }
 
         .container {
-            max-width: 1140px;
             margin: 0 auto;
-            padding: 0 1rem;
         }
 
-        .section {
+        .pei-section {
             background: white;
-            border-radius: 0.35rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            margin-bottom: 1rem;
+            margin-bottom: 2em;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
         }
 
-        .section-header {
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .section-header h2 {
+        .pei-title {
+            background: #f8f9fa;
+            padding: 1em;
+            border-bottom: 2px solid #e1e8ed;
             margin: 0;
-            font-size: 1.25rem;
-            color: var(--primary-color);
-        }
-
-        .section-body {
-            padding: 0.75rem;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-label {
+            font-size: 16px;
             font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 0.25rem;
+            color: #2c3e50;
         }
 
-        .info-value {
-            color: var(--text-color);
+        .pei-content {
+            padding: 1.5em;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 1.5em;
+            gap: 2em;
+        }
+
+        .info-col {
+            flex: 1;
+        }
+
+        .section-title {
+            color: #3498db;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            text-transform: uppercase;
+        }
+
+        .section-content {
+            font-size: 14px;
+            color: #34495e;
+        }
+
+        .meta-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em;
+        }
+
+        .meta-item {
+            background: #f8f9fa;
+            padding: 0.5em 1em;
+            border-radius: 3px;
+            border-left: 3px solid #3498db;
+            font-size: 13px;
+        }
+
+        .observacoes {
+            background: #f8f9fa;
+            padding: 1em;
+            border-radius: 4px;
+            margin-top: 0.5em;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
+            margin-top: 1em;
+            border: 1px solid #e1e8ed;
         }
 
         .table th,
         .table td {
-            padding: 0.5rem;
+            padding: 0.75em;
             text-align: left;
-            border: 1px solid var(--border-color);
-            font-size: 0.9rem;
+            border: 1px solid #e1e8ed;
+            font-size: 13px;
         }
 
         .table th {
-            background-color: var(--background-color);
-            color: var(--primary-color);
+            background-color: #f8f9fa;
+            color: #2c3e50;
             font-weight: bold;
         }
 
-        .table tbody tr:nth-child(even) {
-            background-color: var(--background-color);
+        .footer {
+            margin-top: 2em;
+            padding-top: 1em;
+            border-top: 1px solid #e1e8ed;
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
         }
 
-        .meta-section {
-            margin-bottom: 1.5rem;
-            page-break-inside: avoid;
-        }
-
-        .meta-header {
-            background-color: var(--background-color);
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .meta-content {
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
+        .empty-message {
+            text-align: center;
+            padding: 2em;
+            color: #7f8c8d;
+            font-style: italic;
         }
 
         .print-button {
@@ -151,7 +173,7 @@
             top: 1rem;
             right: 1rem;
             padding: 0.5rem 1rem;
-            background-color: var(--primary-color);
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 0.25rem;
@@ -165,54 +187,26 @@
         }
 
         .print-button:hover {
-            background-color: #2e59d9;
+            background-color: #2980b9;
         }
 
         @media print {
             body {
                 background-color: white;
-                color: black;
+                color: #2c3e50;
                 margin: 0;
                 padding: 0;
             }
 
-            .container {
-                max-width: none;
-                padding: 0 2rem;
-            }
-
-            .section {
-                box-shadow: none;
-                margin-bottom: 1rem;
-                break-inside: avoid;
+            .header {
+                background-color: white;
+                color: #2c3e50;
+                padding: 0;
+                margin: 0 0 2em 0;
             }
 
             .print-button {
                 display: none;
-            }
-
-            .header {
-                color: black;
-                background-color: white;
-                padding: 0;
-                margin-bottom: 1.5rem;
-                break-after: avoid;
-            }
-
-            .table {
-                break-inside: auto;
-            }
-
-            tr {
-                break-inside: avoid;
-            }
-
-            .section-header h2 {
-                color: black;
-            }
-
-            .info-label {
-                color: black;
             }
         }
     </style>
@@ -224,87 +218,60 @@
 
     <div class="container">
         <div class="header">
-            <h1>Relatório de PEI</h1>
-            <p class="student-name">{{ aluno.nome_completo }}</p>
-            <p>Período: {{ mes_inicial }}/{{ ano_inicial }} a {{ mes_final }}/{{ ano_final }}</p>
+            <h1>Relatório Individual - PEI</h1>
+            <h2>{{ aluno.nome_completo }}</h2>
+            <p>Data do PEI: {{ pei.get_mes_display }}/{{ pei.ano }}</p>
+            <p>Relatório gerado em {{ data_impressao|date:"d/m/Y H:i" }}</p>
         </div>
 
-        <div class="section">
-            <div class="section-header">
-                <h2>Informações do Aluno</h2>
-            </div>
-            <div class="section-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Nome:</span>
-                        <span class="info-value">{{ aluno.nome_completo }}</span>
+        <div class="pei-section">
+            <h3 class="pei-title">Detalhes do PEI</h3>
+            <div class="pei-content">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="section-title">Período</div>
+                        <div class="section-content">{{ pei.get_mes_display }}/{{ pei.ano }}</div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Data de Nascimento:</span>
-                        <span class="info-value">{{ aluno.data_nascimento|date:"d/m/Y" }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Escola:</span>
-                        <span class="info-value">{{ aluno.escola.nome|default:"Não informada" }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Série/Ano:</span>
-                        <span class="info-value">{{ aluno.serie|default:"Não informado" }}</span>
+                    <div class="info-col">
+                        <div class="section-title">Profissional Responsável</div>
+                        <div class="section-content">{{ pei.pedagogo_responsavel|default:"Não atribuído" }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {% for pei in peis %}
-        <div class="section">
-            <div class="section-header">
-                <h2>PEI - {{ pei.get_mes_display }}/{{ pei.ano }}</h2>
-            </div>
-            <div class="section-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Profissional Responsável:</span>
-                        <span class="info-value">{{ pei.pedagogo_responsavel|default:"Não atribuído" }}</span>
-                    </div>
-                </div>
-
-                <div class="meta-section">
-                    <div class="meta-header">
-                        <h3>Planejamento</h3>
-                    </div>
-                    <div class="meta-content">
-                        {{ pei.observacoes|safe }}
-                    </div>
-                </div>
-
-                <div class="meta-section">
-                    <div class="meta-header">
-                        <h3>Metas/Habilidades</h3>
-                    </div>
-                    <div class="meta-content">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Meta/Habilidade</th>
-                                    <th>Área</th>
-                                    <th>Descrição</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for meta in pei.metas.all %}
-                                <tr>
-                                    <td>{{ meta.titulo }}</td>
-                                    <td>{{ meta.get_area_display }}</td>
-                                    <td>{{ meta.descricao }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="pei-section">
+            <h3 class="pei-title">Planejamento</h3>
+            <div class="pei-content">
+                <div class="observacoes">{{ pei.observacoes|safe|default:"Não há observações registradas." }}</div>
             </div>
         </div>
-        {% endfor %}
+
+        <div class="pei-section">
+            <h3 class="pei-title">Metas e Habilidades</h3>
+            <div class="pei-content">
+                {% if pei.metas.all %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Meta/Habilidade</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for meta in pei.metas.all %}
+                        <tr>
+                            <td>{{ meta.nome }}</td>
+                            <td>{{ meta.descricao }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-message">Não há metas ou habilidades registradas para este período.</div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </body>
 </html>

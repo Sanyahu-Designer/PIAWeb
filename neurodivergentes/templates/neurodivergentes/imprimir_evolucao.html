@@ -5,8 +5,21 @@
     <meta charset="utf-8">
     <title>Evolução - {{ evolucao.neurodivergente }}</title>
     <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif !important;
             line-height: 1.6;
             margin: 20px;
         }

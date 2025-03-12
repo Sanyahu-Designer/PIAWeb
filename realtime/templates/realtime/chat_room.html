@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block main_content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Mensagem</h4>
+                    <div>
+                        <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal">
+                            <i class="fas fa-reply"></i> Responder
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">De: {{ message.sender.get_full_name|default:message.sender.username }}</h5>
+                            <small class="text-muted">{{ message.timestamp|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <h6>Para: {{ message.recipient.get_full_name|default:message.recipient.username }}</h6>
+                    </div>
+                    
+                    <div class="message-content mb-4">
+                        {{ message.message|linebreaks }}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="markAsRead" 
+                                   {% if message.is_read %}checked{% endif %}
+                                   {% if message.sender == request.user %}disabled{% endif %}>
+                            <label class="form-check-label" for="markAsRead">
+                                Marcar como lida
+                            </label>
+                        </div>
+                        
+                        {% if message.sender == request.user %}
+                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resposta -->
+<div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'realtime:new_message' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Responder Mensagem</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="recipient" value="{{ message.sender.id }}">
+                    <div class="mb-3">
+                        <label class="form-label">Mensagem</label>
+                        <textarea name="message" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'realtime:delete_message' message.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    const otherUser = "{{ other_user.username|escapejs }}";
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/' + otherUser + '/'
+    );
+
+    const messageContainer = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('chat-message-input');
+    const chatForm = document.getElementById('chat-form');
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ' + (data.sender === "{{ request.user.username }}" ? 'text-end' : '');
+        
+        messageDiv.innerHTML = `
+            <small class="text-muted">${data.sender}</small>
+            <p class="mb-1">${data.message}</p>
+            <small class="text-muted">${new Date(data.timestamp).toLocaleTimeString()}</small>
+        `;
+        
+        messageContainer.appendChild(messageDiv);
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    chatForm.onsubmit = function(e) {
+        e.preventDefault();
+        const message = messageInput.value;
+        
+        if (message) {
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInput.value = '';
+        }
+    };
+</script>
+{% endblock %}

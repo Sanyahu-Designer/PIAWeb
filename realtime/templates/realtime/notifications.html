@@ -1,0 +1,225 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+
+<!-- Dropdown de notificações -->
+<div class="dropdown" id="notification-dropdown">
+    <button class="btn btn-link position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
+        <i class="fas fa-bell text-muted"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none; font-size: 0.65rem;">
+            0
+        </span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+        <div class="px-3 py-2 border-bottom bg-light">
+            <h6 class="mb-0">Notificações</h6>
+        </div>
+        <div id="notification-list" class="py-2">
+            <!-- As notificações serão inseridas aqui dinamicamente -->
+            <div class="px-3 text-center text-muted">
+                <small>Nenhuma notificação no momento</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para gerenciar notificações -->
+<script>
+    // Inicializar o sistema de notificações apenas uma vez
+    if (!window.notificationSystemInitialized) {
+        window.notificationSystemInitialized = true;
+
+        // Função para atualizar o contador de notificações
+        function updateNotificationCount() {
+            const counts = document.querySelectorAll('.notification-count');
+            counts.forEach(count => {
+                if (window.unreadCount > 0) {
+                    count.style.display = 'block';
+                    count.textContent = window.unreadCount;
+                } else {
+                    count.style.display = 'none';
+                }
+            });
+        }
+
+        // Função para adicionar uma nova notificação
+        function addNotification(notification) {
+            console.log('Recebendo notificação:', notification);  // Debug log
+            
+            const lists = document.querySelectorAll('#notification-list');
+            lists.forEach(list => {
+                const emptyNotification = list.querySelector('.text-center');
+                if (emptyNotification) {
+                    emptyNotification.remove();
+                }
+
+                const notificationElement = document.createElement('div');
+                notificationElement.className = 'dropdown-item border-bottom py-2';
+                notificationElement.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="mb-0">${notification.message}</p>
+                            <small class="text-muted">${new Date(notification.created_at).toLocaleString()}</small>
+                        </div>
+                        <button class="btn btn-sm text-danger" onclick="window.markAsRead('${notification.id}', this.parentElement.parentElement)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                list.insertBefore(notificationElement, list.firstChild);
+            });
+
+            window.unreadCount = (window.unreadCount || 0) + 1;
+            updateNotificationCount();
+        }
+
+        // Função para marcar notificação como lida
+        function markAsRead(notificationId) {
+            fetch('/dashboard/realtime/notifications/' + notificationId + '/read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove a notificação da lista
+                    const notification = document.getElementById('notification-' + notificationId);
+                    if (notification) {
+                        notification.remove();
+                    }
+                    
+                    // Atualiza o contador
+                    updateNotificationCount();
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+        }
+
+        // Carregar notificações existentes
+        function loadNotifications() {
+            fetch('/dashboard/realtime/notifications/')
+            .then(response => response.json())
+            .then(data => {
+                data.notifications.forEach(notification => {
+                    addNotification(notification);
+                });
+            });
+        }
+
+        // Inicializar WebSocket apenas uma vez
+        if (!window.notificationSocket) {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            window.notificationSocket = new ReconnectingWebSocket(
+                wsProtocol + window.location.host + '/ws/notifications/'
+            );
+
+            window.notificationSocket.onmessage = function(e) {
+                console.log('WebSocket message received:', e.data);  // Debug log
+                const data = JSON.parse(e.data);
+                addNotification(data);
+            };
+
+            window.notificationSocket.onopen = function(e) {
+                console.log('WebSocket connection established');  // Debug log
+            };
+
+            window.notificationSocket.onclose = function(e) {
+                console.log('WebSocket connection closed. Attempting to reconnect...');  // Debug log
+            };
+
+            window.notificationSocket.onerror = function(e) {
+                console.error('WebSocket error:', e);  // Debug log
+            };
+        }
+
+        // Função para obter o token CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Expor funções globalmente
+        window.markAsRead = markAsRead;
+        window.addNotification = addNotification;
+        window.updateNotificationCount = updateNotificationCount;
+        window.unreadCount = 0;
+
+        // Carregar notificações ao iniciar
+        loadNotifications();
+    }
+</script>
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        Notificações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul id="notifications-list" class="list-group">
+                        {% for notification in notifications %}
+                        <li id="notification-{{ notification.id }}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1">{{ notification.message }}</p>
+                                <small class="text-muted">{{ notification.created_at }}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary ms-3" onclick="markAsRead({{ notification.id }})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted">
+                            <small>Nenhuma notificação no momento</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function markAsRead(notificationId) {
+        fetch('/dashboard/realtime/notifications/' + notificationId + '/read/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove a notificação da lista
+                const notification = document.getElementById('notification-' + notificationId);
+                if (notification) {
+                    notification.remove();
+                }
+                
+                // Atualiza o contador
+                updateNotificationCount();
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    }
+</script>
+{% endblock %}

@@ -876,11 +876,11 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
     tem_anexos.boolean = True
     tem_anexos.short_description = 'Anexos'
 
-@admin.register(HistoricoEscolar)
-class HistoricoEscolarAdmin(admin.ModelAdmin):
-    list_display = ['neurodivergente', 'escola_atual', 'serie_atual', 'modalidade_ensino']
-    list_filter = ['modalidade_ensino', 'serie_atual']
-    search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
+#@admin.register(HistoricoEscolar)
+#class HistoricoEscolarAdmin(admin.ModelAdmin):
+#    list_display = ['neurodivergente', 'escola_atual', 'serie_atual', 'modalidade_ensino']
+#    list_filter = ['modalidade_ensino', 'serie_atual']
+#    search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
 
 @admin.register(Anamnese)
 class AnamneseAdmin(admin.ModelAdmin):
@@ -891,19 +891,19 @@ class AnamneseAdmin(admin.ModelAdmin):
         models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
     }
     
-@admin.register(PlanoEducacional)
-class PlanoEducacionalAdmin(admin.ModelAdmin):
-    form = PlanoEducacionalForm
-    list_display = ['pdi', 'data_inicio', 'data_fim', 'pedagogo_responsavel']
-    list_filter = ['data_inicio', 'pedagogo_responsavel']
-    search_fields = ['pdi__neurodivergente__primeiro_nome', 'pdi__neurodivergente__ultimo_nome']
-    inlines = [AdaptacaoCurricularInline]
+#@admin.register(PlanoEducacional)
+#class PlanoEducacionalAdmin(admin.ModelAdmin):
+#    form = PlanoEducacionalForm
+#    list_display = ['pdi', 'data_inicio', 'data_fim', 'pedagogo_responsavel']
+#    list_filter = ['data_inicio', 'pedagogo_responsavel']
+#    search_fields = ['pdi__neurodivergente__primeiro_nome', 'pdi__neurodivergente__ultimo_nome']
+#    inlines = [AdaptacaoCurricularInline]
 
-    fieldsets = (
-        ('Informações Básicas', {
-            'fields': ('pdi', 'pedagogo_responsavel', 'data_inicio', 'data_fim')
-        }),
-        ('Detalhes do Plano', {
-            'fields': ('objetivos', 'estrategias', 'recursos')
-        }),
-    )
+#    fieldsets = (
+#        ('Informações Básicas', {
+#            'fields': ('pdi', 'pedagogo_responsavel', 'data_inicio', 'data_fim')
+#        }),
+#        ('Detalhes do Plano', {
+#            'fields': ('objetivos', 'estrategias', 'recursos')
+#        }),
+#    )

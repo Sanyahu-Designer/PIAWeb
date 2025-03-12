@@ -25,4 +25,7 @@ class CustomLoginView(LoginView):
 
 @login_required
 def dashboard(request):
-    return render(request, 'admin')
+    context = {
+        'show_dashboard_messages': True
+    }
+    return render(request, 'admin/index.html', context)

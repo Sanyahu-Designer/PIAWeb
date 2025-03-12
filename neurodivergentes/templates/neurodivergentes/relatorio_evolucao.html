@@ -1,144 +1,236 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de Evoluções - {{ nome_completo }}</title>
+    <title>Relatório de Evolução - {% if evolucao %}{{ evolucao.neurodivergente.nome_completo }}{% else %}{{ neurodivergente.nome_completo }}{% endif %}</title>
     <style>
-        :root {
-            --primary-color: #4e73df;
-            --text-color: #333;
-            --border-color: #e3e6f0;
-            --background-color: #f8f9fc;
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
+            font-weight: bold;
+            font-style: normal;
         }
 
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: white;
-            color: var(--text-color);
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 1rem;
-            padding: 0.5rem;
+        @page {
+            size: A4;
+            margin: 1.5cm 2cm;
         }
         
-        @media screen {
-            .header {
-                background-color: var(--primary-color);
-                color: white;
-                padding: 2rem;
-            }
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.5;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: #3498db;
+            color: white;
+            padding: 1.2em 1.5em;
+            margin: -0.5cm -2cm 2em -2cm;
+            text-align: center;
         }
 
         .header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            margin-bottom: 0.3rem;
+            margin: 0 0 5px 0;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            word-wrap: break-word;
+        }
+
+        .header h2 {
+            margin: 5px 0;
+            font-size: 20px;
+            font-weight: normal;
         }
 
         .header p {
-            margin: 0;
-            font-size: 1.1rem;
-            opacity: 0.9;
+            margin: 5px 0 0;
+            font-size: 14px;
         }
 
-        .header .student-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-
-        /* Container */
         .container {
-            max-width: 1140px;
             margin: 0 auto;
-            padding: 0 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
-        /* Sections */
-        .section {
+        .evolucao-section {
             background: white;
-            border-radius: 0.35rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            margin-bottom: 1rem;
+            margin-bottom: 2em;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+            page-break-inside: avoid;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .section-header {
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .section-header h2 {
+        .evolucao-title {
+            background: #f8f9fa;
+            padding: 1em;
+            border-bottom: 2px solid #e1e8ed;
             margin: 0;
-            font-size: 1.25rem;
-            color: var(--primary-color);
-        }
-
-        .section-body {
-            padding: 0.75rem;
-        }
-
-        /* Info Grid */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-label {
+            font-size: 16px;
             font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .evolucao-content {
+            padding: 1.2em;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2em;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--background-color);
+            padding: 1em;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-header h2 {
+            margin: 0;
             color: var(--primary-color);
-            margin-bottom: 0.25rem;
+            font-size: 20px;
+            font-weight: bold;
         }
 
-        .info-value {
-            color: var(--text-color);
+        .card-body {
+            padding: 1.5em;
         }
 
-        /* Table */
+        .info-row {
+            display: flex;
+            margin-bottom: 1.5em;
+            gap: 2em;
+        }
+
+        .info-col {
+            flex: 1;
+        }
+
+        .section-title {
+            color: #3498db;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            text-transform: uppercase;
+        }
+
+        .section-content {
+            font-size: 14px;
+            color: #34495e;
+        }
+
+        .observacoes {
+            background: #f8f9fa;
+            padding: 1em;
+            border-radius: 4px;
+            margin-top: 0.5em;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
         .table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
+            margin-top: 1em;
+            border: 1px solid #e1e8ed;
         }
 
         .table th,
         .table td {
-            padding: 0.5rem;
+            padding: 0.75em;
             text-align: left;
-            border: 1px solid var(--border-color);
-            font-size: 0.9rem;
+            border: 1px solid #e1e8ed;
+            font-size: 13px;
         }
 
         .table th {
-            background-color: var(--background-color);
-            color: var(--primary-color);
+            background-color: #f8f9fa;
+            color: #2c3e50;
             font-weight: bold;
         }
-
-        .table tbody tr:nth-child(even) {
-            background-color: var(--background-color);
+        
+        .attachment-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            background: #f8f9fa;
+            border-radius: 3px;
+            border-left: 3px solid #3498db;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        .attachment-icon {
+            margin-right: 0.5em;
+            color: #3498db;
+        }
+        
+        .attachment-link {
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 13px;
+            word-break: break-word;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* Print Button */
+        .empty-message {
+            text-align: center;
+            padding: 2em;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .footer {
+            margin-top: 2em;
+            padding-top: 1em;
+            border-top: 1px solid #e1e8ed;
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
         .print-button {
             position: fixed;
             top: 1rem;
             right: 1rem;
             padding: 0.5rem 1rem;
-            background-color: var(--primary-color);
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 0.25rem;
@@ -152,73 +244,31 @@
         }
 
         .print-button:hover {
-            background-color: #2e59d9;
+            background-color: #2980b9;
         }
 
-        /* Print Styles */
         @media print {
             body {
                 background-color: white;
-                color: black;
+                color: #2c3e50;
                 margin: 0;
                 padding: 0;
             }
 
-            .container {
-                max-width: none;
-                padding: 0 2rem;
+            .header {
+                background-color: white;
+                color: #2c3e50;
+                padding: 0;
+                margin: 0 0 2em 0;
             }
-
-            .section {
-                box-shadow: none;
-                margin-bottom: 1rem;
-                break-inside: avoid;
+            
+            .header h1 {
+                font-size: 20px;
             }
 
             .print-button {
                 display: none;
             }
-
-            .header {
-                color: black;
-                background-color: white;
-                padding: 0;
-                margin-bottom: 1.5rem;
-                break-after: avoid;
-            }
-
-            .table {
-                break-inside: auto;
-            }
-
-            tr {
-                break-inside: avoid;
-            }
-
-            .section-header h2 {
-                color: black;
-            }
-        }
-        }
-
-        /* Utilities */
-        .text-center {
-            text-align: center;
-        }
-
-        .list-unstyled {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
@@ -227,60 +277,112 @@
         <i class="fas fa-print"></i> Imprimir Relatório
     </button>
 
-    <div class="header">
-        <h1>Relatório de Evoluções</h1>
-        <p class="student-name">{{ nome_completo }}</p>
-        <p style="margin: 0.2rem 0;">Período: {{ data_inicial }} a {{ data_final }}</p>
-        <p style="margin: 0.2rem 0;">Data de Geração: {{ data_geracao }}</p>
-    </div>
-
     <div class="container">
-        <!-- Registro de Evoluções -->
-        <div class="section">
-            <div class="section-header">
-                <h2>Registro de Evoluções</h2>
-            </div>
-            <div class="section-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Profissional</th>
-                            <th>Descrição</th>
-                            <th>Anexos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for evolucao in evolucoes %}
-                        <tr>
-                            <td>{{ evolucao.data|date:"d/m/Y" }}</td>
-                            <td>{{ evolucao.profissional }}</td>
-                            <td>{{ evolucao.descricao|linebreaks }}</td>
-                            <td>
-                                {% if evolucao.anexos.all %}
-                                <ul class="list-unstyled">
-                                    {% for anexo in evolucao.anexos.all %}
-                                    <li>
-                                        <a href="{{ anexo.arquivo.url }}" target="_blank">
-                                            <i class="fas fa-paperclip"></i> {{ anexo.arquivo.name }}
-                                        </a>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                                {% else %}
-                                <span>Nenhum anexo</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center">Nenhuma evolução encontrada no período selecionado.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="header">
+            {% if evolucao %}
+            <h1>Relatório Individual - Evolução</h1>
+            <h2>{{ evolucao.neurodivergente.nome_completo }}</h2>
+            <p>Data da Evolução: {{ evolucao.data|date:"d/m/Y" }}</p>
+            {% else %}
+            <h1 style="margin-top: 10px;">Relatório Geral - Evoluções</h1>
+            <h2>{{ neurodivergente.nome_completo }}</h2>
+            <p>Período: {{ data_inicial }} a {{ data_final }}</p>
+            {% endif %}
+            <p>Relatório gerado em {% if data_impressao %}{{ data_impressao|date:"d/m/Y H:i" }}{% else %}{{ data_geracao }}{% endif %}</p>
+        </div>
+
+        {% if evolucao %}
+        <!-- Relatório Individual -->
+        <div class="evolucao-section">
+            <h3 class="evolucao-title">Detalhes da Evolução</h3>
+            <div class="evolucao-content">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="section-title">Data</div>
+                        <div class="section-content">{{ evolucao.data|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="section-title">Profissional</div>
+                        <div class="section-content">{{ evolucao.profissional }}</div>
+                    </div>
+                </div>
             </div>
         </div>
+        
+        <div class="evolucao-section">
+            <h3 class="evolucao-title">Descrição</h3>
+            <div class="evolucao-content">
+                <div class="observacoes">{{ evolucao.descricao|linebreaks }}</div>
+            </div>
+        </div>
+        
+        {% if evolucao.anexos.all %}
+        <div class="evolucao-section">
+            <h3 class="evolucao-title">Anexos</h3>
+            <div class="evolucao-content">
+                <ul class="attachment-list">
+                    {% for anexo in evolucao.anexos.all %}
+                    <li class="attachment-item">
+                        <span class="attachment-icon"><i class="fas fa-paperclip"></i></span>
+                        <a href="{{ anexo.arquivo.url }}" target="_blank" class="attachment-link">{{ anexo.arquivo.name }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- Relatório Geral -->
+        {% if evolucoes %}
+            {% for evolucao_item in evolucoes %}
+            <div class="evolucao-section" style="page-break-inside: avoid;">
+                <h3 class="evolucao-title">Evolução - {{ evolucao_item.data|date:"d/m/Y" }}</h3>
+                <div class="evolucao-content">
+                    <div class="info-row">
+                        <div class="info-col">
+                            <div class="section-title">Data</div>
+                            <div class="section-content">{{ evolucao_item.data|date:"d/m/Y" }}</div>
+                        </div>
+                        <div class="info-col">
+                            <div class="section-title">Profissional</div>
+                            <div class="section-content">{{ evolucao_item.profissional }}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1em;">
+                        <div class="section-title">Descrição</div>
+                        <div class="observacoes" style="max-width: 100%; overflow-wrap: break-word;">{{ evolucao_item.descricao|linebreaks }}</div>
+                    </div>
+                    
+                    {% if evolucao_item.anexos.all %}
+                    <div style="margin-top: 1em;">
+                        <div class="section-title">Anexos</div>
+                        <ul class="attachment-list">
+                            {% for anexo in evolucao_item.anexos.all %}
+                            <li class="attachment-item">
+                                <span class="attachment-icon"><i class="fas fa-paperclip"></i></span>
+                                <span class="attachment-link">{{ anexo.arquivo.name }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="evolucao-section">
+                <div class="evolucao-content">
+                    <div class="empty-message">Não foram encontradas evoluções no período selecionado.</div>
+                </div>
+            </div>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>Relatório gerado em {% if data_impressao %}{{ data_impressao|date:"d/m/Y H:i" }}{% else %}{{ data_geracao }}{% endif %}</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>

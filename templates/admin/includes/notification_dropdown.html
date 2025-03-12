@@ -1,0 +1,40 @@
+{% load i18n %}
+
+<div class="dropdown notification-dropdown">
+    <a href="#" class="notification-icon" data-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell"></i>
+        <span class="notification-count">0</span>
+    </a>
+    <div class="dropdown-menu dropdown-menu-right">
+        <div class="px-3 py-2 border-bottom">
+            <h6 class="mb-0">{% trans "Notificações" %}</h6>
+        </div>
+        <div id="notification-list">
+            <div class="px-3 py-2 text-center text-muted">
+                <small>{% trans "Nenhuma notificação no momento" %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Atualiza o contador de notificações a cada 30 segundos
+    function updateNotificationCount() {
+        fetch('/realtime/notification-count/')
+            .then(response => response.json())
+            .then(data => {
+                const count = document.querySelector('.notification-count');
+                if (data.count > 0) {
+                    count.textContent = data.count;
+                    count.style.display = 'block';
+                } else {
+                    count.style.display = 'none';
+                }
+            });
+    }
+
+    updateNotificationCount();
+    setInterval(updateNotificationCount, 30000);
+});
+</script>

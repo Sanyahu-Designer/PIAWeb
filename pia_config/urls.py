@@ -4,8 +4,10 @@ from django.contrib.auth import views as auth_views
 from .views import CustomLoginView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
 urlpatterns = [
+    path('dashboard/realtime/', include('realtime.urls', namespace='realtime')),
     path('dashboard/', admin.site.urls),
     path('', CustomLoginView.as_view(
         template_name='pia_config/login.html',

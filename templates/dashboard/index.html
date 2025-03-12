@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block main_content %}
+<div class="dashboard-container">
+    <div class="dashboard-grid">
+        <!-- Card de Alunos/Pacientes -->
+        <a href="{% url 'admin:neurodivergentes_neurodivergente_changelist' %}" class="app-card text-decoration-none">
+            <h2><i class="fas fa-user"></i> Alunos/Pacientes</h2>
+            <p class="text-muted mb-0">Gerenciar alunos e pacientes</p>
+        </a>
+
+        <!-- Card de Mensagens -->
+        <a href="{% url 'realtime:chat_list' %}" class="app-card text-decoration-none">
+            <h2><i class="fas fa-comments"></i> Mensagens</h2>
+            <p class="text-muted mb-0">Enviar e receber mensagens</p>
+        </a>
+
+        <!-- Card de Adaptação Curricular -->
+        <a href="{% url 'adaptacao_curricular:list' %}" class="app-card text-decoration-none">
+            <h2><i class="fas fa-book"></i> Adaptação Curricular</h2>
+            <p class="text-muted mb-0">Gerenciar adaptações curriculares</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

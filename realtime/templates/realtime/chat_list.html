@@ -1,0 +1,236 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Mensagens{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'realtime/css/messages.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>
+                    Mensagens
+                    {% if unread_count > 0 %}
+                        <span class="badge bg-primary rounded-pill ms-2 message-badge">
+                            {{ unread_count }} não lida{{ unread_count|pluralize }}
+                        </span>
+                    {% endif %}
+                </h4>
+                <a href="{% url 'realtime:new_message' %}" class="btn btn-primary btn-action">
+                    <i class="fas fa-paper-plane me-1"></i>
+                    Nova Mensagem
+                </a>
+            </div>
+
+            {% if messages_list %}
+                {% for message in messages_list %}
+                    <div class="card mb-3 message-card {% if not message.is_read and message.recipient == request.user %}border-primary{% endif %}">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if message.sender == request.user %}
+                                        <h6 class="mb-0">
+                                            <span class="message-icon bg-primary text-white">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </span>
+                                            Para: {{ message.recipient.get_full_name|default:message.recipient.username }}
+                                        </h6>
+                                    {% else %}
+                                        <h6 class="mb-0">
+                                            <span class="message-icon bg-info text-white">
+                                                <i class="fas fa-user"></i>
+                                            </span>
+                                            De: {{ message.sender.get_full_name|default:message.sender.username }}
+                                        </h6>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ message.timestamp|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <p class="card-text text-truncate mb-0">{{ message.message }}</p>
+                        </div>
+                        
+                        <div class="card-footer bg-light">
+                            <div class="d-flex justify-content-between align-items-center message-actions">
+                                <div class="btn-group">
+                                    <a href="{% url 'realtime:view_message' message.id %}" class="btn btn-outline-primary btn-sm btn-action">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Ver Mensagem
+                                    </a>
+                                    {% if message.sender != request.user %}
+                                        <a href="{% url 'realtime:new_message' %}?recipient={{ message.sender.id }}" 
+                                           class="btn btn-outline-success btn-sm btn-action">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Responder
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-flex align-items-center">
+                                    {% if message.recipient == request.user %}
+                                        <button class="btn btn-outline-secondary btn-sm me-2 btn-action"
+                                                onclick="toggleRead({{ message.id }}, this)"
+                                                title="{% if message.is_read %}Marcar como não lida{% else %}Marcar como lida{% endif %}">
+                                            <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
+                                        </button>
+                                    {% endif %}
+                                    <button class="btn btn-outline-danger btn-sm btn-action"
+                                            onclick="deleteMessage({{ message.id }}, this)"
+                                            title="Excluir mensagem">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                {% if is_paginated %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5 empty-state">
+                        <i class="far fa-envelope fa-3x text-muted mb-3 empty-state-icon"></i>
+                        <h5>Nenhuma mensagem encontrada</h5>
+                        <p class="text-muted mb-3">
+                            Você ainda não tem mensagens. Comece uma conversa enviando uma nova mensagem!
+                        </p>
+                        <a href="{% url 'realtime:new_message' %}" class="btn btn-primary btn-action">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Enviar Mensagem
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleRead(messageId, button) {
+    button.disabled = true;
+    const icon = button.querySelector('i');
+    const originalIcon = icon.className;
+    icon.className = 'fas fa-spinner fa-spin';
+    button.closest('.card').classList.add('loading');
+    
+    fetch(`{% url 'realtime:toggle_read' 0 %}`.replace('0', messageId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const messageCard = button.closest('.card');
+            messageCard.classList.remove('loading');
+            if (data.is_read) {
+                messageCard.classList.remove('border-primary');
+                icon.className = 'fas fa-check-double';
+                button.title = 'Marcar como não lida';
+            } else {
+                messageCard.classList.add('border-primary');
+                icon.className = 'fas fa-check';
+                button.title = 'Marcar como lida';
+            }
+            // Atualiza o contador de mensagens não lidas
+            window.dispatchEvent(new CustomEvent('messageRead'));
+        } else {
+            icon.className = originalIcon;
+            alert('Erro ao atualizar status da mensagem');
+        }
+    })
+    .catch(error => {
+        icon.className = originalIcon;
+        alert('Erro ao atualizar status da mensagem');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.closest('.card').classList.remove('loading');
+    });
+}
+
+function deleteMessage(messageId, button) {
+    if (!confirm('Tem certeza que deseja excluir esta mensagem?')) {
+        return;
+    }
+    
+    button.disabled = true;
+    const icon = button.querySelector('i');
+    icon.className = 'fas fa-spinner fa-spin';
+    const messageCard = button.closest('.card');
+    messageCard.classList.add('loading');
+    
+    fetch(`{% url 'realtime:delete_message' 0 %}`.replace('0', messageId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            messageCard.style.opacity = '0';
+            setTimeout(() => {
+                messageCard.remove();
+                // Se não houver mais mensagens, recarrega a página para mostrar o estado vazio
+                if (document.querySelectorAll('.card').length === 0) {
+                    window.location.reload();
+                }
+            }, 300);
+        } else {
+            throw new Error('Erro ao excluir mensagem');
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        icon.className = 'fas fa-trash';
+        messageCard.classList.remove('loading');
+        alert('Erro ao excluir mensagem. Por favor, tente novamente.');
+    });
+}
+</script>
+{% endblock %}

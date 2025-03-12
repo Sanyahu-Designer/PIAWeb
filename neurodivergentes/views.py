@@ -975,12 +975,16 @@ def imprimir_evolucao(request, evolucao_id):
         '''
         
         logger.info('Renderizando template HTML')
-        html_string = render_to_string('neurodivergentes/print_evolucao.html', context)
+        html_string = render_to_string('neurodivergentes/relatorio_evolucao.html', context)
+        
+        logger.info('Configurando fontes')
+        font_config = FontConfiguration()
         
         logger.info('Gerando PDF')
-        html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        html = HTML(string=html_string, base_url=base_url)
         css = CSS(string=css_string)
-        pdf = html.write_pdf(stylesheets=[css])
+        pdf = html.write_pdf(stylesheets=[css], font_config=font_config, presentational_hints=True)
         
         logger.info('Enviando PDF')
         response = HttpResponse(content_type='application/pdf')
@@ -1181,31 +1185,17 @@ def imprimir_pei(request, pei_id):
         'request': request
     }
     
-    # Configura o CSS com as fontes
-    css_string = '''
-        @font-face {
-            font-family: 'Roboto';
-            src: url('%s') format('truetype');
-            font-weight: normal;
-        }
-        @font-face {
-            font-family: 'Roboto';
-            src: url('%s') format('truetype');
-            font-weight: bold;
-        }
-    ''' % (
-        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
-        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
-    )
+    # Configura as fontes
+    font_config = FontConfiguration()
     
     # Renderiza o template HTML
-    html_string = render_to_string('neurodivergentes/pei_detail.html', context, request=request)
+    html_string = render_to_string('neurodivergentes/relatorio_pei.html', context, request=request)
     
     # Cria o PDF
-    html = HTML(string=html_string, base_url=request.build_absolute_uri())
-    css = CSS(string=css_string)
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    html = HTML(string=html_string, base_url=base_url)
     pdf = html.write_pdf(
-        stylesheets=[css],
+        font_config=font_config,
         presentational_hints=True
     )
     

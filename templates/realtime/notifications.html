@@ -1,0 +1,46 @@
+<![CDATA[<a href="{% url 'realtime:chat_list' %}" class="nav-link" title="Notificações">
+    <i class="fas fa-bell"></i>
+    <span class="notification-badge badge badge-danger" style="position: absolute; top: -5px; right: -5px; display: none;">0</span>
+</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const badge = document.querySelector('.notification-badge');
+        const bellIcon = document.querySelector('.fa-bell');
+        
+        if (!badge || !bellIcon) {
+            console.error('Elementos de notificação não encontrados');
+            return;
+        }
+
+        // Função para verificar novas mensagens
+        function checkNewMessages() {
+            fetch('{% url "realtime:notifications" %}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta do servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.notifications && data.notifications.length > 0) {
+                        badge.style.display = 'inline';
+                        badge.textContent = data.notifications.length;
+                        bellIcon.classList.add('fa-shake');
+                    } else {
+                        badge.style.display = 'none';
+                        bellIcon.classList.remove('fa-shake');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao verificar mensagens:', error);
+                });
+        }
+
+        // Verificar mensagens a cada 30 segundos
+        setInterval(checkNewMessages, 30000);
+        
+        // Verificar mensagens imediatamente
+        checkNewMessages();
+    });
+</script>]]>

@@ -1,0 +1,153 @@
+{% load i18n static jazzmin admin_urls %}
+{% get_jazzmin_settings request as jazzmin_settings %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+<nav class="main-header navbar navbar-expand {{ jazzmin_ui.navbar_classes }}" id="jazzy-navbar">
+    <ul class="navbar-nav">
+        {% if jazzmin_settings.show_sidebar %}
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                    <i class="fas fa-bars"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a href="{% url 'admin:index' %}" class="brand-link">
+                    <img src="{% static jazzmin_settings.site_logo %}" alt="{{ jazzmin_settings.site_header }} Logo" class="{{ jazzmin_settings.site_logo_classes }} brand-image" style="opacity: .8; margin: 0 0 0 5px;">
+                </a>
+            </li>
+        {% endif %}
+
+        {% get_top_menu user request.current_app|default:"admin" as top_menu %}
+        {% for link in top_menu %}
+            <li class="nav-item d-none d-sm-inline-block{% if link.children %} dropdown{% endif %}">
+                {% if link.children %}
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{ link.name }}
+                    </a>
+                    <div class="dropdown-menu">
+                        {% for child in link.children %}
+                            <a href="{{ child.url }}" class="dropdown-item">{{ child.name }}</a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <a href="{{ link.url }}" class="nav-link">{{ link.name }}</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <ul class="navbar-nav ml-auto">
+        {% if user.is_authenticated %}
+            <!-- Notification Bell -->
+            <li class="nav-item">
+                <a href="{% url 'realtime:chat_list' %}" class="nav-link" title="Mensagens">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge badge badge-danger" style="position: absolute; top: 0px; right: 0px; display: none;">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link position-relative" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none;">
+                        0
+                    </span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                    <div class="px-3 py-2 border-bottom">
+                        <h6 class="mb-0">Notificações</h6>
+                    </div>
+                    <div id="notification-list" class="py-2">
+                        <div class="px-3 text-center text-muted">
+                            <small>Nenhuma notificação no momento</small>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        {% endif %}
+        {% if jazzmin_settings.search_model %}
+            <li class="nav-item">
+                <form action="{{ jazzmin_settings.search_url }}" method="GET" class="form-inline">
+                    <div class="input-group">
+                        <input type="search" name="q" class="form-control form-control-navbar" placeholder="{% trans 'Search' %}..." aria-label="{% trans 'Search' %}">
+                        <div class="input-group-append">
+                            <button class="btn btn-navbar" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </li>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            <!-- Ícone de notificações -->
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button class="btn btn-link nav-link position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none; font-size: 0.65rem;">
+                            0
+                        </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                        <div class="px-3 py-2 border-bottom bg-light">
+                            <h6 class="mb-0">Notificações</h6>
+                        </div>
+                        <div id="notification-list" class="py-2">
+                            <!-- As notificações serão inseridas aqui dinamicamente -->
+                            <div class="px-3 text-center text-muted">
+                                <small>Nenhuma notificação no momento</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Menu do usuário -->
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
+                    <i class="fas fa-user-circle fa-fw"></i>
+                    {{ request.user.get_full_name|default:request.user.username }}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    {% if user.has_usable_password %}
+                        <a href="{% url 'admin:password_change' %}" class="dropdown-item">
+                            <i class="fas fa-key fa-fw"></i> {% trans 'Change password' %}
+                        </a>
+                        <div class="dropdown-divider"></div>
+                    {% endif %}
+                    <a href="{% url 'admin:logout' %}" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt fa-fw"></i> {% trans 'Log out' %}
+                    </a>
+                </div>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<!-- Notification Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function updateNotifications() {
+            fetch('/dashboard/realtime/notifications/')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.querySelector('.notification-badge');
+                    if (data.notifications && data.notifications.length > 0) {
+                        badge.style.display = 'inline';
+                        badge.textContent = data.notifications.length;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Erro ao verificar mensagens:', error));
+        }
+
+        // Verificar mensagens a cada 30 segundos
+        setInterval(updateNotifications, 30000);
+        
+        // Verificar mensagens imediatamente
+        updateNotifications();
+    });
+</script>
