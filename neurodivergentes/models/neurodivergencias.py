@@ -34,13 +34,14 @@ class CondicaoNeurodivergente(models.Model):
         unique_together = ['categoria', 'nome']
 
     def __str__(self):
-        return f"{self.nome} (CID-10: {self.cid_10})"
+        return f"{self.categoria.nome}: {self.nome} (CID-10: {self.cid_10})"
 
 class Neurodivergencia(models.Model):
     neurodivergente = models.OneToOneField(
         Neurodivergente,
         on_delete=models.CASCADE,
-        related_name='neurodivergencias'
+        related_name='neurodivergencias',
+        verbose_name='Aluno/Paciente'
     )
     data_diagnostico = models.DateField(
         'Data do Diagnóstico',
@@ -86,10 +87,17 @@ class DiagnosticoNeurodivergente(models.Model):
     condicao = models.ForeignKey(
         CondicaoNeurodivergente,
         on_delete=models.PROTECT,
-        related_name='diagnosticos'
+        related_name='diagnosticos',
+        verbose_name='Neurodivergência'
     )
     data_identificacao = models.DateField('Data de Identificação')
     observacoes = models.TextField('Observações', blank=True)
+    
+    def save(self, *args, **kwargs):
+        # Garante que a categoria seja definida com base na condição antes de salvar
+        if self.condicao_id and not self.categoria_id:
+            self.categoria = self.condicao.categoria
+        super().save(*args, **kwargs)
     
     class Meta:
         verbose_name = 'Diagnóstico'
@@ -101,7 +109,12 @@ class DiagnosticoNeurodivergente(models.Model):
         return f"{self.condicao} - {self.data_identificacao}"
 
     def clean(self):
-        if self.condicao and self.categoria and self.condicao.categoria != self.categoria:
+        # Garante que a categoria seja definida com base na condição
+        if self.condicao_id and not self.categoria_id:
+            self.categoria = self.condicao.categoria
+            
+        # Verifica se a condição pertence à categoria apenas se ambos estiverem definidos
+        if self.condicao_id and self.categoria_id and self.condicao.categoria_id != self.categoria_id:
             raise ValidationError({
                 'condicao': 'A condição selecionada não pertence à categoria escolhida.'
             })

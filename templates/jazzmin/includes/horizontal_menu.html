@@ -25,37 +25,6 @@
 
             <ul class="navbar-nav">
                 {% if user.is_authenticated %}
-                    <!-- Ícone de mensagens -->
-                    <li class="nav-item">
-                        <a href="{% url 'realtime:chat_list' %}" class="nav-link position-relative" title="Mensagens">
-                            <i class="fas fa-comments"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger message-count" style="display: none;">
-                                0
-                            </span>
-                        </a>
-                    </li>
-                    <!-- Ícone de notificações -->
-                    <li class="nav-item">
-                        <div class="dropdown">
-                            <button class="btn btn-link nav-link" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bell"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none;">
-                                    0
-                                </span>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
-                                <div class="px-3 py-2 border-bottom">
-                                    <h6 class="mb-0">Notificações</h6>
-                                </div>
-                                <div id="notification-list">
-                                    <!-- As notificações serão inseridas aqui dinamicamente -->
-                                    <div class="px-3 py-2 text-center text-muted">
-                                        <small>Nenhuma notificação no momento</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
                     <!-- Nome do usuário -->
                     <li class="nav-item dropdown">
                         <a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
@@ -79,3 +48,52 @@
         </div>
     </div>
 </nav>
+
+<!-- JavaScript para gerenciar notificações via polling -->
+<script>
+    // Inicializar o sistema de notificações apenas uma vez
+    if (!window.notificationSystemInitialized) {
+        window.notificationSystemInitialized = true;
+
+        // Expor funções globalmente
+        window.markAsRead = function(notificationId, element) {
+            fetch('/dashboard/realtime/notifications/' + notificationId + '/read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Remove a notificação da lista
+                    if (element) {
+                        element.remove();
+                    }
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+        };
+        
+        window.unreadCount = 0;
+
+        // Carregar notificações ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Atualizar contador de mensagens não lidas
+            function updateUnreadCount() {
+                fetch('{% url "realtime:unread_count" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        window.unreadCount = data.unread_count || 0;
+                    })
+                    .catch(error => console.error('Erro ao atualizar contagem de mensagens:', error));
+            }
+            
+            // Atualiza o contador quando a página carrega
+            updateUnreadCount();
+            
+            // Atualiza a cada 10 segundos
+            setInterval(updateUnreadCount, 10000);
+        });
+    }
+</script>

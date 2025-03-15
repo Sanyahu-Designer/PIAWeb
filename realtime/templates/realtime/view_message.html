@@ -1,84 +1,88 @@
-{% extends "dashboard/base.html" %}
+{% extends "admin/base_site.html" %}
 {% load static %}
 
-{% block title %}Ver Mensagem{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'realtime/css/messages.css' %}">
-<link rel="stylesheet" href="{% static 'realtime/css/new_file.css' %}">
-{% endblock %}
+{% block title %}Mensagem{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0">
-                    <i class="fas fa-envelope me-2"></i>
-                    Visualizar Mensagem
-                </h4>
-                <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary btn-action">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Voltar
-                </a>
-            </div>
-
-            <div class="card message-card">
-                <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            {% if message.sender == request.user %}
-                                <h6 class="mb-0">
-                                    <span class="message-icon bg-primary text-white">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </span>
-                                    Para: {{ message.recipient.get_full_name|default:message.recipient.username }}
-                                </h6>
-                            {% else %}
-                                <h6 class="mb-0">
-                                    <span class="message-icon bg-info text-white">
-                                        <i class="fas fa-user"></i>
-                                    </span>
-                                    De: {{ message.sender.get_full_name|default:message.sender.username }}
-                                </h6>
-                            {% endif %}
-                        </div>
-                        <div class="text-muted small">
-                            <i class="far fa-clock me-1"></i>
-                            {{ message.timestamp|date:"d/m/Y H:i" }}
-                        </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-envelope-open-text me-2"></i>
+                        Mensagem
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'realtime:chat_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Voltar
+                        </a>
                     </div>
                 </div>
-                
                 <div class="card-body">
-                    <p class="card-text">{{ message.message|linebreaksbr }}</p>
-                </div>
-                
-                <div class="card-footer bg-light">
-                    <div class="d-flex justify-content-between align-items-center message-actions">
-                        <div class="btn-group">
-                            {% if message.sender != request.user %}
-                                <a href="{% url 'realtime:new_message' %}?recipient={{ message.sender.id }}" 
-                                   class="btn btn-outline-success btn-action">
-                                    <i class="fas fa-reply me-1"></i>
-                                    Responder
-                                </a>
-                            {% endif %}
+                    <!-- Token CSRF oculto para uso em requisições AJAX -->
+                    <form id="csrf-form" style="display: none;">
+                        {% csrf_token %}
+                    </form>
+
+                    <div class="card message-card">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if is_sender %}
+                                        <h6 class="mb-0">
+                                            <span class="message-icon bg-primary text-white me-2" style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%;">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </span>
+                                            <span style="margin-left: 5px;">Para: {{ message.recipient.get_full_name|default:message.recipient.username }}</span>
+                                        </h6>
+                                    {% else %}
+                                        <h6 class="mb-0">
+                                            <span class="message-icon bg-info text-white me-2" style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%;">
+                                                <i class="fas fa-user"></i>
+                                            </span>
+                                            <span style="margin-left: 5px;">De: {{ message.sender.get_full_name|default:message.sender.username }}</span>
+                                        </h6>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ message.timestamp|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="d-flex align-items-center">
-                            {% if message.recipient == request.user %}
-                                <button class="btn btn-outline-secondary me-2 btn-action"
-                                        onclick="toggleRead({{ message.id }}, this)"
-                                        title="{% if message.is_read %}Marcar como não lida{% else %}Marcar como lida{% endif %}">
-                                    <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
-                                </button>
-                            {% endif %}
-                            <button class="btn btn-outline-danger btn-action"
-                                    onclick="deleteMessage({{ message.id }}, this)"
-                                    title="Excluir mensagem">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="card-body">
+                            <p class="card-text">{{ message.message|linebreaksbr }}</p>
+                        </div>
+                        
+                        <div class="card-footer bg-light">
+                            <div class="d-flex justify-content-between align-items-center message-actions">
+                                <div class="btn-group">
+                                    {% if not is_sender %}
+                                        <a href="{% url 'realtime:new_message' %}?recipient={{ message.sender.id }}" 
+                                           class="btn btn-outline-success btn-action">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Responder
+                                        </a>
+                                    {% endif %}
+                                    {% if is_sender %}
+                                        <a href="{% url 'realtime:edit_message' message.id %}" 
+                                           class="btn btn-outline-primary btn-action">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Editar
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-outline-danger btn-action"
+                                            onclick="deleteMessage({{ message.id }}, this)"
+                                            title="Excluir mensagem">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,50 +90,22 @@
         </div>
     </div>
 </div>
+
+<style>
+    .message-icon {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function toggleRead(messageId, button) {
-    button.disabled = true;
-    const icon = button.querySelector('i');
-    const originalIcon = icon.className;
-    icon.className = 'fas fa-spinner fa-spin';
-    button.closest('.card').classList.add('loading');
-    
-    fetch(`{% url 'realtime:toggle_read' 0 %}`.replace('0', messageId), {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.is_read) {
-                icon.className = 'fas fa-check-double';
-                button.title = 'Marcar como não lida';
-            } else {
-                icon.className = 'fas fa-check';
-                button.title = 'Marcar como lida';
-            }
-            // Atualiza o contador de mensagens não lidas
-            window.dispatchEvent(new CustomEvent('messageRead'));
-        } else {
-            icon.className = originalIcon;
-            alert('Erro ao atualizar status da mensagem');
-        }
-    })
-    .catch(error => {
-        icon.className = originalIcon;
-        alert('Erro ao atualizar status da mensagem');
-    })
-    .finally(() => {
-        button.disabled = false;
-        button.closest('.card').classList.remove('loading');
-    });
-}
-
 function deleteMessage(messageId, button) {
     if (!confirm('Tem certeza que deseja excluir esta mensagem?')) {
         return;
@@ -141,10 +117,13 @@ function deleteMessage(messageId, button) {
     const messageCard = button.closest('.card');
     messageCard.classList.add('loading');
     
+    // Obter o token CSRF do formulário oculto
+    const csrfToken = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
+    
     fetch(`{% url 'realtime:delete_message' 0 %}`.replace('0', messageId), {
         method: 'POST',
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-CSRFToken': csrfToken,
         }
     })
     .then(response => {

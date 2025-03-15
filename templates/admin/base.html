@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block userlinks %}
+    {{ block.super }}
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Oculta o campo de busca no menu navbar */
+    .form-inline.ml-3 {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Traduz o texto "Account" para "Menu do Usuário"
+        const accountText = document.querySelector('.dropdown-header');
+        if (accountText && accountText.textContent.trim() === 'Account') {
+            accountText.textContent = 'Menu do Usuário';
+        }
+        
+        // Traduz o texto "See Profile" para "Ver Perfil"
+        const profileLink = document.querySelector('.dropdown-item.dropdown-footer');
+        if (profileLink && profileLink.textContent.trim() === 'See Profile') {
+            profileLink.textContent = 'Ver Perfil';
+        }
+    });
+</script>
+{% endblock %}

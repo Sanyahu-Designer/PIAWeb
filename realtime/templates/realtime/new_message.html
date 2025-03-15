@@ -1,95 +1,51 @@
-{% extends "dashboard/base.html" %}
+{% extends "realtime/base_messages_standalone.html" %}
 {% load static %}
 
 {% block title %}Nova Mensagem{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'realtime/css/messages.css' %}">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0">
-                    <i class="fas fa-paper-plane me-2"></i>
-                    Nova Mensagem
-                </h4>
-                <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary btn-action">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Voltar
-                </a>
-            </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-paper-plane me-2"></i>
+        Nova Mensagem
+    </h4>
+    <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary btn-action">
+        <i class="fas fa-arrow-left me-1"></i>
+        Voltar
+    </a>
+</div>
 
-            <div class="card message-card">
-                <div class="card-body">
-                    <form method="post" id="message-form">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="recipient" class="form-label">
-                                <span class="message-icon bg-info text-white">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                                Destinatário
-                            </label>
-                            <select name="recipient" id="recipient" class="form-select" required>
-                                <option value="">Selecione um destinatário</option>
-                                {% for user in users %}
-                                    <option value="{{ user.id }}" {% if user.id == recipient_id %}selected{% endif %}>
-                                        {{ user.get_full_name|default:user.username }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="message" class="form-label">
-                                <span class="message-icon bg-primary text-white">
-                                    <i class="fas fa-envelope"></i>
-                                </span>
-                                Mensagem
-                            </label>
-                            <textarea name="message" id="message" class="form-control" rows="5" required
-                                      placeholder="Digite sua mensagem aqui..."
-                                      style="resize: vertical;"></textarea>
-                        </div>
-                        
-                        <div class="text-end">
-                            <a href="{% url 'realtime:chat_list' %}" class="btn btn-secondary btn-action me-2">
-                                <i class="fas fa-times me-1"></i>
-                                Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-action">
-                                <i class="fas fa-paper-plane me-1"></i>
-                                Enviar Mensagem
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<div class="card message-card">
+    <div class="card-body">
+        <!-- Formulário simplificado usando a URL de teste -->
+        <form method="post" action="{% url 'realtime:test_message' %}">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="recipient" class="form-label">Destinatário</label>
+                <select name="recipient" id="recipient" class="form-select" required>
+                    <option value="">Selecione um destinatário</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}" {% if user.id == recipient.id %}selected{% endif %}>
+                            {{ user.get_full_name|default:user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
-        </div>
+            
+            <div class="mb-3">
+                <label for="message" class="form-label">Mensagem</label>
+                <textarea name="message" id="message" class="form-control" rows="5" required></textarea>
+            </div>
+            
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+            </div>
+        </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('#recipient').select2({
-            placeholder: 'Selecione um destinatário',
-            allowClear: true
-        });
-
-        $('#message-form').on('submit', function() {
-            const submitButton = $(this).find('button[type="submit"]');
-            submitButton.prop('disabled', true);
-            submitButton.html('<i class="fas fa-spinner fa-spin me-1"></i> Enviando...');
-            $(this).closest('.card').addClass('loading');
-        });
-    });
-</script>
 {% endblock %}

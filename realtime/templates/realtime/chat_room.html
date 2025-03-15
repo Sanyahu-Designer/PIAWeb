@@ -1,52 +1,52 @@
-{% extends 'base.html' %}
+{% extends 'realtime/base_messages_standalone.html' %}
 
-{% block main_content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Mensagem</h4>
-                    <div>
-                        <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary me-2">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal">
-                            <i class="fas fa-reply"></i> Responder
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">De: {{ message.sender.get_full_name|default:message.sender.username }}</h5>
-                            <small class="text-muted">{{ message.timestamp|date:"d/m/Y H:i" }}</small>
-                        </div>
-                        <h6>Para: {{ message.recipient.get_full_name|default:message.recipient.username }}</h6>
-                    </div>
-                    
-                    <div class="message-content mb-4">
-                        {{ message.message|linebreaks }}
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="markAsRead" 
-                                   {% if message.is_read %}checked{% endif %}
-                                   {% if message.sender == request.user %}disabled{% endif %}>
-                            <label class="form-check-label" for="markAsRead">
-                                Marcar como lida
-                            </label>
-                        </div>
-                        
-                        {% if message.sender == request.user %}
-                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-comments me-2"></i>
+        Mensagem
+    </h4>
+    <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary btn-action">
+        <i class="fas fa-arrow-left me-1"></i>
+        Voltar
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Detalhes da Mensagem</h5>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#replyModal">
+            <i class="fas fa-reply"></i> Responder
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">De: {{ message.sender.get_full_name|default:message.sender.username }}</h5>
+                <small class="text-muted">{{ message.timestamp|date:"d/m/Y H:i" }}</small>
             </div>
+            <h6>Para: {{ message.recipient.get_full_name|default:message.recipient.username }}</h6>
+        </div>
+        
+        <div class="message-content mb-4">
+            {{ message.message|linebreaks }}
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="markAsRead" 
+                       {% if message.is_read %}checked{% endif %}
+                       {% if message.sender == request.user %}disabled{% endif %}>
+                <label class="form-check-label" for="markAsRead">
+                    Marcar como lida
+                </label>
+            </div>
+            
+            {% if message.sender == request.user %}
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="fas fa-trash"></i> Excluir
+            </button>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -98,6 +98,7 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>

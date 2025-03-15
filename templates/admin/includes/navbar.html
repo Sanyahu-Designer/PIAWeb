@@ -39,32 +39,35 @@
 
     <ul class="navbar-nav ml-auto">
         {% if user.is_authenticated %}
-            <!-- Notification Bell -->
+            <!-- Ícone de mensagens -->
             <li class="nav-item">
                 <a href="{% url 'realtime:chat_list' %}" class="nav-link" title="Mensagens">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge badge badge-danger" style="position: absolute; top: 0px; right: 0px; display: none;">0</span>
+                    <i class="fas fa-comments"></i>
+                    <span id="message-count" class="badge badge-danger navbar-badge" style="display: none;">0</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link position-relative" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            
+            <!-- Ícone de notificações -->
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#" id="notificationDropdown" role="button" aria-expanded="false" title="Notificações">
                     <i class="fas fa-bell"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none;">
-                        0
-                    </span>
+                    <span class="badge badge-danger navbar-badge notification-count" style="display: none;">0</span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
-                    <div class="px-3 py-2 border-bottom">
-                        <h6 class="mb-0">Notificações</h6>
-                    </div>
-                    <div id="notification-list" class="py-2">
-                        <div class="px-3 text-center text-muted">
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="left: inherit; right: 0px;">
+                    <span class="dropdown-item dropdown-header">Notificações</span>
+                    <div class="dropdown-divider"></div>
+                    <div id="notification-list" style="max-height: 300px; overflow-y: auto;">
+                        <!-- As notificações serão inseridas aqui dinamicamente -->
+                        <div class="dropdown-item text-center text-muted">
                             <small>Nenhuma notificação no momento</small>
                         </div>
                     </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'realtime:chat_list' %}" class="dropdown-item dropdown-footer">Ver todas as mensagens</a>
                 </div>
             </li>
         {% endif %}
+        
         {% if jazzmin_settings.search_model %}
             <li class="nav-item">
                 <form action="{{ jazzmin_settings.search_url }}" method="GET" class="form-inline">
@@ -81,29 +84,6 @@
         {% endif %}
 
         {% if user.is_authenticated %}
-            <!-- Ícone de notificações -->
-            <li class="nav-item">
-                <div class="dropdown">
-                    <button class="btn btn-link nav-link position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
-                        <i class="fas fa-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none; font-size: 0.65rem;">
-                            0
-                        </span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
-                        <div class="px-3 py-2 border-bottom bg-light">
-                            <h6 class="mb-0">Notificações</h6>
-                        </div>
-                        <div id="notification-list" class="py-2">
-                            <!-- As notificações serão inseridas aqui dinamicamente -->
-                            <div class="px-3 text-center text-muted">
-                                <small>Nenhuma notificação no momento</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </li>
-
             <!-- Menu do usuário -->
             <li class="nav-item dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
@@ -126,28 +106,169 @@
     </ul>
 </nav>
 
-<!-- Notification Script -->
+<!-- JavaScript para gerenciar notificações -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function updateNotifications() {
-            fetch('/dashboard/realtime/notifications/')
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.querySelector('.notification-badge');
-                    if (data.notifications && data.notifications.length > 0) {
-                        badge.style.display = 'inline';
-                        badge.textContent = data.notifications.length;
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                })
-                .catch(error => console.error('Erro ao verificar mensagens:', error));
+    // Inicializar o sistema de notificações apenas uma vez
+    if (!window.notificationSystemInitialized) {
+        window.notificationSystemInitialized = true;
+
+        // Função para atualizar o contador de notificações
+        function updateNotificationCount() {
+            const counts = document.querySelectorAll('.notification-count');
+            counts.forEach(count => {
+                if (window.unreadCount > 0) {
+                    count.style.display = 'inline-block';
+                    count.textContent = window.unreadCount;
+                } else {
+                    count.style.display = 'none';
+                }
+            });
         }
 
-        // Verificar mensagens a cada 30 segundos
-        setInterval(updateNotifications, 30000);
-        
-        // Verificar mensagens imediatamente
-        updateNotifications();
-    });
+        // Função para adicionar uma nova notificação
+        function addNotification(notification) {
+            const lists = document.querySelectorAll('#notification-list');
+            lists.forEach(list => {
+                const emptyNotification = list.querySelector('.text-center');
+                if (emptyNotification) {
+                    emptyNotification.remove();
+                }
+
+                const notificationElement = document.createElement('div');
+                notificationElement.className = 'dropdown-item';
+                notificationElement.innerHTML = `
+                    <div class="media">
+                        <div class="media-body">
+                            <h3 class="dropdown-item-title">
+                                Nova mensagem
+                                <span class="float-right text-sm text-danger"><i class="fas fa-envelope"></i></span>
+                            </h3>
+                            <p class="text-sm">${notification.message}</p>
+                            <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> ${new Date(notification.timestamp).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+                list.insertBefore(notificationElement, list.firstChild);
+            });
+
+            window.unreadCount = (window.unreadCount || 0) + 1;
+            updateNotificationCount();
+        }
+
+        // Função para marcar notificação como lida
+        function markAsRead(notificationId, element) {
+            fetch('/dashboard/realtime/notifications/' + notificationId + '/read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Remove a notificação da lista
+                    if (element) {
+                        element.remove();
+                    }
+                    
+                    // Atualiza o contador
+                    window.unreadCount = Math.max(0, window.unreadCount - 1);
+                    updateNotificationCount();
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+        }
+
+        // Carregar notificações existentes
+        function loadNotifications() {
+            fetch('/dashboard/realtime/notifications/')
+            .then(response => response.json())
+            .then(data => {
+                window.unreadCount = data.notifications.length;
+                updateNotificationCount();
+                
+                data.notifications.forEach(notification => {
+                    addNotification(notification);
+                });
+            });
+        }
+
+        // Inicializar WebSocket para notificações em tempo real
+        function initWebSocket() {
+            // Verifica se o WebSocket já foi inicializado
+            if (window.notificationSocket) {
+                return;
+            }
+            
+            // Cria o WebSocket
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = wsProtocol + window.location.host + '/ws/notifications/';
+            
+            // Tenta criar o WebSocket
+            try {
+                window.notificationSocket = new WebSocket(wsUrl);
+                
+                window.notificationSocket.onopen = function(e) {
+                    console.log('WebSocket conectado');
+                };
+                
+                window.notificationSocket.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'notification_message') {
+                        addNotification({
+                            id: data.id || Date.now(),
+                            message: data.message,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                };
+                
+                window.notificationSocket.onclose = function(e) {
+                    console.log('WebSocket desconectado. Tentando reconectar em 5 segundos...');
+                    setTimeout(initWebSocket, 5000);
+                };
+                
+                window.notificationSocket.onerror = function(e) {
+                    console.error('Erro no WebSocket:', e);
+                };
+            } catch (error) {
+                console.error('Erro ao criar WebSocket:', error);
+                setTimeout(initWebSocket, 5000);
+            }
+        }
+
+        // Expor funções globalmente
+        window.markAsRead = markAsRead;
+        window.addNotification = addNotification;
+        window.updateNotificationCount = updateNotificationCount;
+        window.unreadCount = 0;
+
+        // Carregar notificações ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+            initWebSocket();
+            
+            // Atualizar contador de mensagens não lidas
+            function updateUnreadCount() {
+                fetch('{% url "realtime:unread_count" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const messageCountElement = document.getElementById('message-count');
+                        if (data.unread_count > 0) {
+                            messageCountElement.textContent = data.unread_count;
+                            messageCountElement.style.display = 'inline-block';
+                        } else {
+                            messageCountElement.style.display = 'none';
+                        }
+                    })
+                    .catch(error => console.error('Erro ao atualizar contagem de mensagens:', error));
+            }
+            
+            // Atualiza o contador quando a página carrega
+            updateUnreadCount();
+            
+            // Atualiza a cada 30 segundos
+            setInterval(updateUnreadCount, 30000);
+        });
+    }
 </script>

@@ -1,4 +1,108 @@
 document.addEventListener('DOMContentLoaded', function() {
+    /**
+     * Script para preencher automaticamente o campo categoria com base na condição selecionada
+     * Isso permite que o usuário veja apenas o campo de condição, mas mantém a integridade do banco de dados
+     */
+    function setupAutoCategoriaFromCondicao() {
+        // Mapeamento de condições para categorias
+        const condicaoCategoriaMap = {};
+        
+        // Função para extrair a categoria do texto da condição
+        function extractCategoriaFromText(text) {
+            const match = text.match(/^([^:]+):/);
+            return match ? match[1].trim() : null;
+        }
+        
+        // Função para encontrar o ID da categoria com base no nome
+        function findCategoriaIdByName(categoriaName, categoriaSelect) {
+            for (let i = 0; i < categoriaSelect.options.length; i++) {
+                const option = categoriaSelect.options[i];
+                if (option.text.trim() === categoriaName) {
+                    return option.value;
+                }
+            }
+            return null;
+        }
+        
+        // Processa todas as linhas do formulário
+        function processFormRows() {
+            // Procura todos os selects de condição
+            document.querySelectorAll('select.condicao-select, select[name*="condicao"]').forEach(condicaoSelect => {
+                // Encontra o campo de categoria correspondente
+                let categoriaSelect;
+                
+                // Se estamos em uma linha de tabular inline
+                if (condicaoSelect.name.includes('-')) {
+                    const prefix = condicaoSelect.name.split('-condicao')[0];
+                    categoriaSelect = document.querySelector(`select[name="${prefix}-categoria"]`);
+                } 
+                // Se estamos no formulário principal
+                else {
+                    const row = condicaoSelect.closest('.form-row, tr');
+                    categoriaSelect = row.querySelector('select[name*="categoria"]');
+                    if (!categoriaSelect) {
+                        // Tenta encontrar no .form-row anterior
+                        const prevRow = row.previousElementSibling;
+                        if (prevRow) {
+                            categoriaSelect = prevRow.querySelector('select[name*="categoria"]');
+                        }
+                    }
+                }
+                
+                if (categoriaSelect) {
+                    // Oculta o campo de categoria
+                    const categoriaRow = categoriaSelect.closest('.form-row, td');
+                    if (categoriaRow) {
+                        categoriaRow.style.display = 'none';
+                    }
+                    
+                    // Configura o evento de mudança para a condição
+                    condicaoSelect.addEventListener('change', function() {
+                        const selectedOption = condicaoSelect.options[condicaoSelect.selectedIndex];
+                        if (selectedOption && selectedOption.value) {
+                            const categoriaName = extractCategoriaFromText(selectedOption.text);
+                            if (categoriaName) {
+                                const categoriaId = findCategoriaIdByName(categoriaName, categoriaSelect);
+                                if (categoriaId) {
+                                    categoriaSelect.value = categoriaId;
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Executa o evento de mudança inicialmente se já houver uma condição selecionada
+                    if (condicaoSelect.value) {
+                        const event = new Event('change');
+                        condicaoSelect.dispatchEvent(event);
+                    }
+                }
+            });
+        }
+        
+        // Processa as linhas iniciais
+        processFormRows();
+        
+        // Configura o observador para processar novas linhas adicionadas dinamicamente
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length) {
+                    // Aguarda um momento para que o DOM seja completamente atualizado
+                    setTimeout(processFormRows, 100);
+                }
+            });
+        });
+        
+        // Observa o documento para novos campos
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+    
+    // Inicializa o script
+    setupAutoCategoriaFromCondicao();
+    
+
+    
+
+    
     // Função para corrigir o formato de data do campo data_identificacao na aba Diagnóstico
     function fixDiagnosticoDateFormat() {
         // Seleciona todos os formulários de diagnóstico

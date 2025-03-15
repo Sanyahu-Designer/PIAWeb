@@ -229,14 +229,17 @@ ASGI_APPLICATION = 'pia_config.asgi.application'
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
     }
 }
 
 JAZZMIN_SETTINGS = {
-    "site_title": "PIA Admin",
+    "site_title": "PIA",
     "site_header": "PIA",
-    "site_brand": "PIA",
+    "site_brand": "PIA - Dashboard",
     "site_logo": "pia_config/images/logo.webp",
     "login_logo": "pia_config/images/logo.webp",
     "login_logo_dark": None,
@@ -244,7 +247,7 @@ JAZZMIN_SETTINGS = {
     "site_icon": None,
     "welcome_sign": "Bem-vindo ao PIA",
     "copyright": "PIA - Plano Individual de Aprendizagem",
-    "search_model": ["auth.User", "neurodivergentes.Neurodivergente"],
+    "search_model": None,
     "user_avatar": None,
     "topmenu_links": [
         {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
@@ -265,6 +268,7 @@ JAZZMIN_SETTINGS = {
         "neurodivergentes.Neurodivergente": "fas fa-user-graduate",
         "escola.Escola": "fas fa-school",
         "profissionais_app.Profissional": "fas fa-user-md",
+        "realtime.PrivateMessage": "fas fa-comments",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
@@ -281,35 +285,13 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": [],
     "custom_links_in_field_set_template": False,
     "show_ui_builder": False,
-    "topmenu_links": [],
-    "usermenu_links": [],
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-    "order_with_respect_to": [],
-    "app_list_custom_labels": {
-        "adaptacao_curricular": "Adaptação Curricular"
-    },
-    "site_brand": "PIA | Dashboard",
-    "site_logo": "pia_config/images/logo.webp",
-    "login_logo": None,
-    "login_logo_dark": None,
-    "site_logo_classes": "",
-    "site_icon": "pia_config/images/logo.webp",
-    "welcome_sign": "Seja Bem vindo ao PIA - Plano Individual de Aprendizagem",
-    "copyright": "PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03",
-    "user_avatar": None,
-    "search_model": ["auth.User"],
-        
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Mensagens", "url": "realtime:chat_list", "icon": "fas fa-comments"},
         {"name": "Ajuda", "url": "https://sanyahudesigner.com.br", "new_window": True},
-        {"name": "", "url": "#", "icon": "fas fa-bell position-relative", "classes": "notification-icon"},
     ],
-    
     "usermenu_links": [
-        {"name": "Notificações", "url": "#", "icon": "fas fa-bell position-relative"},
+        {"name": "Mensagens", "url": "realtime:chat_list", "icon": "fas fa-comments"},
         {"name": "Suporte", "url": "https://sanyahudesigner.com.br", "new_window": True, "icon": "fas fa-headset"},
     ],
     
@@ -320,6 +302,16 @@ JAZZMIN_SETTINGS = {
     "footer_text": "Direitos Reservados 2023 PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03",
     "footer_version": False,
     "footer_style": "text-align: center; font-size: 14px;",
+    
+    # Adiciona um link para mensagens no menu lateral
+    "custom_links": {
+        "realtime": [{
+            "name": "Mensagens",
+            "url": "realtime:chat_list",
+            "icon": "fas fa-comments",
+            "permissions": ["auth.view_user"]
+        }]
+    },
 }
 
 JAZZMIN_UI_TWEAKS = {
@@ -354,4 +346,45 @@ JAZZMIN_UI_TWEAKS = {
     },
     "custom_css": None,
     "custom_js": None,
+}
+
+# Configuração de logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'realtime': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }

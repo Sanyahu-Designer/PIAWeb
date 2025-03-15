@@ -1,0 +1,94 @@
+{% load i18n %}
+
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
+<nav class="sticky" id="nav-sidebar">
+  <div class="app-auth module">
+    <table>
+      <caption>
+        <a href="#" class="section" title="{% translate 'Authentication and Authorization' %}">
+          {% translate 'Authentication and Authorization' %}
+        </a>
+      </caption>
+      <tbody>
+        <tr class="model-user">
+          <th scope="row"><a href="{% url 'admin:auth_user_changelist' %}">{% translate 'Users' %}</a></th>
+          <td><a href="{% url 'admin:auth_user_add' %}" class="addlink">{% translate 'Add' %}</a></td>
+        </tr>
+        <tr class="model-group">
+          <th scope="row"><a href="{% url 'admin:auth_group_changelist' %}">{% translate 'Groups' %}</a></th>
+          <td><a href="{% url 'admin:auth_group_add' %}" class="addlink">{% translate 'Add' %}</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Link para Mensagens -->
+  <div class="app-realtime module">
+    <table>
+      <caption>
+        <a href="#" class="section" title="Mensagens">
+          Mensagens
+        </a>
+      </caption>
+      <tbody>
+        <tr class="model-privatemessage">
+          <th scope="row">
+            <a href="{% url 'realtime:chat_list' %}" style="display: flex; align-items: center; justify-content: space-between;">
+              Mensagens
+              <span id="sidebar-message-count" class="badge badge-danger" style="display: none; background-color: #dc3545; color: white; border-radius: 50%; font-size: 0.7rem; padding: 0.25rem 0.5rem; min-width: 18px; text-align: center;">0</span>
+            </a>
+          </th>
+          <td><a href="{% url 'realtime:new_message' %}" class="addlink">{% translate 'Add' %}</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  {% if available_apps %}
+    {% for app in available_apps %}
+      <div class="app-{{ app.app_label }} module{% if app.app_url in request.path %} current-app{% endif %}">
+        <table>
+          <caption>
+            <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+          </caption>
+          {% for model in app.models %}
+            <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path %} current-model{% endif %}">
+              <th scope="row"><a href="{% firstof model.admin_url model.add_url '#' %}"{% if model.admin_url is None %} disabled{% endif %}>{{ model.name }}</a></th>
+              <td>
+                {% if model.add_url %}
+                  <a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    {% endfor %}
+  {% endif %}
+</nav>
+
+<script>
+  // Função para atualizar o contador de mensagens não lidas
+  function updateSidebarUnreadCount() {
+      fetch('{% url "realtime:unread_count" %}')
+          .then(response => response.json())
+          .then(data => {
+              const sidebarMessageCountElement = document.getElementById('sidebar-message-count');
+              if (data.unread_count > 0) {
+                  sidebarMessageCountElement.textContent = data.unread_count;
+                  sidebarMessageCountElement.style.display = 'inline';
+              } else {
+                  sidebarMessageCountElement.style.display = 'none';
+              }
+          })
+          .catch(error => console.error('Erro ao atualizar contagem de mensagens:', error));
+  }
+
+  // Atualiza o contador quando a página carrega
+  document.addEventListener('DOMContentLoaded', function() {
+      updateSidebarUnreadCount();
+      
+      // Atualiza a cada 30 segundos
+      setInterval(updateSidebarUnreadCount, 30000);
+  });
+</script> 

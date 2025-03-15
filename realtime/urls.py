@@ -9,6 +9,9 @@ urlpatterns = [
     path('notifications/', views.get_notifications, name='notifications'),
     path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
     path('privatemessage/<int:message_id>/delete/', views.delete_message, name='delete_message'),
+    path('message/<int:message_id>/toggle-read/', views.toggle_read, name='toggle_read'),
     path('new-message/', views.new_message, name='new_message'),
+    path('test-message/', views.new_message, name='test_message'),
     path('message/<int:message_id>/', views.view_message, name='view_message'),
+    path('message/<int:message_id>/edit/', views.edit_message, name='edit_message'),
 ]

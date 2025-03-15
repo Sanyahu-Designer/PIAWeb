@@ -26,7 +26,7 @@ from .models import (
 from .forms import (
     NeurodivergenteForms, PDIForm, PlanoEducacionalForm,
     AdaptacaoCurricularForm, RegistroEvolucaoForm,
-    MonitoramentoForm, ParecerAvaliativoForm
+    MonitoramentoForm, ParecerAvaliativoForm, NeurodivergenciaForm
 )
 
 from django.db.models import Max
@@ -61,6 +61,8 @@ class GrupoFamiliarInline(admin.TabularInline):
 
 @admin.register(Neurodivergente)
 class NeurodivergenteAdmin(admin.ModelAdmin):
+    verbose_name = 'Aluno/Paciente'
+    verbose_name_plural = 'Alunos/Pacientes'
     form = NeurodivergenteForms
     inlines = [GrupoFamiliarInline]
     readonly_fields = ['foto_preview']
@@ -124,13 +126,54 @@ class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
     search_fields = ['nome', 'cid_10']
     ordering = ['categoria', 'nome']
 
+# Formulário personalizado para DiagnosticoNeurodivergente
+class DiagnosticoNeurodivergenteForms(forms.ModelForm):
+    class Meta:
+        model = DiagnosticoNeurodivergente
+        fields = ('condicao', 'data_identificacao', 'observacoes')
+        
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Garante que a categoria seja definida com base na condição
+        if instance.condicao_id:
+            instance.categoria = instance.condicao.categoria
+        if commit:
+            instance.save()
+        return instance
+
 class DiagnosticoInline(admin.TabularInline):
     model = DiagnosticoNeurodivergente
+    form = DiagnosticoNeurodivergenteForms
     extra = 1
     min_num = 1
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
     }
+    
+    # Oculta o campo categoria e mostra apenas os campos relevantes
+    fields = ('condicao', 'data_identificacao', 'observacoes')
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'condicao':
+            # Organiza as condições por categoria para melhor visualização
+            condicoes = CondicaoNeurodivergente.objects.all().order_by('categoria__nome', 'nome')
+            kwargs['queryset'] = condicoes
+            kwargs['widget'] = forms.Select(attrs={'style': 'min-width: 300px;', 'class': 'condicao-select'})
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    class Media:
+        js = ('admin/js/neurodivergentes_admin.js',)
+    
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        
+        class CustomFormset(formset):
+            def _construct_form(self, *args, **kwargs):
+                form = super()._construct_form(*args, **kwargs)
+                if form.instance and form.instance.data_identificacao:
+                    form.initial['data_identificacao'] = form.instance.data_identificacao.strftime('%Y-%m-%d')
+                return form
+        return CustomFormset
 
 class AdaptacaoCurricularInline(admin.StackedInline):
     model = AdaptacaoCurricular
@@ -141,16 +184,25 @@ class AdaptacaoCurricularInline(admin.StackedInline):
 
 @admin.register(Neurodivergencia)
 class NeurodivergenciaAdmin(admin.ModelAdmin):
+    form = NeurodivergenciaForm
     inlines = [DiagnosticoInline]
     list_display = ['neurodivergente', 'data_diagnostico', 'profissional_diagnostico']
     list_filter = ['data_diagnostico']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
-    formfield_overrides = {
-        models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
-    }
+    
+    def save_formset(self, request, form, formset, change):
+        """Garante que a categoria seja definida corretamente antes de salvar"""
+        instances = formset.save(commit=False)
+        for instance in instances:
+            # Verifica se é um DiagnosticoNeurodivergente e se tem condicao definida
+            if isinstance(instance, DiagnosticoNeurodivergente) and instance.condicao_id:
+                # Define a categoria com base na condição selecionada
+                instance.categoria = instance.condicao.categoria
+            instance.save()
+        formset.save_m2m()
     
     fieldsets = (
-        ('Neurodivergente', {
+        ('Aluno/Paciente', {
             'fields': ('neurodivergente',)
         }),
         ('Diagnóstico', {
@@ -163,6 +215,12 @@ class NeurodivergenciaAdmin(admin.ModelAdmin):
             'classes': ('wide', 'diagnosticos-container')
         }),
     )
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if obj and obj.data_diagnostico:
+            form.base_fields['data_diagnostico'].initial = obj.data_diagnostico.strftime('%Y-%m-%d')
+        return form
 
     class Media:
         css = {

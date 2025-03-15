@@ -4,6 +4,8 @@
 {% block extrahead %}
 {{ block.super }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{% static 'css/floating-notification.css' %}" />
+<link rel="stylesheet" href="{% static 'css/hide-websocket-warning.css' %}" />
 <style>
     .navbar-nav.notification-nav {
         display: flex;
@@ -25,20 +27,59 @@
     .notification-nav .nav-link:hover {
         color: var(--link-hover-color);
     }
+    .badge-message-count {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        min-width: 18px;
+        text-align: center;
+    }
+    
+    /* Estilo para o link de mensagens no menu lateral */
+    .messages-link {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        color: var(--link-fg);
+        text-decoration: none;
+        margin-bottom: 0.5rem;
+        border-radius: 0.25rem;
+    }
+    .messages-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    .messages-link i {
+        margin-right: 0.5rem;
+    }
+    
+    /* Esconde o aviso de WebSocket desconectado */
+    .websocket-warning,
+    [class*="websocket-disconnected"],
+    [id*="websocket-disconnected"],
+    div:contains("WebSocket desconectado") {
+        display: none !important;
+    }
 </style>
 {% endblock %}
 
 {% block usertools %}
 {% if has_permission %}
 <div id="user-tools" class="d-flex align-items-center">
+    <form method="post" style="display: none;">
+        {% csrf_token %}
+    </form>
     <ul class="navbar-nav notification-nav">
         <li class="nav-item">
             <a href="{% url 'realtime:chat_list' %}" class="nav-link" title="Mensagens">
                 <i class="fas fa-comments"></i>
+                <span id="message-count" class="badge-message-count" style="display: none;">0</span>
             </a>
-        </li>
-        <li class="nav-item">
-            {% include 'realtime/notifications.html' %}
         </li>
     </ul>
     {% if user.is_active and user.is_staff %}
@@ -62,10 +103,78 @@
 </div>
 {% endif %}
 {% endblock %}
+
+{% block nav-global %}
+<a href="{% url 'realtime:chat_list' %}" class="messages-link">
+    <i class="fas fa-comments"></i>
+    Mensagens
+    <span id="sidebar-message-count" class="badge-message-count" style="display: none;">0</span>
+</a>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script src="{% static 'js/floating-notification.js' %}"></script>
+<script>
+    // Função para atualizar o contador de mensagens não lidas
+    function updateUnreadCount() {
+        fetch('{% url "realtime:unread_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                const messageCountElement = document.getElementById('message-count');
+                const sidebarMessageCountElement = document.getElementById('sidebar-message-count');
+                if (data.unread_count > 0) {
+                    if (messageCountElement) {
+                        messageCountElement.textContent = data.unread_count;
+                        messageCountElement.style.display = 'inline';
+                    }
+                    if (sidebarMessageCountElement) {
+                        sidebarMessageCountElement.textContent = data.unread_count;
+                        sidebarMessageCountElement.style.display = 'inline';
+                    }
+                } else {
+                    if (messageCountElement) {
+                        messageCountElement.style.display = 'none';
+                    }
+                    if (sidebarMessageCountElement) {
+                        sidebarMessageCountElement.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar contagem de mensagens:', error));
+    }
+
+    // Atualiza o contador quando a página carrega
+    document.addEventListener('DOMContentLoaded', function() {
+        updateUnreadCount();
+        
+        // Atualiza a cada 30 segundos
+        setInterval(updateUnreadCount, 30000);
+        
+        // Inicializa o ícone flutuante de notificações
+        if (typeof initNotifications === 'function') {
+            initNotifications();
+        }
+        
+        // Esconde qualquer aviso de WebSocket desconectado
+        document.querySelectorAll('[class*="websocket-disconnected"], [id*="websocket-disconnected"]').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        // Remover qualquer texto que contenha "WebSocket desconectado"
+        document.querySelectorAll('*').forEach(el => {
+            if (el.innerText && el.innerText.includes('WebSocket desconectado')) {
+                el.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}
+
 {% block footer %}
 <footer class="main-footer">
     <div class="float-right d-none d-sm-inline">
-        <b>PIA - Versão Beta</b> 1.0.0
+        <b>PIA - Versão</b> 1.8.0
     </div>
     <strong>© {% now "Y" %} Todos os Direitos Reservados a PIA - Plano Individual de Aprendizagem | Desenvolvido por <a href="https://sanyahudesigner.com.br" target="_blank" style="color: inherit; text-decoration: none;">Sanyahu Designer</a> </strong>
 </footer>
