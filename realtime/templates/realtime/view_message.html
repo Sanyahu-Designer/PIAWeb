@@ -3,6 +3,11 @@
 
 {% block title %}Mensagem{% endblock %}
 
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/delete-confirmation.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
@@ -104,41 +109,127 @@
 </style>
 {% endblock %}
 
-{% block extra_js %}
+{% block extrajs %}
+{{ block.super }}
 <script>
 function deleteMessage(messageId, button) {
-    if (!confirm('Tem certeza que deseja excluir esta mensagem?')) {
-        return;
+    // Armazena referências para uso posterior
+    const messageCard = button.closest('.card');
+    const icon = button.querySelector('i');
+    
+    // Cria o modal de confirmação se ainda não existir
+    if (!document.getElementById('deleteConfirmationModal')) {
+        const modalHTML = `
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirmar exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tem certeza que deseja excluir esta mensagem?</p>
+                        <p class="text-muted small">Esta ação não pode ser desfeita.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancelar</button>
+                        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        
+        // Adiciona o modal ao final do body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
     
-    button.disabled = true;
-    const icon = button.querySelector('i');
-    icon.className = 'fas fa-spinner fa-spin';
-    const messageCard = button.closest('.card');
-    messageCard.classList.add('loading');
+    // Configura o botão de confirmação no modal para este messageId específico
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
     
-    // Obter o token CSRF do formulário oculto
-    const csrfToken = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
+    // Remove qualquer evento de clique anterior
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
     
-    fetch(`{% url 'realtime:delete_message' 0 %}`.replace('0', messageId), {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken,
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            window.location.href = "{% url 'realtime:chat_list' %}";
+    // Adiciona o novo evento de clique
+    newConfirmBtn.addEventListener('click', function() {
+        // Fecha o modal usando jQuery
+        if (typeof $ !== 'undefined') {
+            $('#deleteConfirmationModal').modal('hide');
         } else {
-            throw new Error('Erro ao excluir mensagem');
+            // Fallback manual
+            const modalElement = document.getElementById('deleteConfirmationModal');
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
         }
-    })
-    .catch(error => {
-        button.disabled = false;
-        icon.className = 'fas fa-trash';
-        messageCard.classList.remove('loading');
-        alert('Erro ao excluir mensagem. Por favor, tente novamente.');
+        
+        // Procede com a exclusão
+        button.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin';
+        messageCard.classList.add('loading');
+        
+        // Obter o token CSRF do formulário oculto
+        const csrfToken = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
+        
+        fetch(`{% url 'realtime:delete_message' 0 %}`.replace('0', messageId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "{% url 'realtime:chat_list' %}";
+            } else {
+                throw new Error('Erro ao excluir mensagem');
+            }
+        })
+        .catch(error => {
+            button.disabled = false;
+            icon.className = 'fas fa-trash';
+            messageCard.classList.remove('loading');
+            alert('Erro ao excluir mensagem. Por favor, tente novamente.');
+        });
     });
+    
+    // Configura o botão Cancelar
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    newCancelBtn.addEventListener('click', function() {
+        // Fecha o modal usando jQuery
+        if (typeof $ !== 'undefined') {
+            $('#deleteConfirmationModal').modal('hide');
+        } else {
+            // Fallback manual
+            const modalElement = document.getElementById('deleteConfirmationModal');
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+        }
+    });
+    
+    // Exibe o modal usando jQuery (mais confiável)
+    if (typeof $ !== 'undefined') {
+        $('#deleteConfirmationModal').modal('show');
+    } else {
+        // Fallback manual
+        const modalElement = document.getElementById('deleteConfirmationModal');
+        modalElement.style.display = 'block';
+        modalElement.classList.add('show');
+        document.body.classList.add('modal-open');
+        
+        // Cria backdrop manualmente
+        if (!document.querySelector('.modal-backdrop')) {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+        }
+    }
 }
 </script>
 {% endblock %}
