@@ -5,7 +5,6 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.html import format_html
 from django.db.models import Count, Subquery, OuterRef, Avg
 from django.db import models
 from django.urls import reverse
@@ -26,7 +25,8 @@ from .models import (
 from .forms import (
     NeurodivergenteForms, PDIForm, PlanoEducacionalForm,
     AdaptacaoCurricularForm, RegistroEvolucaoForm,
-    MonitoramentoForm, ParecerAvaliativoForm, NeurodivergenciaForm
+    MonitoramentoForm, ParecerAvaliativoForm, NeurodivergenciaForm,
+    AnamneseForm
 )
 
 from django.db.models import Max
@@ -952,6 +952,7 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
 
 @admin.register(Anamnese)
 class AnamneseAdmin(admin.ModelAdmin):
+    form = AnamneseForm
     list_display = ['neurodivergente', 'tipo_parto', 'prematuridade', 'acoes']
     list_filter = ['tipo_parto', 'prematuridade']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']

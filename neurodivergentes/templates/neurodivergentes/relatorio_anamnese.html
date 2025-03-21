@@ -23,6 +23,8 @@
             margin: 1.5cm 2cm;
         }
         
+
+        
         body {
             font-family: 'Roboto', sans-serif;
             line-height: 1.5;
@@ -426,6 +428,26 @@
             </div>
         </div>
     </div>
+
+    <!-- Anexos -->
+    {% if anamnese.anexos %}
+    <div class="container">
+        <div class="section">
+                <h2 class="section-title">Anexos</h2>
+                <div class="section-content">
+                    <div class="info-row">
+                        <div class="info-col">
+                            <div class="info-label">Arquivo Anexado:</div>
+                            <div class="info-value">
+                                <a href="{{ anamnese.anexos.url }}" target="_blank">Visualizar Anexo</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="footer">
         <p>Relatório gerado em {{ data_impressao|date:"d/m/Y H:i" }}</p>

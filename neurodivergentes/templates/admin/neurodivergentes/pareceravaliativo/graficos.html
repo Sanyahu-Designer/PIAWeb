@@ -105,7 +105,7 @@
             </div>
 
             <div class="grafico-box">
-                <h3>Monitoramento PDI</h3>
+                <h3>Monitoramento de Metas/Habilidades</h3>
                 <canvas id="graficoMonitoramento"></canvas>
             </div>
         </div>
@@ -239,58 +239,104 @@ function criarGraficoMonitoramento(dados) {
         chartMonitoramento.destroy();
     }
     
+    // Removido plugin personalizado para voltar ao comportamento original
+    
     chartMonitoramento = new Chart(ctx, {
-        type: 'line',
+        type: 'scatter',
         data: dados,
         options: {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
                 padding: {
-                    left: 20,
-                    right: 40,  // Aumentado para evitar corte dos pontos
-                    top: 30,
-                    bottom: 30
+                    left: 25,
+                    right: 45,  // Aumentado para evitar corte dos pontos
+                    top: 60,    // Aumentado significativamente para evitar corte das bolinhas no topo
+                    bottom: 35
                 }
             },
             plugins: {
                 legend: {
                     position: 'top',
                     padding: 20,
+                    align: 'start',
                     labels: {
                         padding: 15,
                         font: {
                             size: 13
-                        }
-                    }
+                        },
+                        boxWidth: 40,
+                        boxHeight: 10
+                    },
+                    maxWidth: 800,
+                    maxHeight: 200
                 },
                 tooltip: {
-                    padding: 12,
+                    enabled: true,
                     callbacks: {
                         title: function(context) {
-                            return dados.descricoes[context[0].dataIndex];
+                            return context[0].dataset.label;
                         },
                         label: function(context) {
-                            return `Progresso: ${context.raw}%`;
+                            return `Progresso: ${context.raw.y}%`;
+                        },
+                        afterLabel: function(context) {
+                            // Usa o índice da data armazenado no ponto para obter a data correta
+                            const dataIdx = context.raw.data_idx !== undefined ? context.raw.data_idx : context.dataIndex;
+                            return `Data: ${dados.labels[dataIdx]}`;
                         }
                     }
                 }
             },
             elements: {
                 point: {
-                    radius: 6,  // Aumenta o tamanho dos pontos
-                    hoverRadius: 8  // Aumenta o tamanho no hover
-                },
-                line: {
-                    tension: 0.3  // Suaviza a linha
+                    radius: function(context) {
+                        return context.raw.pointRadius || 6;
+                    },
+                    hoverRadius: function(context) {
+                        return (context.raw.pointRadius || 6) * 1.3;
+                    },
+                    // Garantir que os pontos sejam desenhados mesmo quando estiverem próximos às bordas
+                    hitRadius: 10,
+                    borderWidth: 2
                 }
+            },
+            interaction: {
+                mode: 'point',
+                intersect: true
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    // Ajustando os limites para evitar que as bolinhas fiquem cortadas
+                    min: -5,  // Adiciona espaço na parte inferior
+                    max: 110,  // Aumenta o máximo para 110% para dar espaço às bolinhas
                     grid: {
-                        drawBorder: false
+                        drawBorder: false,
+                        // Oculta as linhas de grade acima de 100%
+                        color: function(context) {
+                            return context.tick.value <= 100 ? 'rgba(0, 0, 0, 0.1)' : 'transparent';
+                        }
+                    },
+                    // Personalização dos ticks (marcações) do eixo Y
+                    ticks: {
+                        callback: function(value, index, values) {
+                            // Adiciona o símbolo de porcentagem aos valores
+                            return value + '%';
+                        },
+                        // Controla quais ticks são exibidos
+                        autoSkip: true,
+                        autoSkipPadding: 50,
+                        // Define os valores específicos a serem mostrados
+                        includeBounds: false,
+                        count: 6,
+                        stepSize: 20,
+                        // Garante que o último tick visível seja 100
+                        max: 100
                     },
                     title: {
                         display: true,
@@ -311,6 +357,8 @@ function criarGraficoMonitoramento(dados) {
                     }
                 },
                 x: {
+                    type: 'linear',
+                    position: 'bottom',
                     grid: {
                         drawBorder: false
                     },
@@ -330,9 +378,25 @@ function criarGraficoMonitoramento(dados) {
                         font: {
                             size: 12
                         },
+                        callback: function(value, index) {
+                            // Verifica se o valor é um índice válido no array de labels
+                            if (value >= 0 && value < dados.labels.length) {
+                                return dados.labels[value];
+                            }
+                            return '';
+                        },
                         maxRotation: 45,  // Rotaciona os labels para melhor legibilidade
                         minRotation: 45,
-                        autoSkip: false  // Não pula labels
+                        autoSkip: false,  // Não pula labels
+                        stepSize: 1       // Garante que os ticks sejam inteiros
+                    },
+                    // Garante que o eixo X tenha uma escala adequada mesmo com poucos dados
+                    // Adiciona padding para evitar que as bolinhas fiquem cortadas nas extremidades
+                    min: -0.5,  // Adiciona espaço à esquerda
+                    suggestedMax: function(context) {
+                        // Se houver poucos pontos, expande a escala para melhorar a visualização
+                        // Adiciona 0.5 para dar espaço à direita e evitar cortes
+                        return Math.max(dados.labels.length - 1, 4) + 0.5;
                     }
                 }
             }

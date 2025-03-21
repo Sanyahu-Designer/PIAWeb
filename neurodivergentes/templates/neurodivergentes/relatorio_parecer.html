@@ -72,10 +72,27 @@
         }
         
         .footer {
-            margin-top: 30px;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
             text-align: center;
             font-size: 12px;
             color: #718096;
+        }
+        
+        .assinatura {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        
+        .assinatura-linha {
+            border-top: 1px solid #333;
+            width: 60%;
+            margin: 0 auto 10px auto;
         }
 
         @media print {
@@ -139,6 +156,11 @@
         </div>
     </div>
     {% endif %}
+
+    <div class="assinatura">
+        <div class="assinatura-linha"></div>
+        <p style="margin: 0;">Assinatura do responsável</p>
+    </div>
 
     <div class="footer">
         <p>Documento gerado em {{ data_impressao|date:"d/m/Y" }} às {{ data_impressao|date:"H:i" }}</p>

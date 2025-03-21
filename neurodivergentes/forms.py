@@ -6,7 +6,7 @@ from .models import (
     PDI, PlanoEducacional,
     AdaptacaoCurricular, RegistroEvolucao,
     Monitoramento, ParecerAvaliativo,
-    MetaHabilidade
+    MetaHabilidade, Anamnese
 )
 from django.core.exceptions import ValidationError
 
@@ -263,5 +263,55 @@ class ParecerAvaliativoForm(forms.ModelForm):
             'conclusoes': forms.Textarea(attrs={
                 'rows': 4,
                 'placeholder': 'Apresente as conclusões'
+            })
+        }
+
+class AnamneseForm(forms.ModelForm):
+    def clean_anexos(self):
+        anexo = self.cleaned_data.get('anexos')
+        if anexo:
+            if anexo.size > 5 * 1024 * 1024:
+                raise ValidationError('Arquivo excede 5MB.')
+            if not anexo.name.lower().endswith(('.pdf', '.docx')):
+                raise ValidationError('Apenas PDF/DOCX permitidos.')
+        return anexo
+        
+    class Meta:
+        model = Anamnese
+        fields = '__all__'
+        widgets = {
+            'tempo_gestacao': forms.NumberInput(attrs={'min': 20, 'max': 45}),
+            'tempo_prematuridade': forms.NumberInput(attrs={'min': 0, 'max': 20}),
+            'observacoes_parto': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Observações sobre o parto'
+            }),
+            'comportamento_familiar': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva o comportamento no ambiente familiar'
+            }),
+            'comportamento_social': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva o comportamento em ambientes sociais'
+            }),
+            'aspectos_cognitivos': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva os aspectos cognitivos'
+            }),
+            'aspectos_psicomotores': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva os aspectos psicomotores'
+            }),
+            'aspectos_emocionais': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva os aspectos emocionais/sociais'
+            }),
+            'aspectos_sensoriais': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva os aspectos sensoriais'
+            }),
+            'descricao_restricoes': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva as restrições alimentares'
             })
         }

@@ -50,26 +50,80 @@ def gerar_dados_frequencia(pdis_concluidos, media_atendimentos):
         }
 
 def gerar_dados_monitoramento(dados_monitoramento):
-    """Gera os dados de monitoramento do PDI para Chart.js"""
+    """Gera os dados de monitoramento do PDI para Chart.js no formato para gráfico de dispersão"""
     try:
-        # Converte as datas para o formato dd/mm/aaaa
-        datas = [datetime.strptime(dado['data'], '%Y-%m-%d').strftime('%d/%m/%Y') for dado in dados_monitoramento]
-        progressos = [float(dado['progresso']) if dado['progresso'] is not None else 0 for dado in dados_monitoramento]
-        descricoes = [dado['descricao'] for dado in dados_monitoramento]
+        # Agrupar dados por data
+        datas_unicas = []
+        datas_formatadas = {}
+        
+        # Primeiro passo: extrair datas únicas
+        for dado in dados_monitoramento:
+            data = dado['data']
+            data_formatada = datetime.strptime(data, '%Y-%m-%d').strftime('%d/%m/%Y')
+            
+            if data_formatada not in datas_formatadas:
+                datas_formatadas[data_formatada] = len(datas_unicas)
+                datas_unicas.append(data_formatada)
+        
+        # Segundo passo: agrupar por meta/habilidade
+        metas_habilidades = {}
+        for dado in dados_monitoramento:
+            descricao = dado['descricao']
+            if descricao not in metas_habilidades:
+                metas_habilidades[descricao] = []
+            
+            data_formatada = datetime.strptime(dado['data'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            progresso = float(dado['progresso']) if dado['progresso'] is not None else 0
+            
+            # Tamanho da bolinha proporcional à porcentagem (mínimo 5, máximo 20)
+            tamanho = 5 + (progresso / 100 * 15)
+            
+            # Posicionar no índice da data
+            x_pos = datas_formatadas[data_formatada]
+            
+            metas_habilidades[descricao].append({
+                'x': x_pos,
+                'y': progresso,
+                'pointRadius': max(5, progresso / 10),  # Tamanho mínimo 5, proporcional ao progresso
+                'r': max(5, progresso / 10),  # Redundância para garantir compatibilidade
+                'data_idx': datas_formatadas[data_formatada]
+            })
+        
+        # Gerar cores distintas para cada meta/habilidade
+        cores = [
+            ['rgba(40, 167, 69, 0.7)', 'rgba(40, 167, 69, 1)'],    # Verde
+            ['rgba(0, 123, 255, 0.7)', 'rgba(0, 123, 255, 1)'],       # Azul
+            ['rgba(220, 53, 69, 0.7)', 'rgba(220, 53, 69, 1)'],       # Vermelho
+            ['rgba(255, 193, 7, 0.7)', 'rgba(255, 193, 7, 1)'],       # Amarelo
+            ['rgba(111, 66, 193, 0.7)', 'rgba(111, 66, 193, 1)'],     # Roxo
+            ['rgba(23, 162, 184, 0.7)', 'rgba(23, 162, 184, 1)'],     # Ciano
+            ['rgba(255, 102, 0, 0.7)', 'rgba(255, 102, 0, 1)'],       # Laranja
+            ['rgba(0, 204, 204, 0.7)', 'rgba(0, 204, 204, 1)'],       # Turquesa
+            ['rgba(153, 102, 255, 0.7)', 'rgba(153, 102, 255, 1)'],   # Lilás
+            ['rgba(255, 51, 153, 0.7)', 'rgba(255, 51, 153, 1)'],    # Rosa
+        ]
+        
+        # Criar datasets separados para cada meta/habilidade
+        datasets = []
+        for i, (meta, dados) in enumerate(metas_habilidades.items()):
+            cor_idx = i % len(cores)
+            datasets.append({
+                'label': meta,
+                'data': dados,
+                'backgroundColor': cores[cor_idx][0],
+                'borderColor': cores[cor_idx][1],
+                'pointBackgroundColor': cores[cor_idx][1],
+                'pointHoverBackgroundColor': cores[cor_idx][1],
+                'pointBorderColor': cores[cor_idx][1],
+                'pointBorderWidth': 1,
+                'pointHitRadius': 10,  # Área de detecção do hover
+                'pointHoverBorderWidth': 2,
+                'pointStyle': 'circle'
+            })
         
         return {
-            'labels': datas,
-            'datasets': [{
-                'label': 'Progresso',
-                'data': progressos,
-                'backgroundColor': 'rgba(40, 167, 69, 0.7)',
-                'borderColor': 'rgba(40, 167, 69, 1)',
-                'borderWidth': 1,
-                'pointRadius': 4,
-                'pointBackgroundColor': 'rgba(40, 167, 69, 1)',
-                'fill': 0
-            }],
-            'descricoes': descricoes  # Adicionando descrições separadamente
+            'labels': datas_unicas,
+            'datasets': datasets
         }
     except Exception as e:
         print(f"Erro em gerar_dados_monitoramento: {str(e)}")

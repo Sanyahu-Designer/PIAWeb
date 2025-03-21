@@ -160,6 +160,14 @@ class Anamnese(models.Model):
     aspectos_emocionais = models.TextField('Aspectos Emocionais/Sociais')
     aspectos_sensoriais = models.TextField('Aspectos Sensoriais')
 
+    # Anexos
+    anexos = models.FileField(
+        'Anexos',
+        upload_to='neurodivergentes/anamnese/',
+        blank=True,
+        null=True
+    )
+    
     # Campos de controle
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

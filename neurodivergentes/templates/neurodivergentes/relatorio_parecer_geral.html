@@ -221,6 +221,23 @@
             page-break-inside: avoid;
         }
     }
+    
+    .assinatura-container {
+        text-align: center;
+        margin-top: 100px;
+        page-break-inside: avoid;
+    }
+    
+    .assinatura {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    
+    .assinatura-linha {
+        border-top: 1px solid #333;
+        width: 60%;
+        margin: 0 auto 10px auto;
+    }
 </style>
 </head>
 <body>
@@ -316,6 +333,17 @@
         </div>
     </div>
     {% endfor %}
+
+    <div class="assinatura-container">
+        <div class="assinatura">
+            <div class="assinatura-linha"></div>
+            <p style="margin: 0;">Assinatura do responsável</p>
+        </div>
+
+        <div class="footer">
+            <p>Documento gerado em {{ data_impressao|date:"d/m/Y" }} às {{ data_impressao|date:"H:i" }}</p>
+        </div>
+    </div>
 </div>
 </body>
 </html>
