@@ -1,0 +1,91 @@
+{% extends "admin/index_material.html" %}
+{% load i18n admin_urls admin_list %}
+
+{% block bodyclass %}{{ block.super }} app-{{ app_label }}{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo;
+{% for app in app_list %}
+{{ app.name }}
+{% endfor %}
+</div>
+{% endblock %}
+{% endif %}
+
+{% block content_title %}
+<div class="row">
+  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card">
+      <div class="card-header p-3 pt-2">
+        <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-symbols-rounded opacity-10">apps</i>
+        </div>
+        <div class="text-end pt-1">
+          <p class="text-sm mb-0 text-capitalize">{{ app_list.0.name }}</p>
+          <h4 class="mb-0">{% translate 'Administration' %}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+  {% for app in app_list %}
+    <div class="col-12 mb-4">
+      <div class="card">
+        <div class="card-header pb-0">
+          <div class="row">
+            <div class="col-lg-6 col-7">
+              <h6>{{ app.name }}</h6>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div class="table-responsive">
+            <table class="table align-items-center mb-0">
+              <thead>
+                <tr>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% translate 'Model' %}</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">{% translate 'Actions' %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for model in app.models %}
+                  <tr>
+                    <td>
+                      <div class="d-flex px-2 py-1">
+                        <div class="d-flex flex-column justify-content-center">
+                          <h6 class="mb-0 text-sm">{{ model.name }}</h6>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex">
+                        {% if model.add_url %}
+                          <a href="{{ model.add_url }}" class="btn btn-link text-dark px-3 mb-0">
+                            <i class="material-symbols-rounded text-sm me-2">add</i>{% translate 'Add' %}
+                          </a>
+                        {% endif %}
+                        {% if model.admin_url %}
+                          <a href="{{ model.admin_url }}" class="btn btn-link text-primary px-3 mb-0">
+                            <i class="material-symbols-rounded text-sm me-2">visibility</i>{% translate 'View' %}
+                          </a>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

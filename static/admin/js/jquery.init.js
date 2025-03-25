@@ -5,4 +5,17 @@
  * namespace (i.e. this preserves pre-existing values for both window.$ and
  * window.jQuery).
  */
-window.django = {jQuery: jQuery.noConflict(true)};
+
+// Verifica se jQuery já está definido antes de tentar usá-lo
+if (typeof jQuery !== 'undefined') {
+  window.django = {jQuery: jQuery.noConflict(true)};
+} else {
+  // Carrega jQuery se não estiver disponível
+  document.write('<script src="/static/admin/js/vendor/jquery/jquery.js"></script>');
+  // Tenta novamente após o carregamento
+  window.addEventListener('load', function() {
+    if (typeof jQuery !== 'undefined') {
+      window.django = {jQuery: jQuery.noConflict(true)};
+    }
+  });
+}

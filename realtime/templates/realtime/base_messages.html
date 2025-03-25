@@ -24,6 +24,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if 'profissionais' in request.path %}active{% endif %}" href="{% url 'profissionais_app:index' %}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Profissionais
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'escola' in request.path %}active{% endif %}" href="{% url 'escola:index' %}">
+                            <i class="fas fa-school me-2"></i>
+                            Escola
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if 'chat' in request.path %}active{% endif %}" href="{% url 'realtime:chat_list' %}">
                             <i class="fas fa-comments me-2"></i>
                             Mensagens
@@ -56,9 +68,15 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     {% if user.is_authenticated %}
-                        <!-- Ícone de mensagens -->
-                        <a href="{% url 'realtime:chat_list' %}" class="btn btn-link position-relative" title="Mensagens">
-                            <i class="fas fa-comments"></i>
+                        <!-- Botões de navegação -->
+                        <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+                            <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+                        </a>
+                        <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+                            <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+                        </a>
+                        <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+                            <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
                         </a>
                         <!-- Ícone de notificações -->
                         {% include 'realtime/notifications.html' %}

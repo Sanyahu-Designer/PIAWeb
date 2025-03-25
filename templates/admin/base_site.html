@@ -74,16 +74,21 @@
     <form method="post" style="display: none;">
         {% csrf_token %}
     </form>
-    <ul class="navbar-nav notification-nav">
-        <li class="nav-item">
-            <a href="{% url 'realtime:chat_list' %}" class="nav-link" title="Mensagens">
-                <i class="fas fa-comments"></i>
+        {% if user.is_active and user.is_staff %}
+        <div class="d-flex align-items-center">
+            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+                <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+            </a>
+            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+                <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
                 <span id="message-count" class="badge-message-count" style="display: none;">0</span>
             </a>
-        </li>
-    </ul>
-    {% if user.is_active and user.is_staff %}
-        <strong>{% firstof user.get_short_name user.get_username %}</strong>
+            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+                <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+            </a>
+            <strong class="ms-2">{{ user.first_name|default:user.username }}</strong>
+            <i class="material-symbols-rounded opacity-10 ms-1">person</i>
+        </div>
     {% endif %}
     {% block userlinks %}
         {% if site_url %}

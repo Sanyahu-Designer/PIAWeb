@@ -1,0 +1,163 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+  {% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+  {% endif %}
+  {% if cl.formset or action_form %}
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
+    <script src="{% static 'admin/js/actions.js' %}"></script>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media.js }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
+            <h6 class="text-white text-capitalize ps-3">{{ cl.opts.verbose_name_plural|capfirst }}</h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div id="toolbar" class="px-4 py-2">
+            <form id="changelist-search" method="get">
+              <div class="row">
+                {% if cl.search_fields %}
+                <div class="col-md-6 mb-2">
+                  <div class="input-group input-group-outline">
+                    <label class="form-label">{% translate 'Search' %}</label>
+                    <input type="text" size="40" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar" class="form-control">
+                  </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-md-6 text-end">
+                  {% block object-tools %}
+                    {% block object-tools-items %}
+                      {% if has_add_permission %}
+                        <a href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}" class="btn btn-sm bg-gradient-dark mb-0">
+                          {% blocktranslate with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktranslate %}
+                        </a>
+                      {% endif %}
+                    {% endblock %}
+                  {% endblock %}
+                </div>
+              </div>
+              
+              {% for pair in cl.params.items %}
+                {% if pair.0 != search_var %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+              {% endfor %}
+            </form>
+          </div>
+          
+          {% if cl.formset and cl.formset.errors %}
+            <p class="errornote">
+              {% blocktranslate count errors=cl.formset.total_error_count %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+            </p>
+            {{ cl.formset.non_form_errors }}
+          {% endif %}
+          
+          <div class="changelist-form-container">
+            {% block result_list %}
+              {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+              
+              <div class="table-responsive p-0">
+                {% if cl.result_count %}
+                  <table class="table align-items-center mb-0">
+                    <thead>
+                      <tr>
+                        {% for header in cl.result_headers %}
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if header.class_attrib %} {{ header.class_attrib }}{% endif %}">
+                            {% if header.sortable %}
+                              <a href="{{ header.url_primary }}">
+                                {{ header.text|capfirst }}
+                                {% if header.sorted %}
+                                  <i class="material-symbols-rounded text-xs">
+                                    {% if header.ascending %}arrow_upward{% else %}arrow_downward{% endif %}
+                                  </i>
+                                {% endif %}
+                              </a>
+                            {% else %}
+                              <span>{{ header.text|capfirst }}</span>
+                            {% endif %}
+                          </th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for result in cl.results %}
+                        {% if result.form and result.form.non_field_errors %}
+                          <tr class="error">
+                            <td colspan="{{ cl.result_headers|length }}">{{ result.form.non_field_errors }}</td>
+                          </tr>
+                        {% endif %}
+                        <tr class="{% cycle 'row1' 'row2' %}">
+                          {% for field_name in cl.list_display %}
+                            {% with value=result|getattr:field_name %}
+                              <td class="align-middle">
+                                <div class="d-flex px-2 py-1">
+                                  <div class="d-flex flex-column justify-content-center">
+                                    {% if forloop.first %}
+                                      <h6 class="mb-0 text-sm">
+                                        {% if cl.list_display_links|length == 1 and forloop.counter0 == 0 %}
+                                          <a href="{% url 'admin:'|add:cl.opts.app_label|add:'_'|add:cl.opts.model_name|add:'_change' result.pk %}">{{ value }}</a>
+                                        {% else %}
+                                          {{ value }}
+                                        {% endif %}
+                                      </h6>
+                                    {% else %}
+                                      <p class="text-xs text-secondary mb-0">{{ value }}</p>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              </td>
+                            {% endwith %}
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                {% else %}
+                  <div class="px-4 py-2">
+                    <p class="text-sm text-secondary">{% translate "No results found." %}</p>
+                  </div>
+                {% endif %}
+              </div>
+              
+              {% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+            {% endblock %}
+            
+            {% block pagination %}
+              {% if cl.result_count != cl.full_result_count %}
+                <div class="px-4 py-2">
+                  <p class="text-sm text-secondary">
+                    {% blocktranslate with cl.result_count as count and cl.full_result_count as full_count %}
+                      {{ count }} of {{ full_count }} selected
+                    {% endblocktranslate %}
+                  </p>
+                </div>
+              {% endif %}
+              
+              <div class="px-4 py-2 d-flex justify-content-center">
+                {% pagination cl %}
+              </div>
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

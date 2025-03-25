@@ -1,0 +1,108 @@
+{% extends "admin/base_material.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+  {% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+  {% endif %}
+  <link rel="stylesheet" type="text/css" href="{% static "css/search-fixes.css" %}">
+  {% if cl.formset or action_form %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
+    <script src="{% static 'admin/js/actions.js' %}"></script>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media.js }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='bncc' %}">BNCC</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ cl.opts.verbose_name_plural|capfirst }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
+            <h6 class="text-white text-capitalize ps-3">{{ cl.opts.verbose_name_plural|capfirst }}</h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div id="toolbar" class="px-4 py-2 mb-4">
+            <form id="changelist-search" method="get">
+              <div class="row">
+                {% if cl.search_fields %}
+                  <div class="col-md-6 mb-3">
+                    <div class="input-group input-group-outline">
+                      <label class="form-label">Buscar {{ cl.opts.verbose_name_plural }}</label>
+                      <input type="text" class="form-control" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar">
+                    </div>
+                  </div>
+                  <div class="col-md-2 mb-3">
+                    <button type="submit" class="btn btn-dark btn-sm mb-0 w-100">
+                      <i class="fas fa-search me-2"></i> Buscar
+                    </button>
+                  </div>
+                {% endif %}
+                {% if cl.has_filters %}
+                  <div class="col-md-4 mb-3 text-end">
+                    <a href="#" class="btn btn-outline-dark btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#filterModal">
+                      <i class="fas fa-filter me-2"></i> Filtros
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+          
+          <div class="changelist-form-container">
+            {% block result_list %}
+              {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+              
+              <div class="table-responsive p-0">
+                {% result_list cl %}
+              </div>
+              
+              {% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+            {% endblock %}
+            
+            {% block pagination %}
+              {% pagination cl %}
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

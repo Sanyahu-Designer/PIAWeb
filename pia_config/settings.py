@@ -63,9 +63,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Application definition
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.admin',
-    'django.contrib.auth',
+    'django.contrib.auth',  # Mantendo a aplicação auth original
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -236,116 +235,13 @@ CHANNEL_LAYERS = {
     }
 }
 
-JAZZMIN_SETTINGS = {
+# Material Dashboard Settings
+MATERIAL_DASHBOARD_SETTINGS = {
     "site_title": "PIA",
     "site_header": "PIA",
-    "site_brand": "PIA - Dashboard",
+    "site_brand": "Painel PIA",
     "site_logo": "pia_config/images/logo.webp",
-    "login_logo": "pia_config/images/logo.webp",
-    "login_logo_dark": None,
-    "site_logo_classes": "img-circle",
-    "site_icon": None,
-    "welcome_sign": "Bem-vindo ao PIA",
-    "copyright": "PIA - Plano Individual de Aprendizagem",
-    "search_model": None,
-    "user_avatar": None,
-    "topmenu_links": [
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Mensagens", "url": "realtime:chat_list"},
-    ],
-    "usermenu_links": [
-        {"name": "Mensagens", "url": "realtime:chat_list", "icon": "fas fa-comments"},
-    ],
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-    "order_with_respect_to": ["auth", "neurodivergentes", "escola", "profissionais_app"],
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "neurodivergentes.Neurodivergente": "fas fa-user-graduate",
-        "escola.Escola": "fas fa-school",
-        "profissionais_app.Profissional": "fas fa-user-md",
-        "realtime.PrivateMessage": "fas fa-comments",
-    },
-    "default_icon_parents": "fas fa-chevron-circle-right",
-    "default_icon_children": "fas fa-circle",
-    "related_modal_active": False,
-    "custom_css": None,
-    "custom_js": None,
-    "show_ui_builder": False,
-    "changeform_format": "horizontal_tabs",
-    "changeform_format_overrides": {},
-    "language_chooser": False,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-    "order_with_respect_to": [],
-    "custom_links_in_field_set_template": False,
-    "show_ui_builder": False,
-    "topmenu_links": [
-        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Mensagens", "url": "realtime:chat_list", "icon": "fas fa-comments"},
-        {"name": "Ajuda", "url": "https://sanyahudesigner.com.br", "new_window": True},
-    ],
-    "usermenu_links": [
-        {"name": "Mensagens", "url": "realtime:chat_list", "icon": "fas fa-comments"},
-        {"name": "Suporte", "url": "https://sanyahudesigner.com.br", "new_window": True, "icon": "fas fa-headset"},
-    ],
-    
-    "navigation_expanded": False,
-    "show_ui_builder": False,
-    
-    "show_footer": True,
-    "footer_text": "Direitos Reservados 2023 PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03",
-    "footer_version": False,
-    "footer_style": "text-align: center; font-size: 14px;",
-    
-    # Adiciona um link para mensagens no menu lateral
-    "custom_links": {
-        "realtime": [{
-            "name": "Mensagens",
-            "url": "realtime:chat_list",
-            "icon": "fas fa-comments",
-            "permissions": ["auth.view_user"]
-        }]
-    },
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": "navbar-dark",
-    "accent": "accent-primary",
-    "navbar": "navbar-dark bg-dark",
-    "no_navbar_border": False,
-    "navbar_fixed": False,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": False,
-    "sidebar": "sidebar-dark-primary",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": False,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "default",
-    "dark_mode_theme": None,
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    },
-    "custom_css": None,
-    "custom_js": None,
+    "footer_text": "Direitos Reservados 2025 PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03"
 }
 
 # Configuração de logging

@@ -1,0 +1,15 @@
+{% if field_name %}<td class="align-middle">
+  <div class="d-flex px-2 py-1">
+    <div class="d-flex flex-column justify-content-center">
+      {% if is_checkbox %}
+        {{ contents }}
+      {% else %}
+        {% if forloop.first %}
+          <h6 class="mb-0 text-sm">{{ contents|striptags }}</h6>
+        {% else %}
+          <p class="text-xs text-secondary mb-0">{{ contents|striptags }}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</td>{% else %}{{ contents }}{% endif %}

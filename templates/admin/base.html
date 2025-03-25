@@ -1,22 +1,441 @@
-{% extends "admin/base.html" %}
-{% load i18n %}
+{% load i18n static admin_urls %}
+<!DOCTYPE html>
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}">
 
-{% block userlinks %}
-    {{ block.super }}
-{% endblock %}
-
-{% block extrastyle %}
-{{ block.super }}
-<style>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{% static 'pia_config/images/logo.webp' %}">
+  <link rel="icon" type="image/png" href="{% static 'pia_config/images/logo.webp' %}">
+  <title>{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ site_title|default:_('Django site admin') }}{% endblock %}</title>
+  
+  <!-- Fonts and icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+  <!-- Nucleo Icons -->
+  <link href="{% static 'material-dashboard/css/nucleo-icons.css' %}" rel="stylesheet" />
+  <link href="{% static 'material-dashboard/css/nucleo-svg.css' %}" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <!-- Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <!-- CSS Files -->
+  <link id="pagestyle" href="{% static 'material-dashboard/css/material-dashboard.css' %}" rel="stylesheet" />
+  <link href="{% static 'material-dashboard/css/django-admin.css' %}" rel="stylesheet" />
+  <link href="{% static 'css/floating-notification.css' %}" rel="stylesheet" />
+  
+  <!-- CSS personalizado para remover campo de pesquisa do navbar -->
+  <style>
+    /* Oculta completamente o campo de pesquisa no navbar */
+    .navbar .ms-md-auto.pe-md-3 > *,
+    .navbar .ms-md-auto.pe-md-3 form,
+    .navbar .ms-md-auto.pe-md-3 input,
+    .navbar .ms-md-auto.pe-md-3 .form-control,
+    .navbar .ms-md-auto.pe-md-3 .form-group,
+    .navbar .ms-md-auto.pe-md-3 .input-group,
+    #changelist-search-button,
+    .navbar [role="search"] {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      overflow: hidden !important;
+    }
+  </style>
+  
+  <!-- Django Admin Styles -->
+  {% block extrastyle %}
+  <style>
     /* Oculta o campo de busca no menu navbar */
     .form-inline.ml-3 {
         display: none !important;
     }
-</style>
-{% endblock %}
+    
+    /* Estilo para o contador de mensagens */
+    .badge-message-count {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        min-width: 18px;
+        text-align: center;
+    }
+    
+    /* Estilo para destacar o navbar */
+    .navbar-main {
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        margin-top: 10px;
+    }
+    
+    /* Estilo para os botões de navegação no navbar */
+    .btn-outline-primary {
+        border-color: #e91e63;
+        color: #e91e63;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #e91e63;
+        color: white;
+    }
+  </style>
+  {% endblock %}
+  
+  <!-- Django Admin Scripts -->
+  {% block extrahead %}{% endblock %}
+</head>
 
-{% block extrajs %}
-<script>
+<body class="g-sidenav-show bg-gray-100">
+  <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-radius-lg fixed-start ms-2 bg-white my-2" id="sidenav-main">
+    <div class="sidenav-header">
+      <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+      <a class="navbar-brand px-4 py-3 m-0" href="{% url 'admin:index' %}">
+        <img src="{% static 'pia_config/images/logo.webp' %}" class="navbar-brand-img" width="26" height="26" alt="main_logo">
+        <span class="ms-1 text-sm text-dark">PIA - Dashboard</span>
+      </a>
+    </div>
+    <hr class="horizontal dark mt-0 mb-2">
+    <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+      <ul class="navbar-nav">
+        <!-- Menu principal -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/admin/' %}active bg-gradient-dark text-white{% else %}text-dark{% endif %}" href="{% url 'admin:index' %}">
+            <i class="material-symbols-rounded opacity-5">dashboard</i>
+            <span class="nav-link-text ms-1">Dashboard</span>
+          </a>
+        </li>
+        
+        <!-- Aplicações do Django Admin -->
+        {% if request.user.is_authenticated %}
+          <!-- ALUNO/PACIENTE -->
+          <li class="nav-item mt-3">
+            <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder text-dark">ALUNO/PACIENTE</h6>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/neurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/neurodivergente/">
+              <i class="material-symbols-rounded opacity-5">person</i>
+              <span class="nav-link-text ms-1">Alunos/Pacientes</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'adaptacao_curricular' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/">
+              <i class="material-symbols-rounded opacity-5">school</i>
+              <span class="nav-link-text ms-1">ACI</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/anamnese' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/anamnese/">
+              <i class="material-symbols-rounded opacity-5">description</i>
+              <span class="nav-link-text ms-1">Anamneses</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/registroevolucao' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/registroevolucao/">
+              <i class="material-symbols-rounded opacity-5">trending_up</i>
+              <span class="nav-link-text ms-1">Evolução</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/neurodivergencia' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/neurodivergencia/">
+              <i class="material-symbols-rounded opacity-5">psychology</i>
+              <span class="nav-link-text ms-1">Neurodivergentes</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/pdi' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pdi/">
+              <i class="material-symbols-rounded opacity-5">assignment</i>
+              <span class="nav-link-text ms-1">PDIs</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/monitoramento' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/monitoramento/">
+              <i class="material-symbols-rounded opacity-5">assignment_ind</i>
+              <span class="nav-link-text ms-1">PEI</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/pareceravaliativo' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pareceravaliativo/">
+              <i class="material-symbols-rounded opacity-5">grading</i>
+              <span class="nav-link-text ms-1">Pareceres</span>
+            </a>
+          </li>
+          
+          <!-- CADASTROS -->
+          <li class="nav-item mt-3">
+            <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder text-dark">CADASTROS</h6>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'adaptacao_curricular/bncchabilidade' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/bncchabilidade/">
+              <i class="material-symbols-rounded opacity-5">code</i>
+              <span class="nav-link-text ms-1">Código BNCC</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'adaptacao_curricular/bnccdisciplina' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/bnccdisciplina/">
+              <i class="material-symbols-rounded opacity-5">menu_book</i>
+              <span class="nav-link-text ms-1">Disciplinas BNCC</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/categorianeurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/categorianeurodivergente/">
+              <i class="material-symbols-rounded opacity-5">category</i>
+              <span class="nav-link-text ms-1">Categorias CID-10</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/condicaoneurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/condicaoneurodivergente/">
+              <i class="material-symbols-rounded opacity-5">medical_information</i>
+              <span class="nav-link-text ms-1">Condições CID-10</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/metahabilidade' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/metahabilidade/">
+              <i class="material-symbols-rounded opacity-5">emoji_events</i>
+              <span class="nav-link-text ms-1">Metas/Habilidades</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'auth' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/auth/">
+              <i class="material-symbols-rounded opacity-5">security</i>
+              <span class="nav-link-text ms-1">Usuários</span>
+            </a>
+          </li>
+          
+          <!-- ESCOLA -->
+          <li class="nav-item mt-3">
+            <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder text-dark">ESCOLA</h6>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'escola/escola' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/escola/escola/">
+              <i class="material-symbols-rounded opacity-5">school</i>
+              <span class="nav-link-text ms-1">Escolas</span>
+            </a>
+          </li>
+          
+          <!-- PROFISSIONAIS -->
+          <li class="nav-item mt-3">
+            <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder text-dark">PROFISSIONAIS</h6>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link text-dark {% if 'profissionais_app/profissional' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/profissionais_app/profissional/">
+              <i class="material-symbols-rounded opacity-5">groups</i>
+              <span class="nav-link-text ms-1">Profissionais</span>
+            </a>
+          </li>
+
+        {% endif %}
+        
+        <!-- Links personalizados do menu -->
+        <!-- MENSAGENS -->
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">MENSAGENS</h6>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark {% if 'chat' in request.path and 'privatemessage' not in request.path %}active bg-gradient-dark text-white{% endif %}" href="{% url 'realtime:chat_list' %}">
+            <i class="material-symbols-rounded opacity-5">chat</i>
+            <span class="nav-link-text ms-1">Mensagens</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark {% if 'privatemessage' in request.path %}active bg-gradient-dark text-white{% endif %}" href="{% url 'realtime:chat_list' %}">
+            <i class="material-symbols-rounded opacity-5">inbox</i>
+            <span class="nav-link-text ms-1">Minhas Mensagens</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="{% url 'realtime:new_message' %}">
+            <i class="material-symbols-rounded opacity-5">add</i>
+            <span class="nav-link-text ms-1">Nova Mensagem</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="sidenav-footer position-absolute w-100 bottom-0">
+      <div class="mx-3">
+        <a class="btn bg-gradient-dark w-100" href="{% url 'logout' %}" type="button">Sair</a>
+      </div>
+    </div>
+  </aside>
+  
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <!-- Navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-sm border-radius-xl bg-white mt-2" id="navbarBlur" data-scroll="true">
+      <div class="container-fluid py-1 px-3">
+        <!-- Links do navbar -->
+        <div class="d-flex align-items-center justify-content-between w-100">
+          {% block navbar_buttons %}
+          <div class="d-flex">
+            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+            </a>
+            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+            </a>
+            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+            </a>
+          </div>
+          {% endblock %}
+          
+          <!-- Espaço para manter o layout equilibrado -->
+          <div class="flex-grow-1"></div>
+        </div>
+        <nav aria-label="breadcrumb" style="display: none;">
+          <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">Home</a></li>
+            {% block breadcrumbs %}
+              {% if title %}<li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ title }}</li>{% endif %}
+            {% endblock %}
+          </ol>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+            <!-- Campo de pesquisa removido do navbar -->
+          </div>
+          <ul class="navbar-nav d-flex align-items-center justify-content-end">
+            <!-- Links de navegação removidos do navbar -->
+            <!-- Perfil do usuário -->
+            <li class="nav-item dropdown pe-3 d-flex align-items-center">
+              <a href="javascript:;" class="nav-link text-body p-0 d-flex align-items-center" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="d-sm-inline d-none">{{ request.user.first_name|default:request.user.username }}</span>
+                <i class="material-symbols-rounded ms-1">person</i>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
+                <li class="mb-2">
+                  <div class="dropdown-header">Menu do Usuário</div>
+                </li>
+                <li class="mb-2">
+                  <a class="dropdown-item border-radius-md" href="{% url 'admin:password_change' %}">
+                    <div class="d-flex py-1">
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="text-sm font-weight-normal mb-1">
+                          <i class="fas fa-key me-1"></i> Alterar Senha
+                        </h6>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li class="mb-2">
+                  <a class="dropdown-item border-radius-md" href="{% url 'logout' %}">
+                    <div class="d-flex py-1">
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="text-sm font-weight-normal mb-1">
+                          <i class="fas fa-sign-out-alt me-1"></i> Sair
+                        </h6>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item dropdown-footer" href="#">Ver Perfil</a>
+                </li>
+              </ul>
+            </li>
+            
+            <!-- Notificações removidas do navbar, usando apenas o botão flutuante -->
+            
+            <!-- Menu mobile -->
+            <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+              <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
+                <div class="sidenav-toggler-inner">
+                  <i class="sidenav-toggler-line"></i>
+                  <i class="sidenav-toggler-line"></i>
+                  <i class="sidenav-toggler-line"></i>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- End Navbar -->
+    
+    <div class="container-fluid py-2">
+      <!-- Mensagens do Django -->
+      {% if messages %}
+      <div class="row">
+        <div class="col-12">
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible text-white" role="alert">
+            <span class="text-sm">{{ message }}</span>
+            <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Conteúdo principal -->
+      {% block content %}
+      {% block pretitle %}{% endblock %}
+      {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+      {% block content_subtitle %}{% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}{% endblock %}
+      {% block content_description %}{% endblock %}
+      <div class="row">
+        <div class="col-12">
+          <div class="card my-4">
+            <div class="card-body">
+              {% block object-tools %}{% endblock %}
+              {% block content_body %}{% endblock %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endblock %}
+      
+      <!-- Rodapé -->
+      <footer class="footer py-4">
+        <div class="container-fluid">
+          <div class="row align-items-center justify-content-lg-between">
+            <div class="col-lg-12 mb-lg-0 mb-4">
+              <div class="copyright text-center text-sm text-muted">
+                {% block footer %}
+                Direitos Reservados 2023 PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03
+                {% endblock %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+  
+  <!-- Core JS Files -->
+  <script src="{% static 'material-dashboard/js/core/popper.min.js' %}"></script>
+  <script src="{% static 'material-dashboard/js/core/bootstrap.min.js' %}"></script>
+  <script src="{% static 'material-dashboard/js/plugins/perfect-scrollbar.min.js' %}"></script>
+  <script src="{% static 'material-dashboard/js/plugins/smooth-scrollbar.min.js' %}"></script>
+  
+  <!-- Control Center for Material Dashboard -->
+  <script src="{% static 'material-dashboard/js/material-dashboard.min.js' %}"></script>
+  
+  <!-- Django Admin Scripts -->
+  {% block extrajs %}
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Traduz o texto "Account" para "Menu do Usuário"
         const accountText = document.querySelector('.dropdown-header');
@@ -29,6 +448,59 @@
         if (profileLink && profileLink.textContent.trim() === 'See Profile') {
             profileLink.textContent = 'Ver Perfil';
         }
+        
+        // Inicializa o sistema de notificações flutuantes
+        if (typeof initNotifications === 'function') {
+            initNotifications();
+        }
     });
-</script>
-{% endblock %}
+  </script>
+  {% endblock %}
+  
+  <!-- Script de notificações flutuantes -->
+  <script src="{% static 'js/floating-notification.js' %}"></script>
+  
+  <!-- Script para atualizar contador de mensagens não lidas -->
+  <script>
+    // Função para atualizar o contador de mensagens não lidas
+    function updateUnreadCount() {
+        fetch('{% url "realtime:unread_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                const messageCountElement = document.getElementById('message-count');
+                if (data.unread_count > 0) {
+                    if (messageCountElement) {
+                        messageCountElement.textContent = data.unread_count;
+                        messageCountElement.style.display = 'inline';
+                    }
+                } else {
+                    if (messageCountElement) {
+                        messageCountElement.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar contagem de mensagens:', error));
+    }
+
+    // Atualiza o contador quando a página carrega
+    document.addEventListener('DOMContentLoaded', function() {
+        updateUnreadCount();
+        
+        // Atualiza o contador a cada 30 segundos
+        setInterval(updateUnreadCount, 30000);
+    });
+  </script>
+  
+  <!-- Inicialização de scripts -->
+  <script>
+    var win = navigator.platform.indexOf('Win') > -1;
+    if (win && document.querySelector('#sidenav-scrollbar')) {
+      var options = {
+        damping: '0.5'
+      }
+      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+    }
+  </script>
+</body>
+
+</html>

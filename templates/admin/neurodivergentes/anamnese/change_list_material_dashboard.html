@@ -1,0 +1,198 @@
+{% extends "admin/base_material.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+  {% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+  {% endif %}
+  <link rel="stylesheet" type="text/css" href="{% static "css/search-fixes.css" %}">
+  {% if cl.formset or action_form %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
+    <script src="{% static 'admin/js/actions.js' %}"></script>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media.js }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">Aluno/Paciente</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ cl.opts.verbose_name_plural|capfirst }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
+            <h6 class="text-white text-capitalize ps-3">{{ cl.opts.verbose_name_plural|capfirst }}</h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div id="toolbar" class="px-4 py-2 mb-4">
+            <form id="changelist-search" method="get">
+              <div class="row">
+                {% if cl.search_fields %}
+                <div class="col-md-6 mb-4">
+                  <div class="input-group input-group-outline">
+                    <input type="text" size="40" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar" class="form-control" placeholder="{% translate 'Pesquisar anamnese' %}">
+                    <button type="submit" class="btn btn-sm btn-dark ms-2 d-flex align-items-center justify-content-center">
+                      <i class="material-symbols-rounded">search</i>
+                    </button>
+                  </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-md-6 text-end">
+                  {% block object-tools %}
+                    {% block object-tools-items %}
+                      {% if has_add_permission %}
+                        <a href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}" class="btn btn-sm bg-gradient-dark mb-0">
+                          {% blocktranslate with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktranslate %}
+                        </a>
+                      {% endif %}
+                    {% endblock %}
+                  {% endblock %}
+                </div>
+              </div>
+              
+              {% for pair in cl.params.items %}
+                {% if pair.0 != search_var %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+              {% endfor %}
+            </form>
+          </div>
+          
+          {% if cl.formset and cl.formset.errors %}
+            <p class="errornote">
+              {% blocktranslate count errors=cl.formset.total_error_count %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+            </p>
+            {{ cl.formset.non_form_errors }}
+          {% endif %}
+          
+          <div class="changelist-form-container">
+            {% block result_list %}
+              {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+              
+              <div class="table-responsive p-0">
+                {% if cl.result_count %}
+                  <table id="result_list" class="table align-items-center mb-0">
+                    <thead>
+                      <tr>
+                        {% for header in cl.result_headers %}
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if header.class_attrib %} {{ header.class_attrib }}{% endif %}">
+                            {% if header.sortable %}
+                              <a href="{{ header.url_primary }}">
+                                {{ header.text|capfirst }}
+                                {% if header.sorted %}
+                                  <i class="material-symbols-rounded text-xs">
+                                    {% if header.ascending %}arrow_upward{% else %}arrow_downward{% endif %}
+                                  </i>
+                                {% endif %}
+                              </a>
+                            {% else %}
+                              <span>{{ header.text|capfirst }}</span>
+                            {% endif %}
+                          </th>
+                        {% endfor %}
+                        <th class="text-secondary opacity-7"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for obj in cl.result_list %}
+                        <tr>
+                          <td>
+                            <div class="d-flex px-2 py-1">
+                              <div class="d-flex flex-column justify-content-center">
+                                <h6 class="mb-0 text-sm">
+                                  {% if cl.list_display_links|length == 1 and forloop.counter0 == 0 %}
+                                    <a href="{% url 'admin:neurodivergentes_anamnese_change' obj.pk %}">{{ obj.neurodivergente }}</a>
+                                  {% else %}
+                                    {{ obj.neurodivergente }}
+                                  {% endif %}
+                                </h6>
+                                <p class="text-xs text-secondary mb-0">Paciente</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.data_criacao|date:"d/m/Y" }}</p>
+                            <p class="text-xs text-secondary mb-0">Data</p>
+                          </td>
+                          <td class="align-middle text-center text-sm">
+                            <span class="badge badge-sm {% if obj.is_active %}bg-gradient-success{% else %}bg-gradient-secondary{% endif %}">
+                              {% if obj.is_active %}Ativo{% else %}Inativo{% endif %}
+                            </span>
+                          </td>
+                          <td class="align-middle text-center">
+                            <span class="text-secondary text-xs font-weight-bold">{{ obj.ultima_atualizacao|date:"d/m/Y" }}</span>
+                          </td>
+                          <td class="align-middle">
+                            <a href="{% url 'admin:neurodivergentes_anamnese_change' obj.pk %}" class="text-secondary font-weight-bold text-xs" data-toggle="tooltip" data-original-title="Edit user">
+                              Edit
+                            </a>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                {% else %}
+                  <div class="px-4 py-2">
+                    <p class="text-sm text-secondary">{% translate "No results found." %}</p>
+                  </div>
+                {% endif %}
+              </div>
+              
+              {% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+            {% endblock %}
+            
+            {% block pagination %}
+              {% if cl.result_count != cl.full_result_count %}
+                <div class="px-4 py-2">
+                  <p class="text-sm text-secondary">
+                    {% blocktranslate with cl.result_count as count and cl.full_result_count as full_count %}
+                      {{ count }} of {{ full_count }} selected
+                    {% endblocktranslate %}
+                  </p>
+                </div>
+              {% endif %}
+              
+              <div class="px-4 py-2 d-flex justify-content-center">
+                {% pagination cl %}
+              </div>
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

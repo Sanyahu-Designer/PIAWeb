@@ -108,7 +108,7 @@ class Neurodivergente(models.Model):
     
     class Meta:
         verbose_name = 'Aluno/Paciente'
-        verbose_name_plural = '.Alunos/Pacientes'
+        verbose_name_plural = 'Alunos/Pacientes'
         ordering = ['primeiro_nome', 'ultimo_nome']
         
     def __str__(self):

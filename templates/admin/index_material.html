@@ -1,0 +1,177 @@
+{% extends "admin/base_material.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="ms-3">
+    <h3 class="mb-0 h4 font-weight-bolder">Dashboard</h3>
+    <p class="mb-4">Bem-vindo ao Painel Administrativo do PIA</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="card">
+      <div class="card-header pb-0">
+        <div class="row">
+          <div class="col-12">
+            <h5>Bem-vindo ao Painel Administrativo do PIA</h5>
+            <p class="text-sm mb-0">Utilize o menu lateral para acessar as funcionalidades do sistema.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>Selecione uma das opções no menu lateral para gerenciar:</p>
+        <ul class="mt-3">
+          <li>Adaptação Curricular</li>
+          <li>Alunos/Pacientes</li>
+          <li>Escolas</li>
+          <li>Profissionais</li>
+          <li>Usuários e Permissões</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Seção de Mensagens Recentes -->
+<div class="row mb-4">
+  <div class="col-lg-8 col-md-12 mb-md-0 mb-4">
+    <div class="card">
+      <div class="card-header pb-0">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6>Atividades Recentes</h6>
+            <p class="text-sm mb-0">
+              <i class="fa fa-clock text-info" aria-hidden="true"></i>
+              Últimas atualizações
+            </p>
+          </div>
+          <div class="col-lg-6 col-5 my-auto text-end">
+            <a href="{% url 'admin:index' %}" class="btn btn-sm bg-gradient-dark mb-0">Ver Todas</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Ação</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% load log %}
+              {% get_admin_log 10 as admin_log for_user user %}
+              {% if not admin_log %}
+                <tr>
+                  <td colspan="2">
+                    <div class="d-flex px-2 py-1">
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="mb-0 text-sm">Nenhuma atividade recente encontrada.</h6>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              {% else %}
+                {% for entry in admin_log %}
+                  <tr>
+                    <td>
+                      <div class="d-flex px-2 py-1">
+                        <div class="d-flex flex-column justify-content-center">
+                          <h6 class="mb-0 text-sm">
+                            {% if entry.is_addition %}
+                              <span class="badge bg-gradient-success">Adicionou</span>
+                            {% elif entry.is_change %}
+                              <span class="badge bg-gradient-info">Alterou</span>
+                            {% elif entry.is_deletion %}
+                              <span class="badge bg-gradient-danger">Excluiu</span>
+                            {% endif %}
+                            
+                            {% if entry.content_type %}
+                              <span class="text-dark">{{ entry.content_type.name }}</span>
+                            {% else %}
+                              <span class="text-dark">Desconhecido</span>
+                            {% endif %}
+                            
+                            {% if entry.is_addition or entry.is_change %}
+                              <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                            {% else %}
+                              {{ entry.object_repr }}
+                            {% endif %}
+                          </h6>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <p class="text-xs text-secondary mb-0">{{ entry.action_time|date:"d/m/Y H:i" }}</p>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Informações do Usuário -->
+  <div class="col-lg-4 col-md-12">
+    <div class="card h-100">
+      <div class="card-header pb-0">
+        <h6>Informações do Usuário</h6>
+      </div>
+      <div class="card-body p-3">
+        <div class="timeline timeline-one-side">
+          <div class="timeline-block mb-3">
+            <span class="timeline-step">
+              <i class="material-symbols-rounded text-dark text-gradient">person</i>
+            </span>
+            <div class="timeline-content">
+              <h6 class="text-dark text-sm font-weight-bold mb-0">Nome</h6>
+              <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ request.user.get_full_name|default:request.user.username }}</p>
+            </div>
+          </div>
+          <div class="timeline-block mb-3">
+            <span class="timeline-step">
+              <i class="material-symbols-rounded text-dark text-gradient">email</i>
+            </span>
+            <div class="timeline-content">
+              <h6 class="text-dark text-sm font-weight-bold mb-0">Email</h6>
+              <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ request.user.email }}</p>
+            </div>
+          </div>
+          <div class="timeline-block mb-3">
+            <span class="timeline-step">
+              <i class="material-symbols-rounded text-dark text-gradient">admin_panel_settings</i>
+            </span>
+            <div class="timeline-content">
+              <h6 class="text-dark text-sm font-weight-bold mb-0">Permissões</h6>
+              <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">
+                {% if request.user.is_superuser %}
+                  Administrador
+                {% else %}
+                  Usuário
+                {% endif %}
+              </p>
+            </div>
+          </div>
+          <div class="timeline-block">
+            <span class="timeline-step">
+              <i class="material-symbols-rounded text-dark text-gradient">calendar_today</i>
+            </span>
+            <div class="timeline-content">
+              <h6 class="text-dark text-sm font-weight-bold mb-0">Último acesso</h6>
+              <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ request.user.last_login|date:"d/m/Y H:i" }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

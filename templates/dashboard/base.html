@@ -16,31 +16,144 @@
                             Home
                         </a>
                     </li>
+                    
+                    <!-- ALUNO/PACIENTE -->
+                    <li class="nav-item mt-3">
+                        <h6 class="ps-2 text-uppercase text-xs font-weight-bolder">ALUNO/PACIENTE</h6>
+                    </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'aluno' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_neurodivergente_changelist' %}">
+                        <a class="nav-link {% if 'neurodivergentes/neurodivergente' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_neurodivergente_changelist' %}">
                             <i class="fas fa-user me-2"></i>
-                            Aluno/Paciente
+                            Alunos/Pacientes
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'chat' in request.path %}active{% endif %}" href="{% url 'realtime:chat_list' %}">
-                            <i class="fas fa-comments me-2"></i>
+                        <a class="nav-link {% if 'adaptacao_curricular' in request.path %}active{% endif %}" href="/dashboard/adaptacao_curricular/">
+                            <i class="fas fa-school me-2"></i>
+                            ACI
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/anamnese' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_anamnese_changelist' %}">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Anamneses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/registroevolucao' in request.path %}active{% endif %}" href="/dashboard/neurodivergentes/registroevolucao/">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Evolução
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/neurodivergencia' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_neurodivergencia_changelist' %}">
+                            <i class="fas fa-brain me-2"></i>
+                            Neurodivergentes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/pdi' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_pdi_changelist' %}">
+                            <i class="fas fa-tasks me-2"></i>
+                            PDIs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/monitoramento' in request.path %}active{% endif %}" href="/dashboard/neurodivergentes/monitoramento/">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            PEI
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/pareceravaliativo' in request.path %}active{% endif %}" href="/dashboard/neurodivergentes/pareceravaliativo/">
+                            <i class="fas fa-clipboard-check me-2"></i>
+                            Pareceres
+                        </a>
+                    </li>
+                    
+                    <!-- CADASTROS -->
+                    <li class="nav-item mt-3">
+                        <h6 class="ps-2 text-uppercase text-xs font-weight-bolder">CADASTROS</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'adaptacao_curricular/bncchabilidade' in request.path %}active{% endif %}" href="/dashboard/adaptacao_curricular/bncchabilidade/">
+                            <i class="fas fa-code me-2"></i>
+                            Código BNCC
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'adaptacao_curricular/bnccdisciplina' in request.path %}active{% endif %}" href="{% url 'admin:adaptacao_curricular_bnccdisciplina_changelist' %}">
+                            <i class="fas fa-book me-2"></i>
+                            Disciplinas BNCC
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/categorianeurodivergente' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_categorianeurodivergente_changelist' %}">
+                            <i class="fas fa-list-alt me-2"></i>
+                            Categorias CID-10
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/condicaoneurodivergente' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_condicaoneurodivergente_changelist' %}">
+                            <i class="fas fa-medkit me-2"></i>
+                            Condições CID-10
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'neurodivergentes/metahabilidade' in request.path %}active{% endif %}" href="{% url 'admin:neurodivergentes_metahabilidade_changelist' %}">
+                            <i class="fas fa-trophy me-2"></i>
+                            Metas/Habilidades
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'auth' in request.path %}active{% endif %}" href="{% url 'admin:auth_user_changelist' %}">
+                            <i class="fas fa-users me-2"></i>
+                            Usuários
+                        </a>
+                    </li>
+                    
+                    <!-- ESCOLA -->
+                    <li class="nav-item mt-3">
+                        <h6 class="ps-2 text-uppercase text-xs font-weight-bolder">ESCOLA</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'escola/escola' in request.path %}active{% endif %}" href="{% url 'admin:escola_escola_changelist' %}">
+                            <i class="fas fa-school me-2"></i>
+                            Escolas
+                        </a>
+                    </li>
+                    
+                    <!-- PROFISSIONAIS -->
+                    <li class="nav-item mt-3">
+                        <h6 class="ps-2 text-uppercase text-xs font-weight-bolder">PROFISSIONAIS</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'profissionais_app/profissional' in request.path %}active{% endif %}" href="{% url 'admin:profissionais_app_profissional_changelist' %}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Profissionais
+                        </a>
+                    </li>
+                    
+                    <!-- MENSAGENS -->
+                    <li class="nav-item mt-3">
+                        <h6 class="ps-2 text-uppercase text-xs font-weight-bolder">MENSAGENS</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'chat' in request.path and 'privatemessage' not in request.path %}active{% endif %}" href="{% url 'realtime:chat_list' %}">
+                            <i class="material-symbols-rounded opacity-5">chat</i>
                             Mensagens
                         </a>
-                        <ul class="nav flex-column ms-3">
-                            <li class="nav-item">
-                                <a class="nav-link {% if 'privatemessage' in request.path %}active{% endif %}" href="{% url 'realtime:chat_list' %}">
-                                    <i class="fas fa-inbox me-2"></i>
-                                    Minhas Mensagens
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'realtime:new_message' %}">
-                                    <i class="fas fa-plus me-2"></i>
-                                    Nova Mensagem
-                                </a>
-                            </li>
-                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'privatemessage' in request.path %}active{% endif %}" href="{% url 'realtime:chat_list' %}">
+                            <i class="material-symbols-rounded opacity-5">inbox</i>
+                            Minhas Mensagens
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'realtime:new_message' %}">
+                            <i class="material-symbols-rounded opacity-5">add</i>
+                            Nova Mensagem
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -55,9 +168,15 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     {% if user.is_authenticated %}
-                        <!-- Ícone de mensagens -->
-                        <a href="{% url 'realtime:chat_list' %}" class="btn btn-link position-relative" title="Mensagens">
-                            <i class="fas fa-comments"></i>
+                        <!-- Botões de navegação -->
+                        <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+                            <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+                        </a>
+                        <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+                            <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+                        </a>
+                        <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+                            <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
                         </a>
                         <!-- Ícone de notificações -->
                         {% include 'realtime/notifications.html' %}

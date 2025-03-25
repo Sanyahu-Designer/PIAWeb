@@ -44,14 +44,11 @@ class BNCCHabilidade(models.Model):
         return f"{self.disciplina} - {self.objeto_conhecimento} - {self.codigo}"
 
     class Meta:
-        verbose_name = 'Cadastro BNCC'
-        verbose_name_plural = 'Cadastros BNCC'
+        verbose_name = 'Código BNCC'
+        verbose_name_plural = 'Códigos BNCC'
         ordering = ['disciplina', 'ano', 'trimestre', 'codigo']
 
 class AdaptacaoCurricularIndividualizada(models.Model):
-    class Meta:
-        verbose_name = 'Adaptação Curricular Individualizada'
-        verbose_name_plural = 'Adaptações Curriculares Individualizadas'
 
     MODALIDADE_CHOICES = [
         ('EI', 'Educação Infantil'),
@@ -105,8 +102,8 @@ class AdaptacaoCurricularIndividualizada(models.Model):
         return f"ACI - {self.aluno} - {self.data_cadastro}"
 
     class Meta:
-        verbose_name = 'Adaptação Curricular Individualizada'
-        verbose_name_plural = 'Adaptações Curriculares Individualizadas'
+        verbose_name = 'ACI'
+        verbose_name_plural = 'ACIs'
         ordering = ['-data_cadastro', 'aluno']
 
 class AdaptacaoHabilidade(models.Model):

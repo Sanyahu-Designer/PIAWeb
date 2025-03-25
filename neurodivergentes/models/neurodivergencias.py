@@ -8,8 +8,8 @@ class CategoriaNeurodivergente(models.Model):
     ordem = models.IntegerField('Ordem de Exibição', default=0)
     
     class Meta:
-        verbose_name = 'Categoria de Neurodivergência'
-        verbose_name_plural = 'Categorias de Neurodivergência'
+        verbose_name = 'Categoria CID-10'
+        verbose_name_plural = 'Categorias CID-10'
         ordering = ['ordem', 'nome']
 
     def __str__(self):
@@ -28,8 +28,8 @@ class CondicaoNeurodivergente(models.Model):
     ativo = models.BooleanField('Ativo', default=True)
     
     class Meta:
-        verbose_name = 'Condição Aluno/Paciente'
-        verbose_name_plural = 'Condições Alunos/Pacientes'
+        verbose_name = 'Condição CID-10'
+        verbose_name_plural = 'Condições CID-10'
         ordering = ['categoria', 'nome']
         unique_together = ['categoria', 'nome']
 
@@ -67,8 +67,8 @@ class Neurodivergencia(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Neurodivergência'
-        verbose_name_plural = 'Neurodivergências'
+        verbose_name = 'Neurodivergente'
+        verbose_name_plural = 'Neurodivergentes'
 
     def __str__(self):
         return f"Neurodivergências de {self.neurodivergente}"

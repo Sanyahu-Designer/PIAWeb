@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'verbose_name': 'Aluno/Paciente',
-                'verbose_name_plural': '.Alunos/Pacientes',
+                'verbose_name_plural': 'Alunos/Pacientes',
                 'ordering': ['primeiro_nome', 'ultimo_nome'],
             },
         ),

@@ -4,5 +4,5 @@ from . import views
 app_name = 'escola'
 
 urlpatterns = [
-    # URLs serão adicionadas posteriormente conforme necessário
+    path('', views.index, name='index'),
 ]
