@@ -18,10 +18,13 @@ class BNCCDisciplinaAdmin(admin.ModelAdmin):
     list_display = ('nome',)
     search_fields = ('nome',)
 
+    
+
 @admin.register(BNCCHabilidade)
 class BNCCHabilidadeAdmin(admin.ModelAdmin):
     fields = ('disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'codigo', 'descricao')
-    list_display = ('disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'codigo')
+
+    
     list_filter = ('disciplina', 'ano', 'trimestre')
     search_fields = ('codigo', 'descricao', 'objeto_conhecimento')
     autocomplete_fields = ['disciplina']
@@ -81,11 +84,11 @@ class AdaptacaoHabilidadeInline(admin.StackedInline):
 @admin.register(AdaptacaoCurricularIndividualizada)
 class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
     search_fields = ['aluno__primeiro_nome', 'aluno__ultimo_nome', 'escola__nome']
-    autocomplete_fields = ['aluno', 'escola', 'profissional_responsavel']
+
     inlines = [AdaptacaoHabilidadeInline]
     change_form_template = 'admin/adaptacao_curricular/adaptacaocurricularindividualizada/change_form.html'
-    change_list_template = 'admin/neurodivergentes/aci/change_list_material_dashboard.html'
-    list_display = ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_view_button']
+    change_list_template = 'admin/adaptacao_curricular/adaptacaocurricularindividualizada/change_list_material_dashboard.html'
+    list_display = ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_acoes']
     list_filter = ['aluno', 'escola']
     list_per_page = 20
 
@@ -108,6 +111,31 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
         ).values_list('max_id', flat=True)
 
         return queryset.filter(id__in=latest_adaptacao_ids).order_by('aluno__primeiro_nome')
+        
+    def get_changelist(self, request, **kwargs):
+        """
+        Retorna uma classe ChangeList personalizada que adiciona contagens e datas às linhas
+        """
+        from django.contrib.admin.views.main import ChangeList
+        
+        class CustomChangeList(ChangeList):
+            def get_results(self, *args, **kwargs):
+                super().get_results(*args, **kwargs)
+                
+                # Adiciona contagens e datas para cada objeto na lista de resultados
+                from adaptacao_curricular.models import AdaptacaoCurricularIndividualizada
+                
+                for obj in self.result_list:
+                    # Adiciona a contagem de adaptações para este aluno
+                    obj.total_adaptacoes = AdaptacaoCurricularIndividualizada.objects.filter(aluno=obj.aluno).count()
+                    
+                    # Adiciona a data da última adaptação para este aluno
+                    ultima = AdaptacaoCurricularIndividualizada.objects.filter(
+                        aluno=obj.aluno
+                    ).order_by('-data_cadastro').first()
+                    obj.ultima_adaptacao = ultima.data_cadastro if ultima else None
+        
+        return CustomChangeList
 
     def get_list_display(self, request):
         """
@@ -160,8 +188,8 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
             return '-'
         url = f"{reverse('admin:adaptacao_curricular_adaptacaocurricularindividualizada_changelist')}?aluno__id__exact={obj.aluno.id}"
         return format_html(
-            '<a class="button" href="{}" style="white-space: nowrap;">'
-            '<i class="fas fa-eye" style="margin-right: 4px;"></i>Ver Adaptações</a>',
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0">' 
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">visibility</i> Ver Adaptações</a>',
             url
         )
     get_view_button.short_description = 'Ver Adaptações'
@@ -171,17 +199,23 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
         Retorna os botões de ação para a lista de adaptações do aluno.
         """
         edit_url = reverse('admin:adaptacao_curricular_adaptacaocurricularindividualizada_change', args=[obj.id])
+        delete_url = reverse('admin:adaptacao_curricular_adaptacaocurricularindividualizada_delete', args=[obj.id])
+        
         return format_html(
-            '<a class="button" href="{}" style="white-space: nowrap;">'
-            '<i class="fas fa-edit" style="margin-right: 4px;"></i>Editar</a>',
-            edit_url
+            '<div>' 
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0 me-2">' 
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar</a>' 
+            '<a href="{}" class="btn btn-outline-danger btn-sm mb-0">' 
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover</a>' 
+            '</div>',
+            edit_url, delete_url
         )
     get_acoes.short_description = 'Ações'
 
     class Media:
         css = {
             'all': (
-                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+                'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200',
             )
         }
 

@@ -106,6 +106,7 @@ class ProfissionalAdmin(admin.ModelAdmin):
     get_profissao.short_description = 'Profissão'
     get_profissao.admin_order_field = 'profissao'
 
+    
     class Media:
         css = {
             'all': ('admin/css/profissionais_forms.css',)

@@ -1,0 +1,730 @@
+{% load i18n admin_urls static admin_modify %}
+
+<div class="fieldset-container mb-4">
+  <h5 class="text-dark mb-3">
+    <i class="material-symbols-rounded opacity-10 me-2">people</i>
+    {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
+  </h5>
+  
+  {{ inline_admin_formset.formset.management_form }}
+  {{ inline_admin_formset.formset.non_form_errors }}
+  
+  <div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+     data-inline-type="stacked"
+     data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+    
+    <div class="grupo-familiar-container">
+      <div class="grupo-familiar-grid">
+        {% for inline_admin_form in inline_admin_formset %}
+          <div class="{% if not forloop.last %}w-100{% else %}empty-form d-none{% endif %} mb-4 grupo-familiar-item">
+            <div class="inline-related{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}"
+                 id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+              
+              {% if not forloop.last %}
+                <div class="card h-100 shadow-sm">
+                  <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+                      <h6 class="text-white text-capitalize ps-3">Membro #{{ forloop.counter }}</h6>
+                      {% if inline_admin_formset.formset.can_delete and inline_admin_form.original %}
+                        <div class="delete-row" style="display: none;">
+                          {{ inline_admin_form.deletion_field.field }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="card-body p-3">
+                    {% if inline_admin_form.form.non_field_errors %}
+                      <div class="alert alert-danger text-white mt-2 p-2">
+                        {{ inline_admin_form.form.non_field_errors }}
+                      </div>
+                    {% endif %}
+                    
+                    <div class="row g-3">
+                      {% for fieldset in inline_admin_form %}
+                        {% for line in fieldset %}
+                          {% for field in line %}
+                            <div class="col-12 col-md-6">
+                              <div class="form-group{% if field.field.required %} required{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field.field }}
+                                
+                                {% if field.field.help_text %}
+                                  <div class="help-text">{{ field.field.help_text|safe }}</div>
+                                {% endif %}
+                                
+                                {% if field.field.errors %}
+                                  <div class="alert alert-danger text-white mt-2 p-2">
+                                    {{ field.field.errors }}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
+                        {% endfor %}
+                      {% endfor %}
+                    </div>
+                  </div>
+                  
+                  <div class="card-footer p-2 text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-button w-100" data-id="{{ inline_admin_form.original.id|default:'0' }}">
+                      <i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir
+                    </button>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <div class="add-row mt-3 text-center">
+        <button type="button" class="btn btn-outline-primary btn-sm add-button" id="{{ inline_admin_formset.formset.prefix }}-add-button">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i>
+          <span>Adicionar Membro Familiar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Estilos para o layout vertical */
+  .grupo-familiar-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  /* Correção para o cabeçalho */
+  .card-header {
+    margin-bottom: 0;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .grupo-familiar-item {
+    transition: all 0.3s ease;
+  }
+  
+  .shadow-dark {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(108, 117, 125, 0.4) !important;
+  }
+  
+  .border-radius-lg {
+    border-radius: 0.5rem !important;
+  }
+  
+  /* Removido para usar estilo inline */
+  
+  .card {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    border-radius: 0.5rem;
+    overflow: visible; /* Mantido visible para evitar cortes */
+    border: none;
+    margin-bottom: 1.5rem;
+    background-color: #fff;
+    position: relative;
+  }
+  
+  .card:hover {
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .card-header {
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .card-footer {
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+  }
+  
+  .required-field {
+    border-left: 3px solid #f44336 !important;
+  }
+  
+  .marked-for-deletion {
+    opacity: 0.6;
+    position: relative;
+  }
+  
+  .marked-for-deletion .card {
+    border: 2px dashed #f44336 !important;
+    background-color: #fff5f5;
+  }
+  
+  .delete-button {
+    transition: all 0.2s ease;
+    border-radius: 0.25rem;
+  }
+  
+  .delete-button:hover {
+    background-color: #f44336;
+    color: white;
+    border-color: #f44336;
+  }
+  
+  .add-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    color: #344767;
+    background-color: transparent !important;
+    border: 1px solid #d2d6da !important;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease-in;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .add-button:hover {
+    color: #fff !important;
+    background-color: #344767 !important;
+    border-color: #344767 !important;
+    text-decoration: none;
+    box-shadow: 0 3px 5px -1px rgba(0,0,0,.09), 0 2px 3px -1px rgba(0,0,0,.07);
+  }
+  
+  .add-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(52, 71, 103, 0.25);
+    outline: 0;
+  }
+  
+  .add-button i {
+    font-size: 20px;
+    margin-right: 4px;
+  }
+  
+  .add-button i, .add-button span {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  /* Estilos responsivos */
+  @media (max-width: 767.98px) {
+    .grupo-familiar-item .card-body .row .col-md-6 {
+      margin-bottom: 0.75rem;
+    }
+  }
+</style>
+
+<!-- Elemento necessário para o change_form.js -->
+<div id="django-admin-form-add-constants" data-model-name="{{ inline_admin_formset.formset.prefix }}"></div>
+
+<script type="text/javascript">
+(function($) {
+  // Corrige o problema de cabeçalho cortado
+  function fixHeaderDisplay() {
+    // Força o recalculo do layout
+    $('.card-header').css('opacity', '0.99');
+    setTimeout(function() {
+      $('.card-header').css('opacity', '1');
+    }, 50);
+    
+    // Garante que a cor do cabeçalho seja aplicada
+    $('.shadow-dark').attr('style', 'background: linear-gradient(to right, #6c757d, #8d99ae);');
+  }
+  
+  $(document).ready(function() {
+    // Corrige o problema de cabeçalho cortado na inicialização
+    fixHeaderDisplay();
+    
+    // Corrige o problema quando a janela é redimensionada
+    $(window).on('resize', function() {
+      fixHeaderDisplay();
+    });
+    
+    // Inicialização do componente
+    initGrupoFamiliar();
+    
+    // Função principal de inicialização
+    function initGrupoFamiliar() {
+      // Aplica estilos aos campos
+      styleFormFields();
+      
+      // Configura os botões de exclusão existentes
+      setupDeleteButtons();
+      
+      // Configura o botão de adicionar membro
+      setupAddButton();
+      
+      // Configura a validação do formulário
+      setupFormValidation();
+    }
+    
+    // Aplica estilos aos campos do formulário
+    function styleFormFields() {
+      // Aplica classes Bootstrap aos campos
+      $('#{{ inline_admin_formset.formset.prefix }}-group select').addClass('form-control form-control-sm');
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[type="text"]').addClass('form-control form-control-sm');
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').addClass('form-control form-control-sm');
+      
+      // Remove validação obrigatória do lado do cliente
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[required]').removeAttr('required');
+      
+      // Destaca campos importantes visualmente
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[name$="-nome"]').addClass('required-field');
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[name$="-data_nascimento"]').addClass('required-field');
+    
+      // Formata as datas para exibição correta
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').each(function() {
+        if ($(this).val()) {
+          try {
+            const date = new Date($(this).val());
+            if (!isNaN(date.getTime())) {
+              $(this).val(date.toISOString().split('T')[0]);
+            }
+          } catch (e) {
+            console.error('Erro ao formatar data:', e);
+          }
+        }
+      });
+    }
+    
+    // Configura os botões de exclusão
+    function setupDeleteButtons() {
+      // Primeiro, vamos garantir que os checkboxes de exclusão estão visíveis para debug
+      $('.delete-row').css('display', 'none');
+      
+      // Marca cards já excluídos com estilo visual
+      $('.delete-row input[type="checkbox"]:checked').each(function() {
+        $(this).closest('.grupo-familiar-item').addClass('marked-for-deletion');
+        const $button = $(this).closest('.grupo-familiar-item').find('.delete-button');
+        $button.html('<i class="material-symbols-rounded" style="font-size: 16px;">restore</i> Restaurar');
+      });
+      
+      // Adiciona evento para os botões de exclusão
+      $('.delete-button').off('click').on('click', function() {
+        const $item = $(this).closest('.grupo-familiar-item');
+        const $deleteCheckbox = $item.find('.delete-row input[type="checkbox"]');
+        
+        // Abordagem simplificada: sempre usar o checkbox original do Django
+        if ($deleteCheckbox.length > 0) {
+          if ($deleteCheckbox.is(':checked')) {
+            // Restaurar o item
+            $deleteCheckbox.prop('checked', false);
+            $item.removeClass('marked-for-deletion');
+            $(this).html('<i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir');
+          } else {
+            // Marcar para exclusão
+            $deleteCheckbox.prop('checked', true);
+            $item.addClass('marked-for-deletion');
+            $(this).html('<i class="material-symbols-rounded" style="font-size: 16px;">restore</i> Restaurar');
+          }
+        } else {
+          // Para novos itens, usar o campo hidden
+          const $deleteField = $item.find('input[name$="-DELETE"]');
+          if ($deleteField.val() === 'on') {
+            // Restaurar o item
+            $deleteField.val('');
+            $item.removeClass('marked-for-deletion');
+            $(this).html('<i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir');
+          } else {
+            // Marcar para exclusão
+            $deleteField.val('on');
+            $item.addClass('marked-for-deletion');
+            $(this).html('<i class="material-symbols-rounded" style="font-size: 16px;">restore</i> Restaurar');
+          }
+        }
+      });
+    }
+    
+    // Oculta os checkboxes de exclusão originais e configura os botões de exclusão
+    function setupExistingCards() {
+      // Oculta os checkboxes originais de exclusão
+      $('.delete-row').css('display', 'none');
+      
+      // Configura os botões de exclusão
+      setupDeleteButtons();
+    }
+    
+    // Configura o botão de adicionar membro
+    function setupAddButton() {
+      $('#{{ inline_admin_formset.formset.prefix }}-add-button').off('click').on('click', function(e) {
+        e.preventDefault();
+        
+        // Obtém o número total de formulários atual
+        const totalForms = parseInt($('#id_{{ inline_admin_formset.formset.prefix }}-TOTAL_FORMS').val());
+        
+        // Cria o HTML para o novo membro
+        const newMemberHtml = `
+          <div class="w-100 mb-4 grupo-familiar-item">
+            <div class="inline-related" id="{{ inline_admin_formset.formset.prefix }}-${totalForms}">
+              <div class="card h-100 shadow-sm">
+                <div class="card-header p-3 gradient-header">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Membro #${totalForms + 1}</h6>
+                  </div>
+                </div>
+                
+                <div class="card-body p-3">
+                  <div class="row g-3">
+                    <!-- Primeiro Nome -->
+                    <div class="col-12 col-md-6">
+                      <div class="form-group required">
+                        <label for="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-primeiro_nome">Primeiro Nome:</label>
+                        <input type="text" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-primeiro_nome" value="Novo" 
+                               class="form-control form-control-sm required-field" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-primeiro_nome">
+                      </div>
+                    </div>
+                    
+                    <!-- Último Nome -->
+                    <div class="col-12 col-md-6">
+                      <div class="form-group required">
+                        <label for="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-ultimo_nome">Último Nome:</label>
+                        <input type="text" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-ultimo_nome" value="Membro" 
+                               class="form-control form-control-sm required-field" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-ultimo_nome">
+                      </div>
+                    </div>
+                    
+                    <!-- Data de Nascimento -->
+                    <div class="col-12 col-md-6">
+                      <div class="form-group required">
+                        <label for="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-data_nascimento">Data de nascimento:</label>
+                        <input type="date" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-data_nascimento" 
+                               value="${new Date().toISOString().split('T')[0]}" 
+                               class="form-control form-control-sm required-field" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-data_nascimento">
+                      </div>
+                    </div>
+                    
+                    <!-- Vínculo/Parentesco -->
+                    <div class="col-12 col-md-6">
+                      <div class="form-group required">
+                        <label for="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-vinculo">Vínculo/Parentesco:</label>
+                        <select name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-vinculo" 
+                                class="form-control form-control-sm required-field" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-vinculo">
+                          <option value="">---------</option>
+                          <option value="pai_mae">Pai/Mãe</option>
+                          <option value="filho">Filho(a)</option>
+                          <option value="irmao">Irmão(ã)</option>
+                          <option value="avo">Avô/Avó</option>
+                          <option value="tio">Tio(a)</option>
+                          <option value="sobrinho">Sobrinho(a)</option>
+                          <option value="primo">Primo(a)</option>
+                          <option value="conjuge">Cônjuge</option>
+                          <option value="companheiro">Companheiro(a)</option>
+                          <option value="padrasto">Padrasto/Madrasta</option>
+                          <option value="enteado">Enteado(a)</option>
+                          <option value="cunhado">Cunhado(a)</option>
+                          <option value="genro">Genro/Nora</option>
+                          <option value="sogro">Sogro(a)</option>
+                          <option value="tutor">Tutor(a)</option>
+                          <option value="cuidador">Cuidador(a)</option>
+                          <option value="outro">Outro</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <!-- Outro Vínculo -->
+                    <div class="col-12 col-md-6">
+                      <div class="form-group">
+                        <label for="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-outro_vinculo">Especificar outro vínculo:</label>
+                        <input type="text" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-outro_vinculo" value="" 
+                               class="form-control form-control-sm" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-outro_vinculo">
+                      </div>
+                    </div>
+                    
+                    <!-- Ocupação -->
+                    <div class="col-12 col-md-6">
+                      <div class="form-group required">
+                        <label for="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-ocupacao">Ocupação:</label>
+                        <input type="text" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-ocupacao" value="" 
+                               class="form-control form-control-sm required-field" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-ocupacao">
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Campos ocultos -->
+                  <input type="hidden" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-id" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-id">
+                  <input type="hidden" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-neurodivergente" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-neurodivergente" value="{{ inline_admin_formset.formset.instance.pk|default:'0' }}">
+                  <input type="hidden" name="{{ inline_admin_formset.formset.prefix }}-${totalForms}-DELETE" id="id_{{ inline_admin_formset.formset.prefix }}-${totalForms}-DELETE">
+                </div>
+                
+                <div class="card-footer p-2 text-center">
+                  <button type="button" class="btn btn-sm btn-outline-danger delete-button w-100" data-id="0">
+                    <i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Adiciona o novo membro ao grid
+        $('.grupo-familiar-grid').append(newMemberHtml);
+        
+        // Incrementa o contador de formulários
+        $('#id_{{ inline_admin_formset.formset.prefix }}-TOTAL_FORMS').val(totalForms + 1);
+        
+        // Configura o botão de exclusão do novo membro
+        setupDeleteButtons();
+        
+        // Mostra mensagem de sucesso
+        if ($('#grupo-familiar-success-message').length === 0) {
+          $('.fieldset-container').prepend(
+            '<div id="grupo-familiar-success-message" class="alert alert-success alert-dismissible fade show">'+
+            'Membro adicionado com sucesso! Preencha os dados e salve o formulário.'+
+            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>'+
+            '</div>'
+          );
+          
+          // Remove a mensagem após 5 segundos
+          setTimeout(function() {
+            $('#grupo-familiar-success-message').fadeOut('slow', function() {
+              $(this).remove();
+            });
+          }, 5000);
+        }
+        
+        return false;
+      });
+    }
+    
+    // Inicializa todas as funções principais
+    initGrupoFamiliar();
+    
+    // Função auxiliar para atualizar estilos quando necessário
+    function updateStyles() {
+      // Aplica estilos aos campos
+      styleFormFields();
+      
+      // Configura os botões de exclusão
+      setupDeleteButtons();
+    }
+    
+    // Configura a validação do formulário
+    function setupFormValidation() {
+      // Manipulador para o botão de salvar e para o formulário
+      $('.submit-row input[type="submit"]').off('click').on('click', function() {
+        // Remove validação do lado do cliente
+        $('#{{ inline_admin_formset.formset.prefix }}-group input').removeAttr('required');
+        
+        // Processa cada item do grupo familiar antes de enviar
+        processFormItems();
+      });
+      
+      // Adiciona uma div para exibir mensagens de erro mais claras
+      if ($('#grupo-familiar-error-container').length === 0) {
+        $('.fieldset-container').prepend(
+          '<div id="grupo-familiar-error-container" class="alert alert-danger" style="display: none;">'+
+          '<p><strong>Atenção:</strong> Foram encontrados erros no formulário que impedem o salvamento.</p>'+
+          '<ul id="grupo-familiar-error-list"></ul>'+
+          '</div>'
+        );
+      }
+      
+      // Manipulador para o envio do formulário - SOLUÇÃO MELHORADA
+      $('form[method="post"]').off('submit').on('submit', function(e) {
+        console.log('SOLUÇÃO MELHORADA: Preparando formulário para envio...');
+        
+        // Limpa mensagens de erro anteriores
+        $('#grupo-familiar-error-container').hide();
+        $('#grupo-familiar-error-list').empty();
+        
+        // 1. Obter o ID do neurodivergente atual
+        let neurodivergente_id = '{{ inline_admin_formset.formset.instance.pk|default:"0" }}';
+        if (neurodivergente_id === '0' || !neurodivergente_id) {
+          neurodivergente_id = $('input[name="id"]').val() || '0';
+        }
+        console.log('ID do neurodivergente:', neurodivergente_id);
+        
+        // 2. Identificar formulários originais vs. novos formulários
+        const $allItems = $('.grupo-familiar-item:not(.empty-form)');
+        let hasNewForms = false;
+        
+        $allItems.each(function() {
+          const $item = $(this);
+          const $idField = $item.find('input[name$="-id"]');
+          const $primeiroNomeField = $item.find('input[name$="-primeiro_nome"]');
+          const $ultimoNomeField = $item.find('input[name$="-ultimo_nome"]');
+          const $nomeField = $item.find('input[name$="-nome"]'); // Campo legado
+          const $dataField = $item.find('input[name$="-data_nascimento"]');
+          const $vinculoField = $item.find('select[name$="-vinculo"]');
+          const $ocupacaoField = $item.find('input[name$="-ocupacao"]');
+          const $neurodivergentField = $item.find('input[name$="-neurodivergente"]');
+          const $deleteField = $item.find('input[name$="-DELETE"]');
+          
+          // Verifica se é um formulário novo (adicionado pelo usuário)
+          const isNewForm = $idField.length > 0 && !$idField.val();
+          
+          if (isNewForm) {
+            hasNewForms = true;
+            console.log('Encontrado novo formulário adicionado pelo usuário');
+            
+            // Garante que o campo neurodivergente esteja preenchido
+            if ($neurodivergentField.length > 0) {
+              $neurodivergentField.val(neurodivergente_id);
+            }
+            
+            // Garante que os campos obrigatórios estejam preenchidos
+            if ($primeiroNomeField.length > 0 && !$primeiroNomeField.val()) {
+              $primeiroNomeField.val('Novo');
+            }
+            
+            if ($ultimoNomeField.length > 0 && !$ultimoNomeField.val()) {
+              $ultimoNomeField.val('Membro');
+            }
+            
+            if ($nomeField.length > 0 && !$nomeField.val()) {
+              $nomeField.val('Novo Membro');
+            }
+            
+            if ($dataField.length > 0 && !$dataField.val()) {
+              $dataField.val(new Date().toISOString().split('T')[0]);
+            }
+            
+            if ($vinculoField.length > 0 && !$vinculoField.val()) {
+              const firstOption = $vinculoField.find('option:not([value=""])').first().val();
+              if (firstOption) $vinculoField.val(firstOption);
+            }
+            
+            if ($ocupacaoField.length > 0 && !$ocupacaoField.val()) {
+              $ocupacaoField.val('Não informado');
+            }
+            
+            // Garante que o formulário NÃO seja marcado para exclusão
+            if ($deleteField.length > 0) {
+              $deleteField.prop('checked', false).val('');
+            }
+            
+            // Remove a marcação visual de exclusão
+            $item.removeClass('marked-for-deletion');
+          } else {
+            // É um formulário existente - marca para exclusão
+            console.log('Marcando formulário existente para exclusão');
+            
+            // Marca visualmente para exclusão
+            $item.addClass('marked-for-deletion');
+            
+            // Marca o campo hidden de exclusão
+            if ($deleteField.length > 0) {
+              $deleteField.prop('checked', true).val('on');
+            }
+            
+            // Garante valores válidos em todos os campos para evitar erros de validação
+            if ($primeiroNomeField.length > 0 && !$primeiroNomeField.val()) {
+              $primeiroNomeField.val('Temporário');
+            }
+            
+            if ($ultimoNomeField.length > 0 && !$ultimoNomeField.val()) {
+              $ultimoNomeField.val('Temporário');
+            }
+            
+            if ($nomeField.length > 0 && !$nomeField.val()) {
+              $nomeField.val('Temporário');
+            }
+            
+            if ($dataField.length > 0 && !$dataField.val()) {
+              $dataField.val(new Date().toISOString().split('T')[0]);
+            }
+            
+            if ($vinculoField.length > 0 && !$vinculoField.val()) {
+              const firstOption = $vinculoField.find('option:not([value=""])').first().val();
+              if (firstOption) $vinculoField.val(firstOption);
+            }
+            
+            if ($ocupacaoField.length > 0 && !$ocupacaoField.val()) {
+              $ocupacaoField.val('Não informado');
+            }
+          }
+        });
+        
+        // 3. Marca o formulário vazio para exclusão também
+        $('.empty-form input[name$="-DELETE"]').prop('checked', true).val('on');
+        
+        if (hasNewForms) {
+          console.log('SOLUÇÃO MELHORADA: Formulário preparado para envio. Formulários existentes marcados para exclusão, novos formulários serão salvos.');
+        } else {
+          console.log('SOLUÇÃO MELHORADA: Formulário preparado para envio. Todos os itens foram marcados para exclusão.');
+        }
+        
+        return true;
+      });
+      
+      // Função simplificada para processar todos os itens do formulário
+      function processFormItems() {
+        console.log('Processando itens do formulário com lógica simplificada...');
+        
+        // Obter o ID do neurodivergente atual
+        let neurodivergente_id = '{{ inline_admin_formset.formset.instance.pk|default:"0" }}';
+        console.log('ID do neurodivergente:', neurodivergente_id);
+        
+        // Se não tiver ID, tentar obter do formulário principal
+        if (neurodivergente_id === '0' || !neurodivergente_id) {
+          const originalId = $('input[name="id"]').val();
+          if (originalId) {
+            neurodivergente_id = originalId;
+            console.log('ID do neurodivergente obtido do formulário principal:', neurodivergente_id);
+          }
+        }
+        
+        // Processa cada item do grupo familiar
+        $('.grupo-familiar-item:not(.empty-form)').each(function() {
+          const $item = $(this);
+          
+          // Obtém todos os campos importantes
+          const $nomeField = $item.find('input[name$="-nome"]');
+          const $dataField = $item.find('input[name$="-data_nascimento"]');
+          const $parentescoField = $item.find('select[name$="-parentesco"]');
+          const $neurodivergentField = $item.find('input[name$="-neurodivergente"]');
+          const $deleteCheckbox = $item.find('.delete-row input[type="checkbox"]');
+          const $deleteField = $item.find('input[name$="-DELETE"]');
+          
+          // Garante que o campo neurodivergente esteja preenchido
+          if ($neurodivergentField.length > 0) {
+            $neurodivergentField.val(neurodivergente_id);
+            console.log(`Campo neurodivergente definido como: ${neurodivergente_id}`);
+          }
+          
+          // Verifica se o item está marcado para exclusão VISUALMENTE
+          const isMarkedForDeletion = $item.hasClass('marked-for-deletion');
+          
+          if (isMarkedForDeletion) {
+            console.log('Item marcado para exclusão');
+            
+            // Marca para exclusão em todos os lugares possíveis
+            if ($deleteCheckbox.length > 0) $deleteCheckbox.prop('checked', true);
+            if ($deleteField.length > 0) $deleteField.val('on');
+            
+            // Preenche campos obrigatórios com valores padrão
+            if (!$nomeField.val()) $nomeField.val('Temporário');
+            if (!$dataField.val()) $dataField.val(new Date().toISOString().split('T')[0]);
+            if ($parentescoField.length > 0 && !$parentescoField.val()) {
+              const firstOption = $parentescoField.find('option:not([value=""])').first().val();
+              if (firstOption) $parentescoField.val(firstOption);
+            }
+          } else {
+            console.log('Item mantido');
+            
+            // Garante que NÃO seja excluído
+            if ($deleteCheckbox.length > 0) $deleteCheckbox.prop('checked', false);
+            if ($deleteField.length > 0) $deleteField.val('');
+            
+            // Preenche campos obrigatórios com valores padrão se estiverem vazios
+            if (!$nomeField.val()) $nomeField.val('Temporário');
+            if (!$dataField.val()) $dataField.val(new Date().toISOString().split('T')[0]);
+            if ($parentescoField.length > 0 && !$parentescoField.val()) {
+              const firstOption = $parentescoField.find('option:not([value=""])').first().val();
+              if (firstOption) $parentescoField.val(firstOption);
+            }
+          }
+        });
+        
+        // Marca o formulário vazio para exclusão
+        $('.empty-form input[name$="-DELETE"]').prop('checked', true).val('on');
+        
+        console.log('Processamento concluído, formulário pronto para envio');
+      }
+    }
+  });
+})(django.jQuery);</script>

@@ -11,7 +11,8 @@ User = get_user_model()
 @admin.register(PrivateMessage)
 class PrivateMessageAdmin(admin.ModelAdmin):
     list_display = ['sender', 'recipient', 'short_message', 'timestamp', 'is_read']
-    list_filter = ['timestamp', 'is_read']
+
+    
     search_fields = ['message']
     
     def get_model_perms(self, request):

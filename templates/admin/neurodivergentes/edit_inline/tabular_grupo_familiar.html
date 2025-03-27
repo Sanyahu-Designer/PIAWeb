@@ -1,0 +1,153 @@
+{% load i18n admin_urls static admin_modify %}
+
+<div class="fieldset-container mb-4">
+  <div class="card-header p-0 position-relative mt-n4 z-index-2 bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3 mb-4">
+    <h5 class="text-white ps-3 mb-0">
+      <i class="material-symbols-rounded opacity-10 me-2">people</i>
+      {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
+    </h5>
+  </div>
+  
+  <div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+       data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+    {{ inline_admin_formset.formset.management_form }}
+    {{ inline_admin_formset.formset.non_form_errors }}
+    
+    <div class="table-responsive">
+      <table class="table align-items-center mb-0 grupo-familiar-table">
+        <thead class="thead-light">
+          <tr>
+            {% for field in inline_admin_formset.fields %}
+              {% if not field.widget.is_hidden %}
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                  {{ field.label|capfirst }}
+                  {% if field.required %}<span class="text-danger">*</span>{% endif %}
+                </th>
+              {% endif %}
+            {% endfor %}
+            {% if inline_admin_formset.formset.can_delete %}<th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">{% translate "Remover?" %}</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for inline_admin_form in inline_admin_formset %}
+            <tr class="{% cycle "row1" "row2" %} {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %} grupo-familiar-row"
+                id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+              
+              {% if inline_admin_form.form.non_field_errors %}
+                <td colspan="{{ inline_admin_form|cell_count }}">
+                  <div class="alert alert-danger text-white mt-2 p-2">
+                    {{ inline_admin_form.form.non_field_errors }}
+                  </div>
+                </td>
+              {% endif %}
+              
+              {% for fieldset in inline_admin_form %}
+                {% for line in fieldset %}
+                  {% for field in line %}
+                    <td class="{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% if field.field.errors %} errors{% endif %}">
+                      {% if field.is_readonly %}
+                        <p>{{ field.contents }}</p>
+                      {% else %}
+                        {{ field.field }}
+                        {% if field.field.errors %}
+                          <div class="alert alert-danger text-white mt-2 p-2">
+                            {{ field.field.errors }}
+                          </div>
+                        {% endif %}
+                        {% if field.field.help_text %}
+                          <div class="help-text">{{ field.field.help_text|safe }}</div>
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+              
+              {% if inline_admin_formset.formset.can_delete %}
+                <td class="delete text-center">
+                  {% if inline_admin_form.original %}
+                    {{ inline_admin_form.deletion_field.field }}
+                    <label for="{{ inline_admin_form.deletion_field.field.id_for_label }}" class="mb-0">
+                      <i class="material-symbols-rounded text-danger cursor-pointer" style="font-size: 20px;">delete</i>
+                    </label>
+                  {% endif %}
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="add-row mt-3">
+      <a href="#" class="btn btn-sm btn-outline-primary add-button" id="{{ inline_admin_formset.formset.prefix }}-add-button">
+        <i class="material-symbols-rounded opacity-10 me-1" style="font-size: 16px;">add</i>
+        <span>{% blocktranslate with verbose_name=inline_admin_formset.opts.verbose_name|capfirst %}Adicionar membro{% endblocktranslate %}</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function($) {
+  $(document).ready(function() {
+    // Aplica estilos aos campos do inline
+    $('#{{ inline_admin_formset.formset.prefix }}-group select').addClass('form-control form-control-sm');
+    $('#{{ inline_admin_formset.formset.prefix }}-group input[type="text"]').addClass('form-control form-control-sm');
+    $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').addClass('form-control form-control-sm');
+    
+    // Inicializa Select2 para os campos de seleção
+    $('#{{ inline_admin_formset.formset.prefix }}-group select').select2({
+      theme: 'bootstrap4',
+      width: '100%',
+      dropdownParent: $('#{{ inline_admin_formset.formset.prefix }}-group')
+    });
+    
+    // Melhora a aparência dos checkboxes de exclusão
+    $('#{{ inline_admin_formset.formset.prefix }}-group input[type="checkbox"]').addClass('form-check-input');
+    
+    // Função para formatar as datas no carregamento inicial
+    function formatInitialDates() {
+      $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').each(function() {
+        if ($(this).val()) {
+          // Garante que a data está no formato correto para o input type="date"
+          const date = new Date($(this).val());
+          if (!isNaN(date.getTime())) {
+            $(this).val(date.toISOString().split('T')[0]);
+          }
+        }
+      });
+    }
+    
+    // Formata as datas existentes
+    formatInitialDates();
+    
+    // Observa mudanças na DOM para lidar com linhas adicionadas dinamicamente
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes.length) {
+          formatInitialDates();
+          
+          // Aplica estilos aos novos campos
+          $('#{{ inline_admin_formset.formset.prefix }}-group select').addClass('form-control form-control-sm');
+          $('#{{ inline_admin_formset.formset.prefix }}-group input[type="text"]').addClass('form-control form-control-sm');
+          $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').addClass('form-control form-control-sm');
+          
+          // Inicializa Select2 para os novos campos
+          $('#{{ inline_admin_formset.formset.prefix }}-group select').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            dropdownParent: $('#{{ inline_admin_formset.formset.prefix }}-group')
+          });
+        }
+      });
+    });
+    
+    // Observa o container do inline formset
+    observer.observe(document.getElementById('{{ inline_admin_formset.formset.prefix }}-group'), {
+      childList: true,
+      subtree: true
+    });
+  });
+})(django.jQuery);
+</script>

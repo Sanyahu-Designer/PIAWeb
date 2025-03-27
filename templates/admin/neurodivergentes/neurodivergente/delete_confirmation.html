@@ -7,7 +7,7 @@
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">Aluno/Paciente</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:neurodivergentes_neurodivergente_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
-    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{% translate 'Delete' %}</li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{% translate 'Excluir' %}</li>
   </ol>
 </nav>
 {% endblock %}

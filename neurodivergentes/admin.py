@@ -32,18 +32,34 @@ from .forms import (
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
-class GrupoFamiliarInline(admin.TabularInline):
+class GrupoFamiliarInline(admin.StackedInline):
     model = GrupoFamiliar
-    extra = 1
+    extra = 0
+    template = 'admin/neurodivergentes/edit_inline/stacked_grupo_familiar.html'
     
     formfield_overrides = {
         models.DateField: {
             'widget': forms.DateInput(
                 attrs={
                     'type': 'date',
-                    'class': 'vDateField date-input',
+                    'class': 'vDateField date-input form-control',
                 },
                 format='%Y-%m-%d'
+            )
+        },
+        models.CharField: {
+            'widget': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            )
+        },
+        models.TextField: {
+            'widget': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3
+                }
             )
         }
     }
@@ -103,6 +119,7 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
     )
 
 
+    
     class Media:
         css = {
             'all': ('admin/css/neurodivergentes_forms.css',)
@@ -127,6 +144,7 @@ class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
     ordering = ['categoria', 'nome']
 
 # Formulário personalizado para DiagnosticoNeurodivergente
+    
 class DiagnosticoNeurodivergenteForms(forms.ModelForm):
     class Meta:
         model = DiagnosticoNeurodivergente
@@ -222,6 +240,7 @@ class NeurodivergenciaAdmin(admin.ModelAdmin):
             form.base_fields['data_diagnostico'].initial = obj.data_diagnostico.strftime('%Y-%m-%d')
         return form
 
+    
     class Media:
         css = {
             'all': ('admin/css/neurodivergentes_forms.css',)
@@ -234,6 +253,7 @@ class MetaHabilidadeAdmin(admin.ModelAdmin):
     list_filter = ['ativo']
     search_fields = ['nome', 'descricao']
     ordering = ['nome']
+    
 class PDIMetaHabilidadeInline(admin.TabularInline):
     model = PDIMetaHabilidade
     extra = 1
@@ -373,6 +393,7 @@ class PDIAdmin(admin.ModelAdmin):
             )
     get_view_button.short_description = 'Ações'
 
+    
     class Media:
         """
         Inclui arquivos CSS e JavaScript adicionais para customização.
@@ -530,6 +551,7 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         )
     get_acoes.short_description = 'Ações'
 
+    
     class Media:
         css = {
             'all': (
@@ -706,6 +728,7 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
         )
     get_edit_button.short_description = 'Editar'
 
+    
     class Media:
         css = {
             'all': ('admin/css/neurodivergentes_forms.css',)
@@ -751,6 +774,7 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     list_per_page = 20
     readonly_fields = ['idade', 'ver_graficos']
+    
     
     class Media:
         css = {
@@ -952,6 +976,7 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
 
 @admin.register(Anamnese)
 class AnamneseAdmin(admin.ModelAdmin):
+    
     form = AnamneseForm
     list_display = ['neurodivergente', 'tipo_parto', 'prematuridade', 'acoes']
     list_filter = ['tipo_parto', 'prematuridade']
@@ -984,3 +1009,4 @@ class AnamneseAdmin(admin.ModelAdmin):
 #            'fields': ('objetivos', 'estrategias', 'recursos')
 #        }),
 #    )
+    

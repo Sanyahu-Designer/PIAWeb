@@ -1,23 +1,9 @@
 <!DOCTYPE html>
-{% load static %}
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <title>Adaptação Curricular - {{ disciplina.nome }}</title>
     <style>
-        @font-face {
-            font-family: 'Roboto';
-            src: url("{% static 'fonts/Roboto-Regular.ttf' %}") format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'Roboto';
-            src: url("{% static 'fonts/Roboto-Bold.ttf' %}") format('truetype');
-            font-weight: bold;
-            font-style: normal;
-        }
-
         :root {
             --primary-color: #4e73df;
             --text-color: #333;
@@ -35,7 +21,7 @@
             }
         }
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.4;
             margin: 0;
             padding: 0;

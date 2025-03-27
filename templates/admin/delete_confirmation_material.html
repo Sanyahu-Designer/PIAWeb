@@ -10,7 +10,7 @@
       <div class="card my-4">
         <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
           <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
-            <h6 class="text-white text-capitalize ps-3">{% blocktranslate with name=opts.verbose_name %}Delete {{ name }}{% endblocktranslate %}</h6>
+            <h6 class="text-white text-capitalize ps-3">{% blocktranslate with name=opts.verbose_name %}Excluir {{ name }}{% endblocktranslate %}</h6>
           </div>
         </div>
         <div class="card-body px-4 pb-2">
@@ -34,15 +34,15 @@
             </div>
           {% else %}
             <div class="alert alert-warning text-white">
-              {% blocktranslate with escaped_object=object %}Are you sure you want to delete the {{ object_name }} "{{ escaped_object }}"? All of the following related items will be deleted:{% endblocktranslate %}
+              {% blocktranslate with escaped_object=object %}Você tem certeza que quer excluir {{ object_name }} "{{ escaped_object }}"? Todos os seguintes itens relacionados serão excluídos:{% endblocktranslate %}
             </div>
             
             <div class="table-responsive p-0">
               <table class="table align-items-center mb-4">
                 <thead>
                   <tr>
-                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% translate "Objects" %}</th>
-                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% translate "Type" %}</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% translate "Cadastros" %}</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">{% translate "Quantidades" %}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -70,11 +70,11 @@
                 {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
                 {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
                 <div class="d-flex justify-content-between">
-                  <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}" class="btn btn-outline-dark mb-0">
-                    {% translate "No, take me back" %}
+                  <a href="{% url opts|admin_urlname:'changelist' %}" class="btn btn-outline-dark mb-0">
+                    {% translate "Não, me leve de volta" %}
                   </a>
                   <button type="submit" class="btn bg-gradient-danger mb-0">
-                    {% translate "Yes, I'm sure" %}
+                    {% translate "Sim, tenho certeza" %}
                   </button>
                 </div>
               </div>

@@ -1,0 +1,132 @@
+{% extends "admin/base_material.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+  {% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+  {% endif %}
+  <link rel="stylesheet" type="text/css" href="{% static "css/search-fixes.css" %}">
+  {% if cl.formset or action_form %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
+    <script src="{% static 'admin/js/actions.js' %}"></script>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media.js }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ cl.opts.verbose_name_plural|capfirst }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">{{ cl.opts.verbose_name_plural|capfirst }}</h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <!-- Campo de Pesquisa Elegante -->
+          <div class="px-4 py-3">
+            <form id="changelist-search" method="get" class="mb-0">
+              <div class="d-flex align-items-center">
+                <div class="input-group flex-grow-1">
+                  <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
+                </div>
+                <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
+                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
+                </button>
+              </div>
+              {% for pair in cl.params.items %}
+                {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+              {% endfor %}
+            </form>
+          </div>
+          
+          {% if cl.formset and cl.formset.errors %}
+            <p class="errornote">
+              {% blocktranslate count errors=cl.formset.total_error_count %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+            </p>
+            {{ cl.formset.non_form_errors }}
+          {% endif %}
+          
+          <div class="changelist-form-container">
+            {% block result_list %}
+              <div class="table-responsive p-0">
+                {% if cl.result_count %}
+                  <table id="result_list" class="table align-items-center mb-0">
+                    <thead>
+                      <tr>
+                        {% block table_header %}
+                        <!-- Cabeçalhos da tabela serão substituídos pelas páginas específicas -->
+                        {% endblock %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% block table_body %}
+                      <!-- Conteúdo da tabela será substituído pelas páginas específicas -->
+                      {% endblock %}
+                    </tbody>
+                  </table>
+                {% else %}
+                  <p class="text-sm text-secondary">{% translate "No results found." %}</p>
+                {% endif %}
+              </div>
+            {% endblock %}
+            
+            {% block pagination %}
+              {% if cl.result_count != cl.full_result_count %}
+                <p class="text-sm text-secondary mt-3">
+                  {% blocktranslate with cl.result_count as count and cl.full_result_count as full_count %}
+                    {{ count }} of {{ full_count }} selected
+                  {% endblocktranslate %}
+                </p>
+              {% endif %}
+              
+              <div class="d-flex justify-content-center mt-3">
+                {% pagination cl %}
+              </div>
+            {% endblock %}
+            
+            <p class="text-center text-sm text-secondary mt-3">
+              {{ cl.result_count }} {% if cl.result_count == 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

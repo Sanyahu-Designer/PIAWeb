@@ -14,6 +14,7 @@ class ModalidadeEnsinoAdmin(admin.ModelAdmin):
 
 @admin.register(ProgramaEducacional)
 class ProgramaEducacionalAdmin(admin.ModelAdmin):
+    
     list_display = ['nome', 'tipo', 'ativo']
     list_filter = ['tipo', 'ativo']
     search_fields = ['nome', 'descricao']
@@ -21,6 +22,7 @@ class ProgramaEducacionalAdmin(admin.ModelAdmin):
 
 @admin.register(Recurso)
 class RecursoAdmin(admin.ModelAdmin):
+    
     list_display = ['nome', 'tipo', 'ativo']
     list_filter = ['tipo', 'ativo']
     search_fields = ['nome', 'descricao']
@@ -29,6 +31,7 @@ class RecursoAdmin(admin.ModelAdmin):
 
 @admin.register(Escola)
 class EscolaAdmin(admin.ModelAdmin):
+    
     form = EscolaForm
     search_fields = ['nome', 'codigo_inep']
     
