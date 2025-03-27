@@ -54,52 +54,66 @@
       <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
         <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
           <h6 class="text-white text-capitalize ps-3">{{ cl.opts.verbose_name_plural|capfirst }}</h6>
-          </div>
         </div>
-        <div class="card-body px-0 pb-2">
-          <div id="toolbar" class="px-4 py-2 mb-4">
-            <form id="changelist-search" method="get">
-              <div class="row">
-                {% if cl.search_fields %}
-                  <div class="col-md-6 mb-3">
-                    <div class="input-group input-group-outline">
-                      <label class="form-label">Buscar {{ cl.opts.verbose_name_plural }}</label>
-                      <input type="text" class="form-control" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar">
-                    </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div id="toolbar" class="px-4 py-2 mb-4">
+          <form id="changelist-search" method="get">
+            <div class="row">
+              {% if cl.search_fields %}
+                <div class="col-md-6 mb-3">
+                  <div class="input-group input-group-outline">
+                    <label class="form-label">Buscar {{ cl.opts.verbose_name_plural }}</label>
+                    <input type="text" class="form-control" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar">
                   </div>
-                  <div class="col-md-2 mb-3">
-                    <button type="submit" class="btn btn-dark btn-sm mb-0 w-100">
-                      <i class="fas fa-search me-2"></i> Buscar
-                    </button>
-                  </div>
-                {% endif %}
-                {% if cl.has_filters %}
-                  <div class="col-md-4 mb-3 text-end">
-                    <a href="#" class="btn btn-outline-dark btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#filterModal">
-                      <i class="fas fa-filter me-2"></i> Filtros
-                    </a>
-                  </div>
-                {% endif %}
+                </div>
+                <div class="col-md-2 mb-3">
+                  <button type="submit" class="btn btn-info mb-0">
+                    <i class="material-symbols-rounded opacity-10">search</i> Buscar
+                  </button>
+                </div>
+              {% endif %}
+              <div class="col-md-4 mb-3 text-end">
+                {% block object-tools %}
+                  <ul class="object-tools">
+                    {% block object-tools-items %}
+                      {% if has_add_permission %}
+                        <li>
+                          {% url cl.opts|admin_urlname:'add' as add_url %}
+                          <a href="{% add_preserved_filters add_url is_popup to_field %}" class="btn btn-success mb-0">
+                            <i class="material-symbols-rounded opacity-10">add</i> Adicionar {{ cl.opts.verbose_name }}
+                          </a>
+                        </li>
+                      {% endif %}
+                    {% endblock %}
+                  </ul>
+                {% endblock %}
               </div>
-            </form>
+            </div>
+          </form>
+        </div>
+        
+        {% if cl.formset and cl.formset.errors %}
+          <div class="alert alert-danger mx-4">
+            {{ cl.formset.non_form_errors }}
           </div>
-          
-          <div class="changelist-form-container">
-            {% block result_list %}
-              {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
-              
-              <div class="table-responsive p-0">
-                {% result_list cl %}
-              </div>
-              
-              {% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
-            {% endblock %}
-            
-            {% block pagination %}
+        {% endif %}
+        
+        <div class="table-responsive px-4">
+          {% block result_list %}
+            {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+            {% result_list cl %}
+            {% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+          {% endblock %}
+        </div>
+        
+        {% block pagination %}
+          {% if cl.result_count > 0 %}
+            <div class="px-4 py-2 d-flex justify-content-center">
               {% pagination cl %}
-            {% endblock %}
-          </div>
-        </div>
+            </div>
+          {% endif %}
+        {% endblock %}
       </div>
     </div>
   </div>

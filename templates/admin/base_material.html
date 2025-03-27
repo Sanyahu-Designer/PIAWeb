@@ -39,6 +39,7 @@
   <!-- Custom CSS -->
   <link href="{% static 'css/navbar-fixes.css' %}" rel="stylesheet" />
   <link href="{% static 'css/floating-notification.css' %}" rel="stylesheet" />
+  <link href="{% static 'css/material-dashboard-fixes.css' %}" rel="stylesheet" />
   
   <!-- Django Admin Styles -->
   {% block extrastyle %}{% endblock %}
@@ -244,7 +245,7 @@
   
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
     <!-- Navbar -->
-    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-sm border-radius-xl bg-white mt-2" id="navbarBlur" data-scroll="true">
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-sm border-radius-xl bg-white mt-2 position-sticky top-0 z-index-sticky" id="navbarBlur" data-scroll="true">
       <div class="container-fluid py-1 px-3">
         <!-- Links do navbar -->
         <div class="d-flex align-items-center justify-content-between w-100">
@@ -328,7 +329,7 @@
     </nav>
     <!-- End Navbar -->
     
-    <div class="container-fluid py-2">
+    <div class="container-fluid py-2 mt-4 mb-5 pb-4">
       <!-- Mensagens do Django -->
       {% if messages %}
       <div class="row">
@@ -364,19 +365,24 @@
       {% endblock %}
       
       <!-- Rodapé -->
-      <footer class="footer py-4">
-        <div class="container-fluid">
-          <div class="row align-items-center justify-content-lg-between">
-            <div class="col-lg-12 mb-lg-0 mb-4">
-              <div class="copyright text-center text-sm text-muted">
+      <div class="card px-0 mt-2 mb-2">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-md-10 mb-md-0">
+              <div class="text-sm text-muted text-nowrap overflow-hidden text-truncate">
                 {% block footer %}
-                Direitos Reservados 2023 PIA - Plano Individual de Aprendizagem - Desenvolvido por 46.815.218/0001-03
+                Todos os direitos reservados © {% now "Y" %} PIA - Plano Individual de Aprendizagem - Desenvolvido por <a href="https://sanyahudesigner.com.br" target="_blank" class="text-muted">46.815.218/0001-03</a>
                 {% endblock %}
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="text-sm text-muted text-end">
+                <span>Versão 2.0</span>
               </div>
             </div>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   </main>
   

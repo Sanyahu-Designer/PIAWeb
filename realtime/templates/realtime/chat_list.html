@@ -1,11 +1,43 @@
 {% extends "admin/base_material.html" %}
-{% load static %}
+{% load i18n admin_urls static %}
 
 {% block title %}Mensagens{% endblock %}
 
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'css/delete-confirmation.css' %}">
+<style>
+    /* Ajustes de espaçamento para o select */
+    .form-select option {
+        padding: 8px 12px;
+    }
+    select.form-select {
+        padding-left: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Mensagens</li>
+  </ol>
+</nav>
 {% endblock %}
 
 {% block content %}
@@ -15,12 +47,12 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">
-                        <i class="fas fa-comments me-2"></i>
+                        <i class="fas fa-comments me-3"></i>
                         Mensagens
                     </h3>
                     <div class="card-tools">
                         <a href="{% url 'realtime:new_message' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i> Nova Mensagem
+                            <i class="fas fa-plus me-2"></i> Nova Mensagem
                         </a>
                     </div>
                 </div>

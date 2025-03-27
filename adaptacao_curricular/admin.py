@@ -84,6 +84,7 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
     autocomplete_fields = ['aluno', 'escola', 'profissional_responsavel']
     inlines = [AdaptacaoHabilidadeInline]
     change_form_template = 'admin/adaptacao_curricular/adaptacaocurricularindividualizada/change_form.html'
+    change_list_template = 'admin/neurodivergentes/aci/change_list_material_dashboard.html'
     list_display = ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_view_button']
     list_filter = ['aluno', 'escola']
     list_per_page = 20

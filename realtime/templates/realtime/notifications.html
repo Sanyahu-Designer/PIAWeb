@@ -1,21 +1,29 @@
 <!-- Dropdown de notificações -->
-<li class="nav-item">
+<li class="nav-item dropdown">
     <a class="nav-link" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
-        <i class="fas fa-bell"></i>
-        <span class="badge-message-count notification-count" style="display: none;">0</span>
+        <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">notifications</i>
+        <span class="badge bg-danger badge-pill notification-count" style="display: none; position: absolute; top: 0; right: 0; font-size: 0.65em;">0</span>
     </a>
-    <div class="dropdown-menu dropdown-menu-end" style="width: 300px; max-height: 400px; overflow-y: auto;">
-        <div class="px-3 py-2 border-bottom bg-light">
-            <h6 class="mb-0">Notificações</h6>
-        </div>
-        <div id="notification-list" class="py-2">
-            <!-- As notificações serão inseridas aqui dinamicamente -->
-            <div class="px-3 text-center text-muted">
-                <small>Nenhuma notificação no momento</small>
+    <div class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" style="width: 300px; max-height: 400px; overflow-y: auto;">
+        <div class="card">
+            <div class="card-header p-3">
+                <h6 class="mb-0 d-flex align-items-center">
+                    <i class="material-symbols-rounded opacity-10 me-2" style="font-size: 20px;">notifications</i>
+                    Notificações
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <div id="notification-list" class="py-2">
+                    <!-- As notificações serão inseridas aqui dinamicamente -->
+                    <div class="px-3 text-center text-muted">
+                        <small>Nenhuma notificação no momento</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer p-2 text-center">
+                <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-primary btn-sm mb-0">Ver todas as mensagens</a>
             </div>
         </div>
-        <div class="dropdown-divider"></div>
-        <a href="{% url 'realtime:chat_list' %}" class="dropdown-item text-center">Ver todas as mensagens</a>
     </div>
 </li>
 

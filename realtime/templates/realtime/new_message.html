@@ -1,51 +1,97 @@
-{% extends "realtime/base_messages_standalone.html" %}
-{% load static %}
+{% extends "admin/base_material.html" %}
+{% load i18n admin_urls static %}
 
 {% block title %}Nova Mensagem{% endblock %}
 
-{% block extra_css %}
+{% block extrastyle %}
+{{ block.super }}
 <link rel="stylesheet" href="{% static 'realtime/css/messages.css' %}">
+<style>
+    /* Ajustes de espaçamento para os itens dentro do menu suspenso */
+    .form-select option {
+        padding: 8px 0 8px 15px !important;
+    }
+</style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'realtime:chat_list' %}">Mensagens</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Nova Mensagem</li>
+  </ol>
+</nav>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0">
-        <i class="fas fa-paper-plane me-2"></i>
-        Nova Mensagem
-    </h4>
-    <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-secondary btn-action">
-        <i class="fas fa-arrow-left me-1"></i>
-        Voltar
-    </a>
-</div>
-
-<div class="card message-card">
-    <div class="card-body">
-        <!-- Formulário simplificado usando a URL de teste -->
-        <form method="post" action="{% url 'realtime:test_message' %}">
-            {% csrf_token %}
-            
-            <div class="mb-3">
-                <label for="recipient" class="form-label">Destinatário</label>
-                <select name="recipient" id="recipient" class="form-select" required>
-                    <option value="">Selecione um destinatário</option>
-                    {% for user in users %}
-                        <option value="{{ user.id }}" {% if user.id == recipient.id %}selected{% endif %}>
-                            {{ user.get_full_name|default:user.username }}
-                        </option>
-                    {% endfor %}
-                </select>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3 d-flex justify-content-between align-items-center">
+                        <h6 class="text-white text-capitalize ps-3 mb-0">
+                            <i class="fas fa-paper-plane me-3"></i>
+                            Nova Mensagem
+                        </h6>
+                        <div class="pe-3">
+                            <a href="{% url 'realtime:chat_list' %}" class="btn btn-outline-light btn-sm mb-0">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body px-0 pb-2">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12">
+                                <!-- Formulário simplificado usando a URL de teste -->
+                                <form method="post" action="{% url 'realtime:test_message' %}" class="px-4 py-3">
+                                    {% csrf_token %}
+                                    
+                                    <div class="input-group input-group-outline mb-4">
+                                        <label for="recipient" class="form-label">Destinatário</label>
+                                        <select name="recipient" id="recipient" class="form-select" required>
+                                            <option value="">Selecione um destinatário</option>
+                                            {% for user in users %}
+                                                <option value="{{ user.id }}" {% if user.id == recipient.id %}selected{% endif %} style="padding-left: 20px !important;">
+                                                    &nbsp;&nbsp;&nbsp;&nbsp;{{ user.get_full_name|default:user.username }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="input-group input-group-outline mb-4">
+                                        <label for="message" class="form-label">Mensagem</label>
+                                        <textarea name="message" id="message" class="form-control" rows="5" required></textarea>
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="mb-3">
-                <label for="message" class="form-label">Mensagem</label>
-                <textarea name="message" id="message" class="form-control" rows="5" required></textarea>
-            </div>
-            
-            <div class="text-end">
-                <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
