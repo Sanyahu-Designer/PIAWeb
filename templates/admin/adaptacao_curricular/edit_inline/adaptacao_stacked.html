@@ -6,79 +6,657 @@
 <link rel="stylesheet" type="text/css" href="{% static 'admin/css/vendor/select2/select2.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'adaptacao_curricular/css/adaptacao.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    /* Estilos para o layout do componente de Habilidades */
+    .habilidades-container {
+        width: 100%;
+    }
+    
+    .habilidades-grid {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    /* Estilo para os cards de habilidades */
+    .card {
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        border-radius: 0.5rem;
+        overflow: visible; /* Mantido visible para evitar cortes */
+        border: none;
+        margin-bottom: 1.5rem;
+        background-color: #fff;
+        position: relative;
+    }
+    
+    .card:hover {
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Cabeçalho com gradiente seguindo o padrão do Grupo Familiar */
+    .card-header {
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .shadow-dark {
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(108, 117, 125, 0.4) !important;
+    }
+    
+    .border-radius-lg {
+        border-radius: 0.5rem !important;
+    }
+    
+    .card-footer {
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    
+    /* Melhorias para a exibição dos detalhes da habilidade */
+    .habilidade-detalhes {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-left: 3px solid #344767;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .habilidade-detalhes:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .habilidade-info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .habilidade-codigo-display {
+        font-weight: bold;
+        color: #344767;
+    }
+    
+    .habilidade-disciplina-display {
+        font-weight: bold;
+        color: #344767;
+    }
+    
+    .habilidade-meta {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .habilidade-ano, .habilidade-trimestre {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .habilidade-objeto-display,
+    .habilidade-descricao-display {
+        margin-bottom: 0.5rem;
+    }
+    
+    .habilidade-objeto-display strong,
+    .habilidade-descricao-display strong {
+        color: #344767;
+        font-weight: 600;
+    }
+    
+    .habilidade-objeto,
+    .habilidade-descricao {
+        color: #495057;
+        line-height: 1.5;
+    }
+    
+    /* Botões de ação */
+    .btn-outline-primary,
+    .btn-outline-danger,
+    .relatorio-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        color: #344767;
+        background-color: transparent !important;
+        border: 1px solid #d2d6da !important;
+        text-align: center;
+        vertical-align: middle;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.15s ease-in;
+        margin-bottom: 0;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .btn-outline-primary:hover,
+    .relatorio-btn:hover {
+        color: #fff !important;
+        background-color: #344767 !important;
+        border-color: #344767 !important;
+        box-shadow: 0 3px 5px -1px rgba(0,0,0,.09), 0 2px 3px -1px rgba(0,0,0,.07);
+    }
+    
+    .btn-outline-danger:hover {
+        color: #fff !important;
+        background-color: #f44336 !important;
+        border-color: #f44336 !important;
+    }
+    
+    .add-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        color: #344767;
+        background-color: transparent !important;
+        border: 1px solid #d2d6da !important;
+        text-align: center;
+        vertical-align: middle;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.15s ease-in;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .add-button:hover {
+        color: #fff !important;
+        background-color: #344767 !important;
+        border-color: #344767 !important;
+        box-shadow: 0 3px 5px -1px rgba(0,0,0,.09), 0 2px 3px -1px rgba(0,0,0,.07);
+    }
+    
+    /* Estilo para formulários e campos */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group.required label:after {
+        content: "*";
+        color: #f44336;
+        margin-left: 4px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #344767;
+    }
+    
+    .form-group select,
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #d2d6da;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .form-group select:focus,
+    .form-group input:focus,
+    .form-group textarea:focus {
+        border-color: #344767;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(52, 71, 103, 0.25);
+    }
+    
+    /* Estilos para mensagens de erro e ajuda */
+    .help-text {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        position: relative;
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+    }
+    
+    .alert-danger.text-white {
+        color: white !important;
+        background-color: #f44336 !important;
+    }
+    
+    /* Classes adicionais para layout responsivo */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -0.75rem;
+        margin-left: -0.75rem;
+    }
+    
+    .col-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+    
+    @media (min-width: 768px) {
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+    
+    /* Estilos para marcação de exclusão */
+    .marked-for-deletion {
+        opacity: 0.6;
+        position: relative;
+    }
+    
+    .marked-for-deletion .card {
+        border: 2px dashed #f44336 !important;
+        background-color: #fff5f5;
+    }
+    
+    .delete-button {
+        transition: all 0.2s ease;
+        border-radius: 0.25rem;
+    }
+    
+    .delete-button:hover {
+        background-color: #f44336;
+        color: white;
+        border-color: #f44336;
+    }
+</style>
 {% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
 <script type="text/javascript" src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'adaptacao_curricular/js/adaptacao.js' %}"></script>
+<script type="text/javascript">
+  // Script para gerenciar o componente de Habilidades
+  (function($) {
+    'use strict';
+    
+    // Função para corrigir a exibição do cabeçalho
+    function fixHeaderDisplay() {
+      setTimeout(function() {
+        $('.card-header').each(function() {
+          $(this).css('z-index', '2');
+        });
+      }, 100);
+    }
+    
+    // Função principal de inicialização
+    function initHabilidades() {
+      // Inicializa o Select2 para todos os selects
+      $('.form-group select').select2({
+        width: '100%',
+        placeholder: 'Selecione uma opção',
+        allowClear: true
+      });
+      
+      // Configura os botões de exclusão
+      setupDeleteButtons();
+      
+      // Configura o botão de adicionar
+      setupAddButton();
+      
+      // Configura os cards existentes
+      setupExistingCards();
+      
+      // Configura a exibição dos detalhes das habilidades
+      setupHabilidadesDetails();
+    }
+    
+    // Função para configurar os detalhes das habilidades
+    function setupHabilidadesDetails() {
+      // Função para verificar e mostrar os detalhes das habilidades
+      function mostrarDetalhesHabilidadesSelecionadas() {
+        $('.form-group select[name*="habilidade"]').each(function() {
+          var select = $(this);
+          var selectedValue = select.val();
+          
+          // Mostra os detalhes para qualquer habilidade selecionada
+          if (selectedValue) {
+            // Busca os detalhes da habilidade selecionada
+            $.ajax({
+              url: '/admin/adaptacao_curricular/get_habilidade_details/',
+              data: { 'habilidade_id': selectedValue },
+              dataType: 'json',
+              success: function(data) {
+                if (data) {
+                  // Força a exibição dos detalhes da habilidade
+                  var container = select.closest('.form-group');
+                  var detalhesDiv = container.find('.habilidade-detalhes');
+                  
+                  if (!detalhesDiv.length) {
+                    // Se não existir, cria a div de detalhes
+                    container.append(`
+                      <div class="habilidade-detalhes">
+                        <div class="habilidade-info-header">
+                          <div class="habilidade-codigo-display"><span class="habilidade-codigo">${data.codigo || ''}</span></div>
+                          <div class="habilidade-disciplina-display"><span class="habilidade-disciplina">${data.disciplina || ''}</span></div>
+                        </div>
+                        <div class="habilidade-info-content">
+                          <div class="habilidade-meta">
+                            <span class="habilidade-ano">${data.ano || ''}</span> - <span class="habilidade-trimestre">${data.trimestre || ''}</span>
+                          </div>
+                          <div class="habilidade-objeto-display">
+                            <strong>Objeto do Conhecimento:</strong>
+                            <span class="habilidade-objeto">${data.objeto_conhecimento || ''}</span>
+                          </div>
+                          <div class="habilidade-descricao-display">
+                            <strong>Habilidade:</strong>
+                            <span class="habilidade-descricao">${data.descricao || ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                    `);
+                  } else {
+                    // Se existir, atualiza os dados
+                    detalhesDiv.find('.habilidade-codigo').text(data.codigo || '');
+                    detalhesDiv.find('.habilidade-disciplina').text(data.disciplina || '');
+                    detalhesDiv.find('.habilidade-ano').text(data.ano || '');
+                    detalhesDiv.find('.habilidade-trimestre').text(data.trimestre || '');
+                    detalhesDiv.find('.habilidade-objeto').text(data.objeto_conhecimento || '');
+                    detalhesDiv.find('.habilidade-descricao').text(data.descricao || '');
+                    
+                    // Mostra sempre os detalhes
+                    detalhesDiv.show();
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+      
+      // Adiciona comportamento para quando o select é alterado
+      $(document).on('change', '.form-group select[name*="habilidade"]', function() {
+        // Sempre mostra os detalhes quando o select é alterado
+        setTimeout(mostrarDetalhesHabilidadesSelecionadas, 100);
+      });
+      
+      // Executa após o carregamento da página
+      setTimeout(mostrarDetalhesHabilidadesSelecionadas, 500);
+    }
+    
+    // Função para configurar os cards existentes
+    function setupExistingCards() {
+      // Oculta os checkboxes de exclusão originais
+      $('.delete-row').hide();
+      
+      // Configura os botões de exclusão para os cards existentes
+      $('.delete-button').on('click', function() {
+        var button = $(this);
+        var cardItem = button.closest('.habilidade-item');
+        var deleteCheckbox = cardItem.find('input[type="checkbox"][name$="-DELETE"]');
+        
+        if (cardItem.hasClass('marked-for-deletion')) {
+          // Desmarca para exclusão
+          deleteCheckbox.prop('checked', false);
+          cardItem.removeClass('marked-for-deletion');
+          button.html('<i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir');
+        } else {
+          // Marca para exclusão
+          deleteCheckbox.prop('checked', true);
+          cardItem.addClass('marked-for-deletion');
+          button.html('<i class="material-symbols-rounded" style="font-size: 16px;">restore</i> Restaurar');
+        }
+      });
+    }
+    
+    // Função para configurar o botão de adicionar
+    function setupAddButton() {
+      $('#{{ inline_admin_formset.formset.prefix }}-add-button').on('click', function() {
+        // Encontra o formset e adiciona um novo formulário
+        var totalForms = $('#id_{{ inline_admin_formset.formset.prefix }}-TOTAL_FORMS');
+        var currentForms = parseInt(totalForms.val());
+        
+        // Clona o template vazio
+        var emptyForm = $('.empty-form.habilidade-item').clone(true);
+        emptyForm.removeClass('empty-form d-none');
+        
+        // Substitui os índices __prefix__ pelo índice atual
+        var html = emptyForm.html().replace(/__prefix__/g, currentForms);
+        emptyForm.html(html);
+        
+        // Atualiza os IDs e nomes dos elementos
+        emptyForm.find(':input').each(function() {
+          var name = $(this).attr('name');
+          if (name) {
+            name = name.replace('__prefix__', currentForms);
+            $(this).attr('name', name);
+            $(this).attr('id', 'id_' + name);
+          }
+        });
+        
+        // Adiciona o novo formulário antes do botão de adicionar
+        $('.habilidades-grid').append(emptyForm);
+        
+        // Cria um card para o novo item
+        var newCard = $(`
+          <div class="card h-100 shadow-sm">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+              <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+                <h6 class="text-white text-capitalize ps-3">{{ inline_admin_formset.opts.verbose_name|capfirst }} #${currentForms + 1}</h6>
+              </div>
+            </div>
+            <div class="card-body p-3">
+              <div class="row g-3">
+              </div>
+            </div>
+            <div class="card-footer p-2 text-center">
+              <button type="button" class="btn btn-sm btn-outline-danger delete-button" data-id="0">
+                <i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir
+              </button>
+            </div>
+          </div>
+        `);
+        
+        // Move os campos do formulário para dentro do card
+        var formFields = emptyForm.find('.inline-related').children(':not(.delete-row)').detach();
+        newCard.find('.row').append(formFields);
+        
+        // Substitui o conteúdo do item pelo card
+        emptyForm.find('.inline-related').html(newCard);
+        
+        // Incrementa o contador de formulários
+        totalForms.val(currentForms + 1);
+        
+        // Inicializa o Select2 para os novos selects
+        emptyForm.find('select').select2({
+          width: '100%',
+          placeholder: 'Selecione uma opção',
+          allowClear: true
+        });
+        
+        // Configura o botão de exclusão para o novo card
+        emptyForm.find('.delete-button').on('click', function() {
+          var button = $(this);
+          var cardItem = button.closest('.habilidade-item');
+          var deleteCheckbox = cardItem.find('input[type="checkbox"][name$="-DELETE"]');
+          
+          if (cardItem.hasClass('marked-for-deletion')) {
+            // Desmarca para exclusão
+            deleteCheckbox.prop('checked', false);
+            cardItem.removeClass('marked-for-deletion');
+            button.html('<i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir');
+          } else {
+            // Marca para exclusão
+            deleteCheckbox.prop('checked', true);
+            cardItem.addClass('marked-for-deletion');
+            button.html('<i class="material-symbols-rounded" style="font-size: 16px;">restore</i> Restaurar');
+          }
+        });
+        
+        // Corrige a exibição do cabeçalho
+        fixHeaderDisplay();
+        
+        // Dispara o evento formset:added para outros scripts
+        $(document).trigger('formset:added', [$('#{{ inline_admin_formset.formset.prefix }}-group'), currentForms]);
+      });
+    }
+    
+    // Inicializa quando o documento estiver pronto
+    $(document).ready(function() {
+      // Corrige o problema de cabeçalho cortado na inicialização
+      fixHeaderDisplay();
+      
+      // Inicializa todas as funções principais
+      initHabilidades();
+    });
+  })(django.jQuery);
+</script>
 {% endblock %}
 
 {% block inline_field_sets %}
-<div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
-     data-inline-type="stacked"
-     data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
-  <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
-  {{ inline_admin_formset.formset.management_form }}
-  {{ inline_admin_formset.formset.non_form_errors }}
-
-  {% for inline_admin_form in inline_admin_formset %}
-    <div class="inline-related{% if inline_admin_form.original or inline_admin_form.show_url %} has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}" id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
-      <h3>
-        <b>{{ inline_admin_formset.opts.verbose_name|capfirst }}:</b>
-        <span class="inline_label">{% if inline_admin_form.original %}{{ inline_admin_form.original }}{% endif %}</span>
-        {% if inline_admin_form.original %}
-          {% if inline_admin_formset.formset.can_delete %}
-            <span class="delete">{{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}</span>
-          {% endif %}
-          <a href="{% url 'adaptacao_curricular:imprimir_adaptacao_habilidade' inline_admin_form.original.id %}" class="button" style="margin-left: 10px; padding: 3px 8px; background: #417690; color: white; text-decoration: none; border-radius: 4px; display: inline-block; vertical-align: middle; font-size: 12px;">
-            <i class="fas fa-file-pdf"></i> Gerar Relatório
-          </a>
-        {% endif %}
-      </h3>
-      {% if inline_admin_form.form.non_field_errors %}
-        {{ inline_admin_form.form.non_field_errors }}
-      {% endif %}
-      {% for fieldset in inline_admin_form %}
-        {% for line in fieldset %}
-          {% for field in line %}
-            <div class="form-row{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
-              {% if field.is_readonly %}
-                <div class="readonly">{{ field.contents }}</div>
-              {% else %}
-                {{ field.field.errors.as_ul }}
-                {{ field.field.label_tag }}
-                {{ field.field }}
-                {% if field.field.name == 'habilidade' %}
-                  <div class="habilidade-detalhes" style="display: none;">
-                    <div class="habilidade-info-header">
-                      <div class="habilidade-codigo-display"><span class="habilidade-codigo"></span></div>
-                      <div class="habilidade-disciplina-display"><span class="habilidade-disciplina"></span></div>
-                    </div>
-                    <div class="habilidade-info-content">
-                      <div class="habilidade-meta">
-                        <span class="habilidade-ano"></span> - <span class="habilidade-trimestre"></span>
-                      </div>
-                      <div class="habilidade-objeto-display">
-                        <strong>Objeto do Conhecimento:</strong>
-                        <span class="habilidade-objeto"></span>
-                      </div>
-                      <div class="habilidade-descricao-display">
-                        <strong>Descrição:</strong>
-                        <span class="habilidade-descricao"></span>
-                      </div>
+<div class="fieldset-container mb-4">
+  <div class="card">
+    <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+      <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+        <h6 class="text-white text-capitalize ps-3">
+          <i class="material-symbols-rounded opacity-10 me-2">school</i>
+          {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
+        </h6>
+      </div>
+    </div>
+    
+    <div class="card-body p-3">
+      {{ inline_admin_formset.formset.management_form }}
+      {{ inline_admin_formset.formset.non_form_errors }}
+      
+      <div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+         data-inline-type="stacked"
+         data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+        
+        <div class="habilidades-container">
+          <div class="habilidades-grid">
+        {% for inline_admin_form in inline_admin_formset %}
+          <div class="{% if not forloop.last %}w-100{% else %}empty-form d-none{% endif %} mb-4 habilidade-item">
+            <div class="inline-related{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}" 
+                 id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+              
+              {% if not forloop.last %}
+                <div class="card h-100 shadow-sm">
+                  <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+                      <h6 class="text-white text-capitalize ps-3">{{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}</h6>
+                      {% if inline_admin_formset.formset.can_delete and inline_admin_form.original %}
+                        <div class="delete-row" style="display: none;">
+                          {{ inline_admin_form.deletion_field.field }}
+                        </div>
+                      {% endif %}
                     </div>
                   </div>
-                {% endif %}
+                  
+                  <div class="card-body p-3">
+                    {% if inline_admin_form.form.non_field_errors %}
+                      <div class="alert alert-danger text-white mt-2 p-2">
+                        {{ inline_admin_form.form.non_field_errors }}
+                      </div>
+                    {% endif %}
+                    <div class="row g-3">
+                      {% for fieldset in inline_admin_form %}
+                        {% for line in fieldset %}
+                          {% for field in line %}
+                            <div class="col-12 {% if field.field.name != 'habilidade' %}col-md-6{% endif %}">
+                              <div class="form-group{% if field.field.required %} required{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field.field }}
+                                
+                                {% if field.field.help_text %}
+                                  <div class="help-text">{{ field.field.help_text|safe }}</div>
+                                {% endif %}
+                                
+                                {% if field.field.errors %}
+                                  <div class="alert alert-danger text-white mt-2 p-2">
+                                    {{ field.field.errors }}
+                                  </div>
+                                {% endif %}
+                                
+                                {% if field.field.name == 'habilidade' %}
+                                  <!-- Detalhes da habilidade com estilo aprimorado -->
+                                  <div class="habilidade-detalhes" style="display: none;">
+                                    <div class="habilidade-info-header">
+                                      <div class="habilidade-codigo-display"><span class="habilidade-codigo"></span></div>
+                                      <div class="habilidade-disciplina-display"><span class="habilidade-disciplina"></span></div>
+                                    </div>
+                                    <div class="habilidade-info-content">
+                                      <div class="habilidade-meta">
+                                        <div><span class="habilidade-ano"></span></div>
+                                        <div><span class="habilidade-trimestre"></span></div>
+                                      </div>
+                                      <div class="habilidade-objeto-display">
+                                        <strong>Objeto do Conhecimento</strong>
+                                        <span class="habilidade-objeto"></span>
+                                      </div>
+                                      <div class="habilidade-descricao-display">
+                                        <strong>Habilidade</strong>
+                                        <span class="habilidade-descricao"></span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
+                        {% endfor %}
+                      {% endfor %}
+                    </div>
+                    {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
+                    {{ inline_admin_form.fk_field.field }}
+                  </div>
+                  
+                  <div class="card-footer p-2 text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-button w-100" data-id="{{ inline_admin_form.original.id|default:'0' }}">
+                      <i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir
+                    </button>
+                  </div>
+                </div>
               {% endif %}
             </div>
-          {% endfor %}
+          </div>
         {% endfor %}
-      {% endfor %}
-      {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
-      {{ inline_admin_form.fk_field.field }}
+          </div>
+          
+          <div class="add-row mt-3 text-center">
+            <button type="button" class="btn btn-outline-primary btn-sm add-button" id="{{ inline_admin_formset.formset.prefix }}-add-button">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i>
+              <span>Adicionar {{ inline_admin_formset.opts.verbose_name|capfirst }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  {% endfor %}
+  </div>
 </div>
 {% endblock %}
 

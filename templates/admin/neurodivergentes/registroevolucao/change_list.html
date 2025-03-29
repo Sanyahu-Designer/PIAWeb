@@ -1,6 +1,8 @@
 {% extends "admin/neurodivergentes/registroevolucao/change_list_material_dashboard.html" %}
 {% load i18n admin_urls admin_list %}
 
+{% block title %}Evolução | PIA - Plano Individual de Aprendizagem{% endblock %}
+
 {% block navbar_buttons %}
 <div class="d-flex">
   <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
@@ -23,4 +25,245 @@
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ cl.opts.verbose_name_plural|capfirst }}</li>
   </ol>
 </nav>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% if request.GET.neurodivergente__id__exact %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Encontrar o formulário de pesquisa
+      var searchForm = document.getElementById('changelist-search');
+      if (searchForm) {
+        // Encontrar o elemento pai (div.px-4.py-3)
+        var parentDiv = searchForm.closest('.px-4.py-3');
+        if (parentDiv) {
+          // Criar o botão de Relatório Geral
+          var relatorioBtn = document.createElement('a');
+          relatorioBtn.href = "javascript:void(0);";
+          relatorioBtn.onclick = function() { openRelatorioModal(); };
+          relatorioBtn.className = "btn btn-outline-primary btn-sm mb-0 ms-3";
+          relatorioBtn.innerHTML = '<i class="material-symbols-rounded opacity-10" style="font-size: 20px;">description</i> Relatório Geral';
+          
+          // Criar o botão Adicionar Novo
+          var addBtn = document.createElement('a');
+          addBtn.href = "{% url 'admin:neurodivergentes_registroevolucao_add' %}?neurodivergente={{ request.GET.neurodivergente__id__exact }}";
+          addBtn.className = "btn btn-outline-primary btn-sm mb-0 ms-3";
+          addBtn.innerHTML = '<i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Adicionar Novo';
+          
+          // Criar um wrapper para o formulário e os botões
+          var wrapper = document.createElement('div');
+          wrapper.className = 'd-flex align-items-center justify-content-between';
+          
+          // Clonar o formulário para o wrapper
+          var formClone = searchForm.cloneNode(true);
+          formClone.className = 'mb-0 flex-grow-1';
+          
+          // Criar um div para os botões
+          var btnGroup = document.createElement('div');
+          btnGroup.className = 'd-flex align-items-center';
+          
+          // Adicionar os elementos ao wrapper
+          btnGroup.appendChild(addBtn);
+          btnGroup.appendChild(relatorioBtn);
+          
+          // Substituir o formulário original pelo wrapper com o formulário e os botões
+          parentDiv.innerHTML = '';
+          wrapper.appendChild(formClone);
+          wrapper.appendChild(btnGroup);
+          parentDiv.appendChild(wrapper);
+        }
+      }
+    });
+  </script>
+  
+  <!-- Modal do Relatório Geral -->
+  <div class="modal fade" id="relatorioGeralModal" tabindex="-1" role="dialog" aria-labelledby="relatorioGeralModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae); width: 100%;">
+            <h6 class="text-white text-capitalize ps-3 mb-0">Gerar Relatório Geral</h6>
+          </div>
+        </div>
+        <form method="get" action="{% url 'neurodivergentes:gerar_relatorio_evolucao_html' request.GET.neurodivergente__id__exact %}" id="formRelatorioGeral" target="_blank">
+          <div class="modal-body p-4">
+            <div class="input-group input-group-static mb-4">
+              <label for="data_inicial_geral">Data Inicial</label>
+              <input type="date" name="data_inicial" id="data_inicial_geral" class="form-control" required>
+            </div>
+            <div class="input-group input-group-static mb-4">
+              <label for="data_final_geral">Data Final</label>
+              <input type="date" name="data_final" id="data_final_geral" class="form-control" required>
+            </div>
+          </div>
+          <div class="modal-footer justify-content-between px-4">
+            <button type="button" class="btn btn-outline-secondary" onclick="closeRelatorioModal()">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">close</i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">description</i> Gerar Relatório
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script type="text/javascript">
+    function openRelatorioModal() {
+      var modal = document.getElementById('relatorioGeralModal');
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      document.body.classList.add('modal-open');
+      
+      // Criar backdrop
+      var backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+
+    function closeRelatorioModal() {
+      var modal = document.getElementById('relatorioGeralModal');
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      
+      // Remover backdrop
+      var backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.parentNode.removeChild(backdrop);
+      }
+    }
+
+    // Configura a validação do formulário
+    document.getElementById('formRelatorioGeral').onsubmit = function(e) {
+      var dataInicial = document.getElementById('data_inicial_geral').value;
+      var dataFinal = document.getElementById('data_final_geral').value;
+      
+      if (!dataInicial || !dataFinal) {
+        e.preventDefault();
+        alert('Por favor, preencha as datas inicial e final.');
+        return false;
+      }
+      
+      if (dataInicial > dataFinal) {
+        e.preventDefault();
+        alert('A data inicial não pode ser maior que a data final.');
+        return false;
+      }
+
+      // Fecha o modal após submeter
+      setTimeout(function() {
+        closeRelatorioModal();
+      }, 100);
+    };
+
+    // Configura os campos de data
+    window.addEventListener('load', function() {
+      var dataInicial = document.getElementById('data_inicial_geral');
+      var dataFinal = document.getElementById('data_final_geral');
+      
+      if (dataInicial && dataFinal) {
+        // Define a data máxima como hoje
+        var hoje = new Date().toISOString().split('T')[0];
+        dataInicial.max = hoje;
+        dataFinal.max = hoje;
+
+        // Atualiza a data mínima do campo data_final quando data_inicial mudar
+        dataInicial.addEventListener('change', function() {
+          dataFinal.min = this.value;
+          if (dataFinal.value && dataFinal.value < this.value) {
+            dataFinal.value = this.value;
+          }
+        });
+        
+        // Atualiza a data máxima do campo data_inicial quando data_final mudar
+        dataFinal.addEventListener('change', function() {
+          dataInicial.max = this.value;
+          if (dataInicial.value && dataInicial.value > this.value) {
+            dataInicial.value = this.value;
+          }
+        });
+      }
+    });
+  </script>
+{% endif %}
+{% endblock %}
+
+{% block result_list %}
+{% if request.GET.neurodivergente__id__exact %}
+  {% if cl.result_count %}
+    <div class="table-responsive p-0">
+      <table id="result_list" class="table align-items-center mb-0">
+        <thead>
+          <tr>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data</th>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Profissional</th>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Anexos</th>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in cl.result_list %}
+            <tr>
+              <td>
+                <div class="d-flex px-2 py-1">
+                  <div>
+                    {% if result.neurodivergente.foto_perfil %}
+                      <img src="{{ result.neurodivergente.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ result.neurodivergente.primeiro_nome }}">
+                    {% elif result.neurodivergente.genero == 'M' %}
+                      <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #a8d8f0;">
+                        <i class="material-symbols-rounded text-white">boy</i>
+                      </div>
+                    {% else %}
+                      <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #f8d0d3;">
+                        <i class="material-symbols-rounded text-white">girl</i>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="d-flex flex-column justify-content-center">
+                    <h6 class="mb-0 text-sm">{{ result.neurodivergente.primeiro_nome }} {{ result.neurodivergente.ultimo_nome }}</h6>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-sm" style="background-color: {% if result.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ result.data|date:"d/m/Y" }}</span>
+              </td>
+              <td>
+                <p class="text-xs font-weight-bold mb-0">{{ result.profissional.user.first_name }} {{ result.profissional.user.last_name }}</p>
+              </td>
+              <td class="align-middle text-center">
+                {% if result.anexos %}
+                  <a href="{{ result.anexos.url }}" target="_blank" class="btn btn-outline-info btn-sm mb-0">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">attachment</i>
+                  </a>
+                {% else %}
+                  <i class="material-symbols-rounded text-secondary opacity-5" style="font-size: 16px;">attachment</i>
+                {% endif %}
+              </td>
+              <td class="align-middle text-center">
+                <div class="ms-auto">
+                  <a href="{% url 'admin:neurodivergentes_registroevolucao_change' result.id %}" class="btn btn-outline-primary btn-sm mb-0">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
+                  </a>
+                  <a href="{% url 'neurodivergentes:imprimir_evolucao' result.id %}" target="_blank" class="btn btn-outline-primary btn-sm mb-0 ms-2">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="px-4 py-2">
+      <p class="text-sm text-secondary">{% translate "No results found." %}</p>
+    </div>
+  {% endif %}
+{% else %}
+  {{ block.super }}
+{% endif %}
 {% endblock %}

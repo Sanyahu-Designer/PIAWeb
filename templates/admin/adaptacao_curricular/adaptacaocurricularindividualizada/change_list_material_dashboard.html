@@ -94,10 +94,10 @@
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno</th>
                         {% if request.GET.aluno__id__exact %}
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Escola</th>
-                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data de Cadastro</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Data de Cadastro</th>
                         {% else %}
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total de Adaptações</th>
-                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Última Adaptação</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Última Adaptação</th>
                         {% endif %}
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
@@ -134,15 +134,19 @@
                             <td>
                               <p class="text-xs font-weight-bold mb-0">{{ obj.escola.nome }}</p>
                             </td>
-                            <td>
-                              <p class="text-xs font-weight-bold mb-0">{{ obj.data_cadastro|date:"d/m/Y" }}</p>
+                            <td class="align-middle text-center">
+                              <span class="badge badge-sm" style="background-color: {% if obj.aluno.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.data_cadastro|date:"d/m/Y" }}</span>
                             </td>
                           {% else %}
                             <td>
                               <p class="text-xs font-weight-bold mb-0">{{ obj.total_adaptacoes }}</p>
                             </td>
-                            <td>
-                              <p class="text-xs font-weight-bold mb-0">{{ obj.ultima_adaptacao|date:"d/m/Y"|default:"-" }}</p>
+                            <td class="align-middle text-center">
+                              {% if obj.ultima_adaptacao %}
+                                <span class="badge badge-sm" style="background-color: {% if obj.aluno.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.ultima_adaptacao|date:"d/m/Y" }}</span>
+                              {% else %}
+                                <span class="badge badge-sm bg-secondary">-</span>
+                              {% endif %}
                             </td>
                           {% endif %}
                           <td class="align-middle text-center">

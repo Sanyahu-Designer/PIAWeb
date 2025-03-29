@@ -14,14 +14,14 @@
     <script src="{% static 'admin/js/jquery.init.js' %}"></script>
     <script src="{% static 'admin/js/actions.js' %}"></script>
   {% endif %}
-{% endblock %}
+{% endblock extrastyle %}
 
 {% block extrahead %}
   {{ block.super }}
   {{ media.js }}
-{% endblock %}
+{% endblock extrahead %}
 
-{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock bodyclass %}
 
 {% block navbar_buttons %}
 <div class="d-flex">
@@ -35,17 +35,17 @@
     <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
   </a>
 </div>
-{% endblock %}
+{% endblock navbar_buttons %}
 
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">{{ opts.app_config.verbose_name }</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">Aluno/Paciente</a></li>
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ cl.opts.verbose_name_plural|capfirst }}</li>
   </ol>
 </nav>
-{% endblock %}
+{% endblock breadcrumbs %}
 
 {% block content %}
 <div class="container-fluid py-2">
@@ -60,20 +60,28 @@
         <div class="card-body px-0 pb-2">
           <!-- Campo de Pesquisa Elegante -->
           <div class="px-4 py-3">
-            <form id="changelist-search" method="get" class="mb-0">
-              <div class="d-flex align-items-center">
-                <div class="input-group flex-grow-1">
-                  <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
-                
+            <div class="d-flex align-items-center justify-content-between">
+              <form id="changelist-search" method="get" class="mb-0 flex-grow-1">
+                <div class="d-flex align-items-center">
+                  <div class="input-group flex-grow-1">
+                    <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
+                  
+                  </div>
+                  <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
+                  </button>
                 </div>
-                <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
-                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
-                </button>
+                {% for pair in cl.params.items %}
+                  {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+                {% endfor %}
+              </form>
+              
+              <div class="d-flex align-items-center">
+                <a href="{% url 'admin:neurodivergentes_registroevolucao_add' %}" class="btn btn-outline-primary btn-sm mb-0 ms-3">
+                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Adicionar Novo
+                </a>
               </div>
-              {% for pair in cl.params.items %}
-                {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
-              {% endfor %}
-            </form>
+            </div>
           </div>
           
           {% if cl.formset and cl.formset.errors %}
@@ -91,10 +99,10 @@
                   <table id="result_list" class="table align-items-center mb-0">
                     <thead>
                       <tr>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nome</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Contato</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Cidade</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade/Sexo</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total de Evoluções</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Última Evolução</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
                     </thead>
@@ -104,9 +112,9 @@
                           <td>
                             <div class="d-flex px-2 py-1">
                               <div>
-                                {% if obj.foto_perfil %}
-                                  <img src="{{ obj.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ obj.primeiro_nome }}">
-                                {% elif obj.genero == 'M' %}
+                                {% if obj.neurodivergente.foto_perfil %}
+                                  <img src="{{ obj.neurodivergente.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ obj.neurodivergente.primeiro_nome }}">
+                                {% elif obj.neurodivergente.genero == 'M' %}
                                   <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #a8d8f0;">
                                     <i class="material-symbols-rounded text-white">boy</i>
                                   </div>
@@ -118,29 +126,25 @@
                               </div>
                               <div class="d-flex flex-column justify-content-center">
                                 <h6 class="mb-0 text-sm">
-                                  <a href="{% url 'admin:neurodivergentes_neurodivergente_change' obj.pk %}">{{ obj.primeiro_nome }} {{ obj.ultimo_nome }}</a>
+                                  <a href="{% url 'neurodivergentes:lista_evolucao' obj.neurodivergente.id %}">{{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}</a>
                                 </h6>
                               </div>
                             </div>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0">{{ obj.idade }} anos</p>
-                            <p class="text-xs text-secondary mb-0">{% if obj.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</p>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.neurodivergente.idade }} anos</p>
+                            <p class="text-xs text-secondary mb-0">{% if obj.neurodivergente.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</p>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0">{% if obj.celular %}{{ obj.celular }}{% else %}Não informado{% endif %}</p>
-                            <p class="text-xs text-secondary mb-0">{% if obj.email %}{{ obj.email }}{% else %}Sem e-mail{% endif %}</p>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.neurodivergente.registros_evolucao.count }}</p>
                           </td>
                           <td class="align-middle text-center">
-                            <span class="badge badge-sm" style="background-color: {% if obj.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.cidade }} - {{ obj.estado }}</span>
+                            <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.data|date:"d/m/Y" }}</span>
                           </td>
                           <td class="align-middle text-center">
                             <div class="ms-auto">
-                              <a href="{% url 'admin:neurodivergentes_neurodivergente_change' obj.pk %}" class="btn btn-outline-primary btn-sm mb-0 me-2" data-toggle="tooltip" data-original-title="Edit user">
-                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
-                              </a>
-                              <a href="{% url 'admin:neurodivergentes_neurodivergente_delete' obj.pk %}" class="btn btn-outline-danger btn-sm mb-0" data-toggle="tooltip" data-original-title="Delete user">
-                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
+                              <a href="{% url 'admin:neurodivergentes_registroevolucao_changelist' %}?neurodivergente__id__exact={{ obj.neurodivergente.id }}" class="btn btn-outline-primary btn-sm mb-0">
+                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">visibility</i> Ver Evoluções
                               </a>
                             </div>
                           </td>
@@ -155,7 +159,7 @@
                 {% endif %}
               </div>
 
-            {% endblock %}
+            {% endblock result_list %}
             
             {% block pagination %}
               {% if cl.result_count != cl.full_result_count %}
@@ -171,11 +175,11 @@
               <div class="px-4 py-2 d-flex justify-content-center">
                 {% pagination cl %}
               </div>
-            {% endblock %}
+            {% endblock pagination %}
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
+{% endblock content %}

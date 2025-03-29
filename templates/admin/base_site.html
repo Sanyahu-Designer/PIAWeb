@@ -68,6 +68,61 @@
 </style>
 {% endblock %}
 
+<!-- Script para formatar todas as datas no formato dd/mm/aaaa -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Função para formatar datas no formato dd/mm/aaaa
+        function formatarDatas() {
+            // Formatar campos de data
+            document.querySelectorAll('input[type="date"]').forEach(function(input) {
+                // Adicionar o atributo pattern para garantir o formato correto
+                input.setAttribute('pattern', '\\d{2}/\\d{2}/\\d{4}');
+                input.setAttribute('placeholder', 'dd/mm/aaaa');
+                
+                // Adicionar evento para formatar a data quando o campo perder o foco
+                input.addEventListener('change', function() {
+                    if (this.value) {
+                        // Converter a data do formato yyyy-mm-dd para dd/mm/aaaa
+                        var parts = this.value.split('-');
+                        if (parts.length === 3) {
+                            var formattedDate = parts[2] + '/' + parts[1] + '/' + parts[0];
+                            this.setAttribute('data-value', formattedDate);
+                        }
+                    }
+                });
+            });
+            
+            // Formatar datas em campos readonly e colunas de tabela
+            document.querySelectorAll('.readonly, .field-data_cadastro .readonly, .field-data_inicio .readonly, .field-data_fim .readonly, td.field-data_cadastro, td.field-get_data_cadastro, td.field-get_ultima_adaptacao, .field-data_cadastro p, .field-get_data_cadastro p, .field-get_ultima_adaptacao p').forEach(function(element) {
+                var text = element.textContent.trim();
+                if (text && /^\d{4}-\d{2}-\d{2}$/.test(text)) {
+                    // Converter a data do formato yyyy-mm-dd para dd/mm/aaaa
+                    var parts = text.split('-');
+                    if (parts.length === 3) {
+                        var formattedDate = parts[2] + '/' + parts[1] + '/' + parts[0];
+                        element.textContent = formattedDate;
+                    }
+                }
+            });
+        }
+        
+        // Executar a formatação de datas
+        formatarDatas();
+        
+        // Executar novamente após carregamento de conteúdo dinâmico
+        setTimeout(formatarDatas, 500);
+        setTimeout(formatarDatas, 1000);
+        setTimeout(formatarDatas, 2000);
+        
+        // Observar mudanças no DOM para formatar novas datas que possam ser adicionadas
+        var observer = new MutationObserver(function(mutations) {
+            formatarDatas();
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+</script>
+
 {% block usertools %}
 {% if has_permission %}
 <div id="user-tools" class="d-flex align-items-center">

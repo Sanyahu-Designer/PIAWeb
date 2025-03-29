@@ -675,7 +675,7 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
         """
         if request.GET.get('neurodivergente__id__exact'):
             # Na página de evoluções do aluno
-            return ['get_neurodivergente', 'get_data_formatada', 'descricao_resumida', 'profissional', 'tem_anexos', 'get_acoes']
+            return ['get_neurodivergente', 'get_data_formatada', 'profissional', 'tem_anexos', 'get_acoes']
         # Na página inicial
         return ['get_aluno_nome', 'get_total_evolucoes', 'get_ultima_evolucao', 'get_view_button']
 
@@ -692,13 +692,6 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
     tem_anexos.boolean = True
     tem_anexos.short_description = 'Anexos'
 
-    def descricao_resumida(self, obj):
-        max_length = 50
-        if len(obj.descricao) > max_length:
-            return f"{obj.descricao[:max_length]}..."
-        return obj.descricao
-    descricao_resumida.short_description = 'Descrição'
-
     def get_acoes(self, obj):
         """
         Retorna os botões de ação para a lista de evoluções do aluno.
@@ -709,9 +702,11 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
         imprimir_url = reverse('neurodivergentes:imprimir_evolucao', args=[obj.id])
         
         return format_html(
-            '<div class="btn-group">'
-            '<a href="{}" class="btn btn-info btn-sm" title="Editar"><i class="fas fa-edit"></i></a>'
-            '<a href="{}" class="btn btn-primary btn-sm" target="_blank" title="Imprimir"><i class="fas fa-print"></i> Imprimir</a>'
+            '<div class="d-flex justify-content-center">'            
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0 me-2">'            
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar</a>'            
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" target="_blank">'            
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir</a>'            
             '</div>',
             editar_url, imprimir_url
         )

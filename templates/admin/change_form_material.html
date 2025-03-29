@@ -18,7 +18,7 @@
     <div class="col-12">
       <div class="card my-4">
         <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-          <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
             <h6 class="text-white text-capitalize ps-3">
               {% if add %}{% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}
               {% else %}{{ original|truncatewords:"18" }}
@@ -95,11 +95,15 @@
               {% endfor %}
             {% endblock %}
             
+            {% block after_field_sets %}{% endblock %}
+            
             {% block inline_field_sets %}
               {% for inline_admin_formset in inline_admin_formsets %}
                 {% include inline_admin_formset.opts.template %}
               {% endfor %}
             {% endblock %}
+            
+            {% block after_inline_field_sets %}{% endblock %}
             
             {% block submit_buttons_bottom %}
               <div class="submit-row d-flex justify-content-between mt-4">
@@ -161,6 +165,55 @@
                         $(this).parent().removeClass('is-filled');
                       }
                     });
+                    
+                    // Formatar datas no formato dd/mm/aaaa
+                    function formatarDatas() {
+                      // Formatar datas em campos readonly
+                      $('.readonly').each(function() {
+                        var text = $(this).text().trim();
+                        if (text && /^\d{4}-\d{2}-\d{2}$/.test(text)) {
+                          var parts = text.split('-');
+                          if (parts.length === 3) {
+                            $(this).text(parts[2] + '/' + parts[1] + '/' + parts[0]);
+                          }
+                        }
+                      });
+                      
+                      // Formatar datas em campos de entrada
+                      $('input[type="date"]').each(function() {
+                        // Adicionar evento para formatar a data ao exibir
+                        $(this).on('change', function() {
+                          var valor = $(this).val();
+                          if (valor) {
+                            // Manter o valor original no campo, mas mostrar formatado para o usuário
+                            var parts = valor.split('-');
+                            if (parts.length === 3) {
+                              // Criar um elemento span para mostrar a data formatada
+                              var spanFormatado = $('<span class="data-formatada">' + parts[2] + '/' + parts[1] + '/' + parts[0] + '</span>');
+                              // Posicionar o span sobre o campo
+                              spanFormatado.css({
+                                'position': 'absolute',
+                                'left': $(this).position().left,
+                                'top': $(this).position().top,
+                                'background': 'white',
+                                'padding': '6px 12px',
+                                'z-index': '1'
+                              });
+                              // Remover qualquer span existente e adicionar o novo
+                              $(this).siblings('.data-formatada').remove();
+                              $(this).parent().append(spanFormatado);
+                            }
+                          }
+                        });
+                        // Disparar o evento change para formatar datas já existentes
+                        $(this).trigger('change');
+                      });
+                    }
+                    
+                    // Executar formatação imediatamente
+                    formatarDatas();
+                    // Executar novamente após um tempo para garantir que todas as datas sejam formatadas
+                    setTimeout(formatarDatas, 500);
                   });
                 })(django.jQuery);
               </script>

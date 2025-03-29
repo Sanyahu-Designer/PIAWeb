@@ -2,11 +2,16 @@
 {% load i18n static %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-2">
     <!-- Filtros e Relatórios -->
-    <div class="row mb-3">
+    <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+                        <h6 class="text-white text-capitalize ps-3">Evoluções - {{ aluno.nome_completo }}</h6>
+                    </div>
+                </div>
                 <div class="card-body">
                     <form method="get" class="form-inline">
                         <div class="row">
@@ -24,10 +29,15 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mt-4">
-                                    <button type="submit" class="btn btn-primary">Filtrar</button>
-                                    <button type="button" class="btn btn-success" onclick="gerarRelatorioPDF()">
-                                        <i class="fas fa-file-pdf"></i> Gerar Relatório
+                                    <button type="submit" class="btn btn-outline-primary btn-sm mb-0">
+                                        <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">filter_alt</i> Filtrar
                                     </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mb-0" onclick="gerarRelatorioPDF()">
+                                        <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">description</i> Gerar Relatório
+                                    </button>
+                                    <a href="{% url 'admin:neurodivergentes_registroevolucao_add' %}" class="btn btn-outline-primary btn-sm mb-0">
+                                        <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">add</i> Nova Evolução
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -40,72 +50,83 @@
     <!-- Lista de Evoluções -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Evoluções - {{ aluno.nome_completo }}</h3>
-                    <div class="card-tools">
-                        <a href="{% url 'admin:neurodivergentes_registroevolucao_add' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Nova Evolução
-                        </a>
+            <div class="card my-4">
+                <div class="card-body px-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data da Evolução</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Descrição</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Profissional</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Anexos</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evolucao in evolucoes %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div>
+                                                {% if aluno.foto_perfil %}
+                                                    <img src="{{ aluno.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ aluno.primeiro_nome }}">
+                                                {% elif aluno.genero == 'M' %}
+                                                    <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #a8d8f0;">
+                                                        <i class="material-symbols-rounded text-white">boy</i>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #f8d0d3;">
+                                                        <i class="material-symbols-rounded text-white">girl</i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ aluno.primeiro_nome }} {{ aluno.ultimo_nome }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-sm" style="background-color: {% if aluno.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">
+                                            {{ evolucao.data|date:"d/m/Y" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">
+                                            {% if evolucao.descricao|length > 50 %}{{ evolucao.descricao|slice:":50" }}...{% else %}{{ evolucao.descricao }}{% endif %}
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ evolucao.profissional }}</p>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        {% if evolucao.anexos %}
+                                            <i class="material-symbols-rounded text-danger opacity-10" style="font-size: 16px;">attach_file</i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <div class="ms-auto">
+                                            <a href="{% url 'neurodivergentes:imprimir_evolucao' evolucao.id %}" 
+                                               class="btn btn-outline-primary btn-sm mb-0"
+                                               target="_blank"
+                                               title="Imprimir">
+                                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="card-body table-responsive p-0">
-                    <table class="table table-hover text-nowrap">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="select-all">
-                                    </div>
-                                </th>
-                                <th>Data</th>
-                                <th>Profissional</th>
-                                <th>Tipo</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for evolucao in evolucoes %}
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="{{ evolucao.id }}">
-                                    </div>
-                                </td>
-                                <td>{{ evolucao.data|date:"d/m/Y" }}</td>
-                                <td>{{ evolucao.profissional }}</td>
-                                <td>{{ evolucao.get_tipo_display }}</td>
-                                <td>
-                                    <span class="badge {% if evolucao.status == 'concluido' %}bg-success{% else %}bg-warning{% endif %}">
-                                        {{ evolucao.get_status_display }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="{% url 'admin:neurodivergentes_registroevolucao_change' evolucao.id %}" 
-                                           class="btn btn-sm btn-info" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{% url 'neurodivergentes:imprimir_evolucao' evolucao.id %}" 
-                                           class="btn btn-sm btn-primary"
-                                           target="_blank"
-                                           title="Imprimir">
-                                            <i class="fas fa-print"></i> Imprimir
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="card-footer clearfix">
+                <div class="card-footer d-flex justify-content-center">
                     {% if evolucoes.has_previous or evolucoes.has_next %}
-                    <ul class="pagination pagination-sm m-0 float-right">
+                    <ul class="pagination pagination-sm m-0">
                         {% if evolucoes.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ evolucoes.previous_page_number }}">&laquo;</a>
+                            <a class="page-link" href="?page={{ evolucoes.previous_page_number }}{% if data_inicial %}&data_inicial={{ data_inicial|date:'Y-m-d' }}{% endif %}{% if data_final %}&data_final={{ data_final|date:'Y-m-d' }}{% endif %}">&laquo;</a>
                         </li>
                         {% endif %}
                         <li class="page-item disabled">
@@ -113,7 +134,7 @@
                         </li>
                         {% if evolucoes.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ evolucoes.next_page_number }}">&raquo;</a>
+                            <a class="page-link" href="?page={{ evolucoes.next_page_number }}{% if data_inicial %}&data_inicial={{ data_inicial|date:'Y-m-d' }}{% endif %}{% if data_final %}&data_final={{ data_final|date:'Y-m-d' }}{% endif %}">&raquo;</a>
                         </li>
                         {% endif %}
                     </ul>
@@ -129,37 +150,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log('JavaScript carregado');
-        
-        // Manipulador de seleção múltipla
-        const selectAll = document.getElementById('select-all');
-        const checkboxes = document.querySelectorAll('tbody .form-check-input');
-
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = selectAll.checked;
-                });
-            });
-        }
     });
-
-    async function imprimirEvolucao(url) {
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const pdfUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = pdfUrl;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(pdfUrl);
-        } catch (error) {
-            console.error('Erro ao gerar PDF:', error);
-            alert('Erro ao gerar o PDF. Por favor, tente novamente.');
-        }
-    }
 
     function gerarRelatorioPDF() {
         const dataInicial = document.getElementById('data_inicial').value;

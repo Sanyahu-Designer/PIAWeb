@@ -1,58 +1,1228 @@
-{% extends "admin/change_form.html" %}
+{% extends "admin/change_form_material.html" %}
 {% load i18n admin_urls static %}
+
+{% block title %}{{ title }} | {% translate 'Adaptação Curricular Individualizada' %}{% endblock %}
 
 {% block extrastyle %}
 {{ block.super }}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
-    .submit-row {
-        padding: 12px;
-        margin: 0;
-        border-top: 1px solid #eee;
+    /* Oculta apenas o botão Histórico */
+    .historylink {
+        display: none !important;
     }
-    .submit-row a.button {
-        float: right;
-        padding: 10px 15px;
-        margin: 0 0 0 8px;
-        background: #417690;
-        color: white;
-        border-radius: 4px;
+    
+    /* Estilos para os campos de formulário seguindo o modelo de Dados Pessoais */
+    fieldset.module {
+        background-color: #f8f9fa;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: none;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    fieldset.module:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Estilo para os títulos dos fieldsets */
+    fieldset.module h2 {
+        color: #344767;
+        font-weight: 600;
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 0.75rem;
+    }
+    
+    /* Estilo para os labels */
+    label {
+        color: #344767;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    /* Estilo para os inputs */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    input[type="password"],
+    textarea,
+    select {
+        width: 100%;
+        border: 1px solid #d2d6da;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        background-color: #fff;
+        color: #344767;
+        box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02);
+        transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        line-height: 1.5;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    input[type="date"]:focus,
+    input[type="password"]:focus,
+    textarea:focus,
+    select:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 3px 9px rgba(50, 50, 93, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        outline: none;
+    }
+    
+    /* Estilos para os selects */
+    select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23344767' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 1em;
+        padding-right: 2rem;
+    }
+    
+    /* Estilos para o cabeçalho */
+    .object-tools-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .object-tools-container .card {
+        border: none;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        background-color: #fff;
+    }
+    
+    .object-tools-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .object-tools-actions {
+            margin-top: 0;
+        }
+    }
+    
+    /* Ajustes para melhor visibilidade dos botões */
+    .object-tools-actions .historylink,
+    .object-tools-actions .viewsitelink {
+        background-color: #fff !important;
+        color: #344767 !important;
+        border: 1px solid #d2d6da !important;
+        box-shadow: 0 3px 5px rgba(0,0,0,0.05) !important;
+    }
+    
+    .object-tools-actions .historylink:hover,
+    .object-tools-actions .viewsitelink:hover {
+        background-color: #344767 !important;
+        color: #fff !important;
+        border-color: #344767 !important;
+    }
+    
+    .object-tools-actions .addlink,
+    .object-tools-actions .historylink,
+    .object-tools-actions .viewsitelink {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #fff;
+        background-color: #4CAF50;
+        border: 1px solid transparent;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.15s ease-in;
         text-decoration: none;
     }
-    .submit-row a.button:hover {
-        background: #205067;
+    
+    .object-tools-actions .addlink:hover,
+    .object-tools-actions .historylink:hover,
+    .object-tools-actions .viewsitelink:hover {
+        background-color: #3d8b40;
     }
-    .relatorios-disciplina {
-        margin: 20px 0;
-        padding: 15px;
-        background: #f8f8f8;
-        border: 1px solid #eee;
-        border-radius: 4px;
+    
+    .breadcrumbs {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
     }
-    .relatorios-disciplina h3 {
-        margin: 0 0 15px 0;
-        color: #666;
+    
+    .breadcrumbs a {
+        color: #344767;
+        text-decoration: none;
     }
-    .relatorios-disciplina .buttons {
+    
+    .breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Ajustes para layout responsivo */
+    .form-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+    }
+    
+    .form-row > .field-box {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+        .form-row > .field-box {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .form-row > .field-box {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+        }
+    }
+    
+    /* Oculta os botões de autocomplete e ícones nos campos específicos */
+    .field-aluno .related-widget-wrapper a,
+    .field-escola .related-widget-wrapper a,
+    .field-profissional_responsavel .related-widget-wrapper a {
+        display: none !important;
+    }
+    
+    /* Estilo para os selects dos campos específicos */
+    .select2-container--admin-autocomplete {
+        width: 100% !important;
+    }
+    
+    /* Garante que o fieldset seja sempre visível */
+    .fieldset-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background-color: #fff !important;
+        border-radius: 0.75rem !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        position: relative !important;
+        z-index: 1 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .fieldset-container:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    /* Estilo para os títulos dos fieldsets */
+    .fieldset-container h5 {
+        font-weight: 600 !important;
+        color: #344767 !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        padding-bottom: 0.75rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+    
+    /* Estilos específicos para o componente de Habilidades */
+    .habilidades-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    /* Garante que o componente de relatórios seja sempre visível */
+    #relatórios-container, .relatórios-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    /* Estilos específicos para o fieldset de Informações do Aluno - PRIORIDADE MÁXIMA */
+    .informacoes-aluno-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        background-color: #fff !important;
+        border: none !important;
+        border-radius: 0.75rem !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+        margin-bottom: 1.5rem !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        z-index: 1 !important;
+        background-color: #fff !important;
+        border-radius: 0.75rem !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+    
+    .informacoes-aluno-container .card-body {
+        padding: 2rem !important;
+    }
+    
+    .informacoes-aluno-container .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin-right: -15px !important;
+        margin-left: -15px !important;
+    }
+    
+    .informacoes-aluno-container .col-md-6 {
+        position: relative !important;
+        width: 100% !important;
+        padding-right: 15px !important;
+        padding-left: 15px !important;
+    }
+    
+    .informacoes-aluno-container .form-row {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* Estilos para os inputs dentro do fieldset de Informações do Aluno */
+    .informacoes-aluno-container input[type="text"],
+    .informacoes-aluno-container input[type="number"],
+    .informacoes-aluno-container input[type="email"],
+    .informacoes-aluno-container input[type="tel"],
+    .informacoes-aluno-container input[type="date"],
+    .informacoes-aluno-container select,
+    .informacoes-aluno-container textarea {
+        width: 100% !important;
+        border: 1px solid #d2d6da !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+        background-color: #fff !important;
+        color: #344767 !important;
+        box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+        line-height: 1.5 !important;
+        height: 45px !important;
+    }
+    
+    .informacoes-aluno-container input[type="text"]:hover,
+    .informacoes-aluno-container input[type="number"]:hover,
+    .informacoes-aluno-container input[type="email"]:hover,
+    .informacoes-aluno-container input[type="tel"]:hover,
+    .informacoes-aluno-container input[type="date"]:hover,
+    .informacoes-aluno-container select:hover,
+    .informacoes-aluno-container textarea:hover {
+        border-color: #5e72e4 !important;
+    }
+    
+    .informacoes-aluno-container input[type="text"]:focus,
+    .informacoes-aluno-container input[type="number"]:focus,
+    .informacoes-aluno-container input[type="email"]:focus,
+    .informacoes-aluno-container input[type="tel"]:focus,
+    .informacoes-aluno-container input[type="date"]:focus,
+    .informacoes-aluno-container select:focus,
+    .informacoes-aluno-container textarea:focus {
+        border-color: #5e72e4 !important;
+        box-shadow: 0 3px 9px rgba(50, 50, 9, 0), 3px 4px 8px rgba(94, 114, 228, 0.1) !important;
+        outline: none !important;
+    }
+    
+    /* Estilos para os labels dentro do fieldset de Informações do Aluno */
+    .informacoes-aluno-container label {
+        display: block !important;
+        font-weight: 600 !important;
+        color: #344767 !important;
+        margin-bottom: 0.5rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Estilos para os selects dentro do fieldset de Informações do Aluno */
+    .informacoes-aluno-container select {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23344767' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.5rem center !important;
+        background-size: 1em !important;
+        padding-right: 2rem !important;
+    }
+    
+    .habilidades-container .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Melhorias para os campos de formulário */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+        font-weight: 500;
+        color: #344767;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    /* Indicação visual para campos obrigatórios */
+    .required label:after {
+        content: ' *';
+        color: #f44335;
+    }
+    
+    /* Grid responsivo para os itens de habilidade */
+    .habilidades-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .habilidades-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .habilidades-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    /* Estilos para os botões */
+    .btn-outline-primary {
+        color: #344767;
+        border-color: #d2d6da;
+        background-color: transparent;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .btn-outline-primary:hover {
+        color: #fff;
+        background-color: #344767;
+        border-color: #344767;
+    }
+    
+    .btn-outline-danger {
+        color: #ea0606;
+        border-color: #d2d6da;
+        background-color: transparent;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .btn-outline-danger:hover {
+        color: #fff;
+        background-color: #ea0606;
+        border-color: #ea0606;
+    }
+    
+    /* Estilos para os campos de formulário */
+    .form-label {
+        font-size: 0.875rem;
+        color: #344767;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .form-control {
+        border-radius: 0.5rem;
+        border: 1px solid #d2d6da;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .form-control:focus {
+        border-color: #344767;
+        box-shadow: 0 0 0 0.2rem rgba(52, 71, 103, 0.25);
+    }
+    
+    .readonly {
+        background-color: #f8f9fa !important;
+        border: 1px solid #d2d6da !important;
+        border-radius: 0.5rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.875rem !important;
+        color: #6c757d !important;
+    }
+    
+    /* Estilos para os campos relacionados */
+    .related-widget-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .related-widget-wrapper select {
+        flex: 1;
+        border-radius: 0.5rem;
+        border: 1px solid #d2d6da;
+        padding: 0.5rem 1rem;
+        height: calc(1.5em + 1rem + 2px);
+        font-size: 0.875rem;
+        background-color: #fff;
+    }
+    
+    /* Estilos para o Select2 */
+    .select2-container--default .select2-selection--single {
+        border: 1px solid #d2d6da;
+        border-radius: 0.5rem;
+        height: calc(1.5em + 1rem + 2px);
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: calc(1.5em + 0.5rem);
+        padding-left: 0.25rem;
+        color: #495057;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(1.5em + 1rem);
+        right: 0.5rem;
+    }
+    
+    .select2-dropdown {
+        border-radius: 0.5rem;
+        border: 1px solid #d2d6da;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+    
+    .select2-results__option {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Estilos específicos para o campo de profissional responsável */
+    .field-profissional_responsavel .related-widget-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    
+    /* Garantir que o componente de relatórios seja sempre visível */
+    .fieldset-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Melhorar aparência dos botões relacionados */
+    .related-widget-wrapper-link {
+        margin-left: 0.5rem;
+        color: #344767;
+        border: 1px solid #d2d6da;
+        border-radius: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+    
+    .related-widget-wrapper-link:hover {
+        background-color: #f8f9fa;
+        border-color: #344767;
+    }
+    
+    /* Estilo para textos de ajuda */
+    .help {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .field-profissional_responsavel .select2-container {
+        flex: 1 !important;
+    }
+    
+    /* Estilos para ajustar o cabeçalho do card */
+    .card-header.p-0.position-relative.mt-n4.mx-3.z-index-2 {
+        margin-top: -1.5rem !important;
+    }
+    
+    .shadow-dark.border-radius-lg {
+        border-radius: 0.5rem;
+    }
+    
+    /* Estilos para os fieldsets dentro do componente de habilidades */
+    .fieldset-container .inline-group {
+        margin-bottom: 0;
+    }
+    
+    .fieldset-container .inline-group h2 {
+        display: none;
+    }
+    
+    .fieldset-container .inline-group .inline-related {
+        margin-bottom: 1.5rem;
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .fieldset-container .inline-group .inline-related:hover {
+        box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.07);
+    }
+    
+    .fieldset-container .inline-group .inline-related h3 {
+        margin-top: 0;
+        margin-bottom: 1.25rem;
+        font-size: 1.1rem;
+        color: #344767;
+        font-weight: 600;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 0.75rem;
+    }
+    
+    .fieldset-container .inline-group .inline-related .inline-deletelink {
+        float: right;
+        color: #f44335;
+        border: 1px solid #f44335;
+        border-radius: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+    
+    .fieldset-container .inline-group .inline-related .inline-deletelink:hover {
+        background-color: #f44335;
+        color: #ffffff;
+    }
+    
+    .fieldset-container .inline-group .add-row {
+        margin-top: 1.5rem;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: #344767;
+        border: 1px solid #d2d6da;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.15s ease;
+        font-weight: 500;
+    }
+    
+    .fieldset-container .inline-group .add-row:hover {
+        background-color: #344767;
+        color: #ffffff;
+        border-color: #344767;
+    }
+    
+    /* Ajuste para o cabeçalho do card de habilidades */
+    .fieldset-container .inline-group .shadow-dark.border-radius-lg {
+        background: linear-gradient(to right, #6c757d, #8d99ae) !important;
+        border-radius: 0.5rem;
+        padding-top: 1rem;
+        padding-bottom: 0.75rem;
+    }
+    
+    /* Ajuste para o cabeçalho do card de habilidades */
+    .fieldset-container .inline-group .shadow-dark.border-radius-lg {
+        background: linear-gradient(to right, #6c757d, #8d99ae) !important;
+        border-radius: 0.5rem;
+        padding-top: 1rem;
+        padding-bottom: 0.75rem;
+    }
+    
+    /* Estilos específicos para o componente de Habilidades */
+    .habilidades-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Estilos para os fieldsets seguindo o padrão do Grupo Familiar */
+    .fieldset-container {
+        margin-bottom: 1.5rem !important;
+        border: none !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+        border-radius: 0.5rem !important;
+        background-color: #fff !important;
+        overflow: hidden !important;
+    }
+    
+    /* Estilo para o cabeçalho dos fieldsets seguindo o modelo do Grupo Familiar */
+    .fieldset-container h5 {
+        position: relative !important;
+        margin-top: -1rem !important;
+        margin-left: 1rem !important;
+        margin-right: 1rem !important;
+        z-index: 2 !important;
+        background: linear-gradient(to right, #94a3b8, #cbd5e1) !important;
+        border-radius: 0.5rem !important;
+        padding: 1rem 0.75rem !important;
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(148, 163, 184, 0.4) !important;
+        color: #344767 !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 1.5rem !important;
+        text-transform: capitalize !important;
+    }
+    
+    /* Estilo para o corpo dos fieldsets */
+    .fieldset-container .form-row {
+        padding: 0 1.5rem !important;
+    }
+    
+    /* Estilo para os campos de formulário */
+    .form-row input, .form-row select, .form-row textarea {
+        border: 1px solid #d2d6da !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+        font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
+        background-color: #fff !important;
+        color: #344767 !important;
+        box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .form-row input:hover, .form-row select:hover, .form-row textarea:hover {
+        border-color: #344767 !important;
+    }
+    
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+        border-color: #344767 !important;
+        box-shadow: 0 0 0 0.2rem rgba(52, 71, 103, 0.25) !important;
+        outline: none !important;
+    }
+    
+    /* Estilo para os labels */
+    .form-row label {
+        color: #344767 !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important;
+    }
+    
+    /* Estilo para campos obrigatórios */
+    .form-row label.required::after {
+        content: " *" !important;
+        color: #f44336 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Estilo para a linha de botões de submissão */
+    .submit-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 1rem !important;
+        margin-top: 1.5rem !important;
+        background-color: #f8f9fa !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    }
+    
+    /* Estilo para o corpo dos fieldsets */
+    .fieldset-container .form-row {
+        padding: 0 1.5rem !important;
+    }
+    
+    /* Estilos específicos para os campos de relacionamento (Aluno, Escola, Profissional) */
+    .field-aluno select,
+    .field-escola select,
+    .field-profissional_responsavel select,
+    .field-aluno .select2-container .select2-selection,
+    .field-escola .select2-container .select2-selection,
+    .field-profissional_responsavel .select2-container .select2-selection {
+        border: 2px solid #d2d6da !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+        font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
+        background-color: #fff !important;
+        color: #344767 !important;
+        box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s ease !important;
+        height: auto !important;
+        min-height: 45px !important;
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Hover para os campos de relacionamento */
+    .field-aluno select:hover,
+    .field-escola select:hover,
+    .field-profissional_responsavel select:hover,
+    .field-aluno .select2-container:hover .select2-selection,
+    .field-escola .select2-container:hover .select2-selection,
+    .field-profissional_responsavel .select2-container:hover .select2-selection {
+        border-color: #344767 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08) !important;
+    }
+    
+    /* Focus para os campos de relacionamento */
+    .field-aluno select:focus,
+    .field-escola select:focus,
+    .field-profissional_responsavel select:focus,
+    .field-aluno .select2-container.select2-container--focus .select2-selection,
+    .field-escola .select2-container.select2-container--focus .select2-selection,
+    .field-profissional_responsavel .select2-container.select2-container--focus .select2-selection {
+        border-color: #344767 !important;
+        box-shadow: 0 0 0 0.2rem rgba(52, 71, 103, 0.25) !important;
+        outline: none !important;
+    }
+    
+    /* Estilo para o texto dentro dos selects */
+    .field-aluno .select2-selection__rendered,
+    .field-escola .select2-selection__rendered,
+    .field-profissional_responsavel .select2-selection__rendered {
+        color: #344767 !important;
+        font-size: 0.875rem !important;
+        font-weight: 400 !important;
+        line-height: 1.5 !important;
+        padding-left: 0 !important;
+        font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
+    }
+    
+    /* Estilo para os labels dos campos de relacionamento */
+    .field-aluno label,
+    .field-escola label,
+    .field-profissional_responsavel label {
+        color: #344767 !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important;
+        font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
+    }
+    
+    /* Estilo para ocultar botões de relacionamento */
+    .related-widget-wrapper-link {
+        display: none !important;
+    }
+    
+    .related-lookup {
+        display: none !important;
+    }
+    
+    /* Ocultar completamente os botões de relacionamento */
+    .related-widget-wrapper-link,
+    .related-lookup,
+    a[data-href-template],
+    a.related-lookup {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+    
+    /* Ocultar os containers dos botões de relacionamento */
+    .related-widget-wrapper {
+        padding-right: 0 !important;
     }
 </style>
 {% endblock %}
 
-{% block content %}
-    {{ block.super }}
-    {% if disciplina_buttons %}
-        <div class="relatorios-disciplina">
-            <h3>Gerar Relatório por Disciplina</h3>
-            <div class="buttons">
-                {% for button in disciplina_buttons %}
-                    <a href="{{ button.url }}" class="button" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-file-pdf"></i> {{ button.nome }}
-                    </a>
-                {% endfor %}
-            </div>
+{% block after_field_sets %}
+  {# O conteúdo foi movido para o bloco after_inline_field_sets #}
+{% endblock %}
+
+{% block after_related_objects %}
+  {% if disciplina_buttons %}
+    <div class="relatorios-card">
+      <div class="card-header">
+        <div class="card-header-inner">
+          <h6>Relatórios</h6>
         </div>
+      </div>
+      <div class="card-body">
+        {% for button in disciplina_buttons %}
+          <a href="{{ button.url }}" class="btn-relatorio" target="_blank" rel="noopener noreferrer">
+            <span class="material-symbols-rounded">description</span> {{ button.nome }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+<div class="submit-row">
+  <div class="submit-row-left">
+    {% if show_save %}
+      <input type="submit" value="{% translate 'Salvar' %}" class="default" name="_save">
     {% endif %}
+    {% if show_save_and_continue %}
+      <input type="submit" value="{% translate 'Salvar e continuar editando' %}" name="_continue">
+    {% endif %}
+    {% if show_save_and_add_another %}
+      <input type="submit" value="{% translate 'Salvar e adicionar outro' %}" name="_addanother">
+    {% endif %}
+  </div>
+  <div class="submit-row-right">
+    {% if show_delete_link %}
+      {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+      <a href="{% add_preserved_filters delete_url %}" class="deletelink">{% translate "Excluir" %}</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block after_inline_field_sets %}
+  {# Conteúdo removido e movido para o bloco after_related_objects #}
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+    django.jQuery(document).ready(function() {
+        // Função para ajustar os fieldsets seguindo o padrão do Grupo Familiar
+        function ajustarFieldsets() {
+            // Seleciona todos os fieldsets
+            var fieldsets = django.jQuery('.fieldset-container');
+            
+            fieldsets.each(function(index) {
+                var fieldset = django.jQuery(this);
+                var titulo = fieldset.find('h5');
+                
+                // Ajusta o estilo do fieldset
+                fieldset.css({
+                    'margin-bottom': '1.5rem',
+                    'border': 'none',
+                    'box-shadow': '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    'border-radius': '0.5rem',
+                    'background-color': '#fff',
+                    'overflow': 'hidden',
+                    'padding-bottom': '1.5rem',
+                    'padding-top': '2.5rem' // Espaço para o título elevado
+                });
+                
+                // Ajusta o estilo do título
+                if (titulo.length) {
+                    titulo.css({
+                        'position': 'relative',
+                        'margin-top': '-3rem',
+                        'margin-left': '1rem',
+                        'margin-right': '1rem',
+                        'z-index': '2',
+                        'background': 'linear-gradient(to right, #94a3b8, #cbd5e1)',
+                        'border-radius': '0.5rem',
+                        'padding': '1rem 0.75rem',
+                        'box-shadow': '0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(148, 163, 184, 0.4)',
+                        'color': '#344767',
+                        'font-size': '1rem',
+                        'font-weight': '600',
+                        'margin-bottom': '1.5rem',
+                        'text-transform': 'capitalize'
+                    });
+                }
+                
+                // Ajusta o estilo das linhas de formulário
+                var formRows = fieldset.find('.form-row');
+                formRows.css({
+                    'padding': '0 1.5rem',
+                    'margin-bottom': '1.25rem'
+                });
+                
+                // Organiza os campos em grid responsivo
+                formRows.each(function() {
+                    var formRow = django.jQuery(this);
+                    
+                    // Adiciona classes responsivas se ainda não tiver
+                    if (!formRow.hasClass('col-md-6')) {
+                        formRow.addClass('col-12 col-md-6 col-lg-6');
+                    }
+                    
+                    // Ajusta o estilo dos labels
+                    var labels = formRow.find('label');
+                    labels.each(function() {
+                        var label = django.jQuery(this);
+                        label.css({
+                            'color': '#344767',
+                            'font-weight': '600',
+                            'font-size': '0.875rem',
+                            'margin-bottom': '0.5rem',
+                            'display': 'block',
+                            'font-family': "'Roboto', 'Helvetica', 'Arial', sans-serif"
+                        });
+                        
+                        // Adiciona asterisco vermelho para campos obrigatórios
+                        if (label.hasClass('required') && !label.find('.text-danger').length) {
+                            label.append('<span class="text-danger" style="color: #f44336; font-weight: 700;"> *</span>');
+                        }
+                    });
+                    
+                    // Ajusta o estilo dos inputs, selects e textareas
+                    var inputs = formRow.find('input, select, textarea').not('.select2-hidden-accessible');
+                    inputs.each(function() {
+                        var input = django.jQuery(this);
+                        input.css({
+                            'border': '1px solid #d2d6da',
+                            'border-radius': '0.5rem',
+                            'padding': '0.75rem 1rem',
+                            'font-size': '0.875rem',
+                            'font-family': "'Roboto', 'Helvetica', 'Arial', sans-serif",
+                            'background-color': '#fff',
+                            'color': '#344767',
+                            'box-shadow': '0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02)',
+                            'transition': 'all 0.3s ease',
+                            'width': '100%'
+                        });
+                        
+                        // Adiciona eventos de hover e focus
+                        input.hover(function() {
+                            django.jQuery(this).css({
+                                'border-color': '#344767',
+                                'box-shadow': '0 4px 6px rgba(0,0,0,0.08)'
+                            });
+                        }, function() {
+                            django.jQuery(this).css({
+                                'border-color': '#d2d6da',
+                                'box-shadow': '0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02)'
+                            });
+                        });
+                        
+                        input.focus(function() {
+                            django.jQuery(this).css({
+                                'border-color': '#344767',
+                                'box-shadow': '0 0 0 0.2rem rgba(52, 71, 103, 0.25)',
+                                'outline': 'none'
+                            });
+                        }).blur(function() {
+                            django.jQuery(this).css({
+                                'border-color': '#d2d6da',
+                                'box-shadow': '0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02)'
+                            });
+                        });
+                    });
+                });
+            });
+        }
+        
+        // Função para remover botões de editar, excluir e visualizar dos campos de relacionamento
+        function removerBotoesRelacionamento() {
+            console.log('Removendo botões de relacionamento');
+            
+            // Remover todos os botões de editar, excluir e visualizar
+            django.jQuery('.related-widget-wrapper-link').remove();
+            
+            // Remover ícones de lupa para seleção de registros
+            django.jQuery('.related-lookup').remove();
+            
+            // Adicionar CSS para ocultar os botões caso o JavaScript não consiga removê-los
+            var style = document.createElement('style');
+            style.textContent = `
+                .related-widget-wrapper-link { display: none !important; }
+                .related-lookup { display: none !important; }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Chamar as funções de ajuste
+        ajustarFieldsets();
+        removerBotoesRelacionamento();
+        
+        // Executa a função após um pequeno atraso para garantir que todos os elementos foram carregados
+        setTimeout(function() {
+            ajustarFieldsets();
+            removerBotoesRelacionamento();
+        }, 500);
+        
+        // Reexecuta a função quando houver mudanças no DOM
+        var observer = new MutationObserver(function(mutations) {
+            ajustarFieldsets();
+            removerBotoesRelacionamento();
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+</script>
+
+<script>
+    // Remover botões de relacionamento imediatamente quando o script é carregado
+    (function() {
+        // Remover todos os botões de editar, excluir e visualizar
+        var links = document.querySelectorAll('.related-widget-wrapper-link');
+        links.forEach(function(link) {
+            link.parentNode.removeChild(link);
+        });
+        
+        // Remover ícones de lupa para seleção de registros
+        var lookups = document.querySelectorAll('.related-lookup');
+        lookups.forEach(function(lookup) {
+            lookup.parentNode.removeChild(lookup);
+        });
+    })();
+</script>
+
+<script>
+    // Script dedicado para remover botões de relacionamento
+    document.addEventListener('DOMContentLoaded', function() {
+        function removerBotoesRelacionamentoAggressivo() {
+            console.log('Removendo botões de relacionamento (modo agressivo)');
+            
+            // Selecionar todos os botões e ícones
+            var elementos = document.querySelectorAll('.related-widget-wrapper-link, .related-lookup, a[data-href-template]');
+            
+            // Remover cada elemento
+            elementos.forEach(function(elemento) {
+                if (elemento && elemento.parentNode) {
+                    elemento.parentNode.removeChild(elemento);
+                }
+            });
+        }
+        
+        // Executar imediatamente
+        removerBotoesRelacionamentoAggressivo();
+        
+        // Executar após um pequeno atraso
+        setTimeout(removerBotoesRelacionamentoAggressivo, 500);
+        setTimeout(removerBotoesRelacionamentoAggressivo, 1000);
+        setTimeout(removerBotoesRelacionamentoAggressivo, 2000);
+        
+        // Executar periodicamente
+        setInterval(removerBotoesRelacionamentoAggressivo, 3000);
+        
+        // Observer para remover botões quando o DOM for modificado
+        var observer = new MutationObserver(function(mutations) {
+            removerBotoesRelacionamentoAggressivo();
+        });
+        
+        // Observar todo o documento
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+    });
+</script>
+
+<script>
+    // Script para aplicar estilos diretamente nos elementos DOM
+    (function() {
+        // Função para aplicar estilos aos campos de relacionamento
+        function estilizarCamposRelacionamento() {
+            // Selecionar os campos de relacionamento
+            var camposAluno = document.querySelectorAll('.field-aluno select, .field-aluno .select2-selection');
+            var camposEscola = document.querySelectorAll('.field-escola select, .field-escola .select2-selection');
+            var camposProfissional = document.querySelectorAll('.field-profissional_responsavel select, .field-profissional_responsavel .select2-selection');
+            var todosInputs = document.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]), select, textarea');
+            var todosLabels = document.querySelectorAll('label');
+            
+            // Aplicar estilos a todos os inputs, selects e textareas
+            for (var i = 0; i < todosInputs.length; i++) {
+                var elemento = todosInputs[i];
+                elemento.style.fontFamily = "'Roboto', 'Helvetica', 'Arial', sans-serif";
+            }
+            
+            // Aplicar estilos a todos os labels
+            for (var i = 0; i < todosLabels.length; i++) {
+                var elemento = todosLabels[i];
+                elemento.style.fontFamily = "'Roboto', 'Helvetica', 'Arial', sans-serif";
+            }
+            
+            // Função para aplicar estilos a um conjunto de elementos
+            function aplicarEstilos(elementos) {
+                for (var i = 0; i < elementos.length; i++) {
+                    var elemento = elementos[i];
+                    elemento.setAttribute('style', 'border: 2px solid #d2d6da !important; border-radius: 0.5rem !important; padding: 0.75rem 1rem !important; font-size: 0.875rem !important; font-family: "Roboto", "Helvetica", "Arial", sans-serif !important; background-color: #fff !important; color: #344767 !important; box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02) !important; transition: all 0.3s ease !important; height: auto !important; min-height: 45px !important; width: 100% !important; margin-bottom: 0.5rem !important;');
+                }
+            }
+            
+            // Aplicar estilos a todos os campos
+            aplicarEstilos(camposAluno);
+            aplicarEstilos(camposEscola);
+            aplicarEstilos(camposProfissional);
+            
+            // Remover botões de relacionamento
+            var botoes = document.querySelectorAll('.related-widget-wrapper-link, .related-lookup');
+            for (var i = 0; i < botoes.length; i++) {
+                if (botoes[i].parentNode) {
+                    botoes[i].parentNode.removeChild(botoes[i]);
+                }
+            }
+        }
+        
+        // Executar a função imediatamente
+        estilizarCamposRelacionamento();
+        
+        // Executar a função após um pequeno atraso
+        setTimeout(estilizarCamposRelacionamento, 500);
+        setTimeout(estilizarCamposRelacionamento, 1000);
+        setTimeout(estilizarCamposRelacionamento, 2000);
+        
+        // Executar a função periodicamente
+        setInterval(estilizarCamposRelacionamento, 3000);
+        
+        // Observer para aplicar estilos quando o DOM for modificado
+        var observerEstilos = new MutationObserver(function(mutations) {
+            estilizarCamposRelacionamento();
+        });
+        
+        // Observar todo o documento
+        observerEstilos.observe(document.body, { 
+            childList: true, 
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+    })();
+</script>
 {% endblock %}

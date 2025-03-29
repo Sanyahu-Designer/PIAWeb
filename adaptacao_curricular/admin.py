@@ -91,6 +91,41 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
     list_display = ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_acoes']
     list_filter = ['aluno', 'escola']
     list_per_page = 20
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('get_habilidade_details/', self.admin_site.admin_view(self.get_habilidade_details), name='get_habilidade_details'),
+        ]
+        return custom_urls + urls
+    
+    def get_habilidade_details(self, request):
+        """Endpoint para obter detalhes de uma habilidade pelo ID"""
+        if not request.user.is_staff:
+            raise PermissionDenied
+            
+        habilidade_id = request.GET.get('habilidade_id')
+        if not habilidade_id:
+            return JsonResponse({'error': 'ID da habilidade não fornecido'}, status=400)
+            
+        try:
+            habilidade = BNCCHabilidade.objects.select_related('disciplina').get(id=habilidade_id)
+            
+            # Formata os dados para exibição
+            ano_display = dict(BNCCHabilidade.ANOS_CHOICES).get(habilidade.ano, habilidade.ano)
+            trimestre_display = dict(BNCCHabilidade.TRIMESTRE_CHOICES).get(habilidade.trimestre, habilidade.trimestre)
+            
+            data = {
+                'codigo': habilidade.codigo,
+                'disciplina': habilidade.disciplina.nome,
+                'objeto_conhecimento': habilidade.objeto_conhecimento,
+                'descricao': habilidade.descricao,
+                'ano': ano_display,
+                'trimestre': trimestre_display,
+            }
+            return JsonResponse(data)
+        except BNCCHabilidade.DoesNotExist:
+            return JsonResponse({'error': 'Habilidade não encontrada'}, status=404)
 
     def get_queryset(self, request):
         """
@@ -144,7 +179,7 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
         """
         if request.GET.get('aluno__id__exact'):
             # Lista de adaptações do aluno
-            return ['get_aluno_nome', 'escola', 'data_cadastro', 'get_acoes']
+            return ['get_aluno_nome', 'escola', 'get_data_cadastro', 'get_acoes']
         # Lista inicial
         return ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_view_button']
 
@@ -169,14 +204,17 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
 
     def get_ultima_adaptacao(self, obj):
         """
-        Retorna a data da última adaptação do aluno.
+        Retorna a data da última adaptação do aluno no formato dd/mm/aaaa.
         """
         if not obj.aluno:
             return '-'
         ultima = AdaptacaoCurricularIndividualizada.objects.filter(
             aluno=obj.aluno
         ).order_by('-data_cadastro').first()
-        return ultima.data_cadastro if ultima else '-'
+        if ultima and ultima.data_cadastro:
+            # Formata a data no padrão brasileiro dd/mm/aaaa
+            return ultima.data_cadastro.strftime('%d/%m/%Y')
+        return '-'
     get_ultima_adaptacao.short_description = 'Última Adaptação'
     get_ultima_adaptacao.admin_order_field = 'data_cadastro'
 
@@ -223,7 +261,16 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         obj = self.get_object(request, object_id)
         if obj:
-            # Agrupa adaptações por disciplina
+            # Importa o modelo BNCCDisciplina
+            from .models import BNCCDisciplina
+            
+            # Busca todas as disciplinas disponíveis
+            disciplinas = BNCCDisciplina.objects.all().order_by('nome')
+            
+            # Adiciona as disciplinas ao contexto
+            extra_context['disciplinas'] = disciplinas
+            
+            # Mantém a lógica anterior para compatibilidade
             adaptacoes_por_disciplina = {}
             for adaptacao in obj.adaptacoes.select_related('habilidade__disciplina').all():
                 disciplina = adaptacao.habilidade.disciplina
@@ -232,12 +279,28 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
                 adaptacoes_por_disciplina[disciplina].append(adaptacao)
             
             # Cria os botões para cada disciplina
-            disciplina_buttons = [{
-                'nome': disciplina.nome,
-                'id': disciplina.id,
-                'url': reverse('adaptacao_curricular:imprimir_adaptacao_disciplina', 
-                              args=[obj.id, disciplina.id])
-            } for disciplina in adaptacoes_por_disciplina.keys()]
+            disciplina_buttons = []
+            
+            # Se não houver adaptações, busca todas as disciplinas disponíveis
+            if not adaptacoes_por_disciplina:
+                # Verificar se há disciplinas disponíveis
+                if disciplinas.exists():
+                    for disciplina in disciplinas:
+                        disciplina_buttons.append({
+                            'nome': disciplina.nome,
+                            'id': disciplina.id,
+                            'url': reverse('adaptacao_curricular:imprimir_adaptacao_disciplina', 
+                                          args=[obj.id, disciplina.id])
+                        })
+            else:
+                # Usa as disciplinas que já têm adaptações
+                for disciplina in adaptacoes_por_disciplina.keys():
+                    disciplina_buttons.append({
+                        'nome': disciplina.nome,
+                        'id': disciplina.id,
+                        'url': reverse('adaptacao_curricular:imprimir_adaptacao_disciplina', 
+                                      args=[obj.id, disciplina.id])
+                    })
             
             extra_context['disciplina_buttons'] = disciplina_buttons
         
@@ -283,7 +346,17 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
             'fields': ['aluno', 'escola', 'modalidade_ensino', 'ano', 'trimestre', 'profissional_responsavel']
         }),
     ]
-    list_display = ('aluno', 'escola', 'profissional_responsavel', 'data_cadastro')
+    list_display = ('aluno', 'escola', 'profissional_responsavel', 'get_data_cadastro')
+    
+    def get_data_cadastro(self, obj):
+        """
+        Retorna a data de cadastro formatada no padrão brasileiro dd/mm/aaaa.
+        """
+        if obj.data_cadastro:
+            return obj.data_cadastro.strftime('%d/%m/%Y')
+        return '-'
+    get_data_cadastro.short_description = 'Data do Cadastro'
+    get_data_cadastro.admin_order_field = 'data_cadastro'
     list_filter = ('escola', 'data_cadastro')
     search_fields = (
         'aluno__primeiro_nome',
