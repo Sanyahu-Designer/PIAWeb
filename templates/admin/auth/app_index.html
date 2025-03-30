@@ -1,5 +1,32 @@
-{% extends "admin/app_index.html" %}
-{% load i18n admin_urls admin_list %}
+{% extends "admin/base_material.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+  <link rel="stylesheet" type="text/css" href="{% static "css/search-fixes.css" %}">
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ media.js }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ app_label }} change-list{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
 
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
@@ -10,17 +37,79 @@
 </nav>
 {% endblock %}
 
-{% block content_title %}
-<div class="row">
-  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-    <div class="card">
-      <div class="card-header p-3 pt-2">
-        <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
-          <i class="material-symbols-rounded opacity-10">security</i>
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">Autenticação e Autorização</h6>
+          </div>
         </div>
-        <div class="text-end pt-1">
-          <p class="text-sm mb-0 text-capitalize">Autenticação e Autorização</p>
-          <h4 class="mb-0">{% translate 'Administration' %}</h4>
+        <div class="card-body px-0 pb-2">
+          <div class="px-4 py-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <form id="changelist-search" method="get" class="mb-0 flex-grow-1">
+                <div class="d-flex align-items-center">
+                  <div class="input-group flex-grow-1">
+                    <input type="text" name="q" class="form-control" id="searchbar" placeholder="Pesquisar...">
+                  </div>
+                  <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="table-responsive p-0">
+            <table class="table align-items-center mb-0">
+              <thead>
+                <tr>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipo de Acesso</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for app in app_list %}
+                  {% for model in app.models %}
+                  <tr>
+                    <td>
+                      <div class="d-flex px-2 py-1">
+                        <div class="avatar avatar-sm me-3 bg-gradient-primary border-radius-md d-flex align-items-center justify-content-center">
+                          <i class="material-symbols-rounded text-white opacity-10">{% if model.name == 'Grupos' %}groups{% else %}person{% endif %}</i>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center">
+                          <h6 class="mb-0 text-sm">{{ model.name }}</h6>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center">
+                        {% if model.admin_url %}
+                        <a href="{{ model.admin_url }}" class="btn btn-outline-primary btn-sm mb-0">
+                          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">visibility</i> Visualizar
+                        </a>
+                        {% endif %}
+                        {% if model.add_url %}
+                        <a href="{{ model.add_url }}" class="btn btn-outline-primary btn-sm mb-0 ms-2">
+                          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">add</i> Adicionar
+                        </a>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% empty %}
+                  <tr>
+                    <td colspan="2" class="text-center py-4">
+                      <p class="text-sm text-secondary mb-0">Nenhum modelo encontrado.</p>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

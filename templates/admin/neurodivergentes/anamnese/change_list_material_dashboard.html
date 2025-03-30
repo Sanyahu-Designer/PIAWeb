@@ -60,20 +60,28 @@
         <div class="card-body px-0 pb-2">
           <!-- Campo de Pesquisa Elegante -->
           <div class="px-4 py-3">
-            <form id="changelist-search" method="get" class="mb-0">
-              <div class="d-flex align-items-center">
-                <div class="input-group flex-grow-1">
-                  <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
-                
+            <div class="d-flex align-items-center justify-content-between">
+              <form id="changelist-search" method="get" class="mb-0 flex-grow-1">
+                <div class="d-flex align-items-center">
+                  <div class="input-group flex-grow-1">
+                    <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
+                  
+                  </div>
+                  <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
+                  </button>
                 </div>
-                <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
-                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
-                </button>
+                {% for pair in cl.params.items %}
+                  {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+                {% endfor %}
+              </form>
+              
+              <div class="d-flex align-items-center">
+                <a href="{% url 'admin:neurodivergentes_anamnese_add' %}" class="btn btn-outline-primary btn-sm mb-0 ms-3">
+                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Adicionar Novo
+                </a>
               </div>
-              {% for pair in cl.params.items %}
-                {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
-              {% endfor %}
-            </form>
+            </div>
           </div>
           
           {% if cl.formset and cl.formset.errors %}

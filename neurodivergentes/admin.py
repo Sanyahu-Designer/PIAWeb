@@ -135,6 +135,7 @@ class CategoriaNeurodivergentesAdmin(admin.ModelAdmin):
     list_display = ['nome', 'ordem']
     ordering = ['ordem', 'nome']
     search_fields = ['nome']
+    change_list_template = 'admin/cid10/categoriacid10/change_list_material_dashboard.html'
 
 @admin.register(CondicaoNeurodivergente)
 class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
@@ -142,6 +143,7 @@ class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
     list_filter = ['categoria', 'ativo']
     search_fields = ['nome', 'cid_10']
     ordering = ['categoria', 'nome']
+    change_list_template = 'admin/cid10/condicaocid10/change_list_material_dashboard.html'
 
 # Formulário personalizado para DiagnosticoNeurodivergente
     
@@ -207,6 +209,7 @@ class NeurodivergenciaAdmin(admin.ModelAdmin):
     list_display = ['neurodivergente', 'data_diagnostico', 'profissional_diagnostico']
     list_filter = ['data_diagnostico']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
+    change_list_template = 'admin/neurodivergentes/neurodivergencia/change_list_material_dashboard.html'
     
     def save_formset(self, request, form, formset, change):
         """Garante que a categoria seja definida corretamente antes de salvar"""
@@ -253,6 +256,7 @@ class MetaHabilidadeAdmin(admin.ModelAdmin):
     list_filter = ['ativo']
     search_fields = ['nome', 'descricao']
     ordering = ['nome']
+    change_list_template = 'admin/metashabilidades/metahabilidade/change_list_material_dashboard.html'
     
 class PDIMetaHabilidadeInline(admin.TabularInline):
     model = PDIMetaHabilidade

@@ -17,13 +17,13 @@ from .models import (
 class BNCCDisciplinaAdmin(admin.ModelAdmin):
     list_display = ('nome',)
     search_fields = ('nome',)
-
+    change_list_template = 'admin/bncc/disciplinabncc/change_list_material_dashboard.html'
     
 
 @admin.register(BNCCHabilidade)
 class BNCCHabilidadeAdmin(admin.ModelAdmin):
     fields = ('disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'codigo', 'descricao')
-
+    change_list_template = 'admin/bncc/codigobncc/change_list_material_dashboard.html'
     
     list_filter = ('disciplina', 'ano', 'trimestre')
     search_fields = ('codigo', 'descricao', 'objeto_conhecimento')

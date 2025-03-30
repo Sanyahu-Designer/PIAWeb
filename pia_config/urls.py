@@ -3,6 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.template.response import TemplateResponse
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.models import User
 from .views import CustomLoginView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -21,12 +22,43 @@ urlpatterns = [
     # URLs personalizadas para usar os templates do Material Dashboard 3
     path('dashboard/adaptacao_curricular/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/aci/change_list_material_dashboard.html', {'title': 'ACI', 'cl': {'opts': {'verbose_name_plural': 'Adaptações Curriculares Individualizadas', 'app_label': 'adaptacao_curricular', 'app_config': {'verbose_name': 'Adaptação Curricular'}}}})), name='aci_dashboard'),
     path('dashboard/neurodivergentes/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergente/change_list_material_dashboard.html', {'title': 'Neurodivergentes'})), name='neurodivergentes_dashboard'),
+    path('dashboard/neurodivergentes/neurodivergencia/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergencia/change_list_material_dashboard.html', {'title': 'Neurodivergências', 'cl': {'opts': {'verbose_name_plural': 'Neurodivergências', 'app_label': 'neurodivergentes', 'app_config': {'verbose_name': 'Neurodivergentes'}}}})), name='neurodivergencia_dashboard'),
     path('dashboard/bncc/codigobncc/', staff_member_required(lambda request: TemplateResponse(request, 'admin/bncc/codigobncc/change_list_material_dashboard.html', {'title': 'Códigos BNCC'})), name='codigobncc_dashboard'),
     path('dashboard/bncc/disciplinabncc/', staff_member_required(lambda request: TemplateResponse(request, 'admin/bncc/disciplinabncc/change_list_material_dashboard.html', {'title': 'Disciplinas BNCC'})), name='disciplinabncc_dashboard'),
     path('dashboard/cid10/categoriacid10/', staff_member_required(lambda request: TemplateResponse(request, 'admin/cid10/categoriacid10/change_list_material_dashboard.html', {'title': 'Categorias CID-10'})), name='categoriacid10_dashboard'),
     path('dashboard/cid10/condicaocid10/', staff_member_required(lambda request: TemplateResponse(request, 'admin/cid10/condicaocid10/change_list_material_dashboard.html', {'title': 'Condições CID-10'})), name='condicaocid10_dashboard'),
     path('dashboard/metashabilidades/metahabilidade/', staff_member_required(lambda request: TemplateResponse(request, 'admin/metashabilidades/metahabilidade/change_list_material_dashboard.html', {'title': 'Metas/Habilidades'})), name='metahabilidade_dashboard'),
-    path('dashboard/auth/user/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/user/change_list_material_dashboard.html', {'title': 'Usuários', 'cl': {'opts': {'verbose_name_plural': 'Usuários', 'app_label': 'auth', 'app_config': {'verbose_name': 'Autenticação e Autorização'}}}})), name='usuarios_dashboard'),
+    path('dashboard/auth/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index.html', {
+        'title': 'Autenticação e Autorização',
+        'app_label': 'auth',
+        'app_list': [{
+            'name': 'Autenticação e Autorização',
+            'app_label': 'auth',
+            'app_url': '/dashboard/auth/',
+            'has_module_perms': True,
+            'models': [
+                {
+                    'name': 'Grupos',
+                    'object_name': 'group',
+                    'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
+                    'admin_url': '/dashboard/auth/group/',
+                    'add_url': '/dashboard/auth/group/add/'
+                },
+                {
+                    'name': 'Usuários',
+                    'object_name': 'person',
+                    'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
+                    'admin_url': '/dashboard/auth/user/',
+                    'add_url': '/dashboard/auth/user/add/'
+                }
+            ]
+        }]
+    })), name='auth_dashboard'),
+    path('dashboard/auth/user/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index_material_dashboard.html', {
+        'title': 'Usuários',
+        'app_label': 'auth',
+        'users': User.objects.all().order_by('first_name', 'last_name')
+    })), name='usuarios_dashboard'),
     
     # Outras URLs
     path('', CustomLoginView.as_view(
