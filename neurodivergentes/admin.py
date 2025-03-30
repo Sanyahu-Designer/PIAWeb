@@ -269,7 +269,7 @@ class PDIMetaHabilidadeInline(admin.TabularInline):
 class PDIAdmin(admin.ModelAdmin):
     form = PDIForm
     inlines = [PDIMetaHabilidadeInline]
-    list_display = ['get_aluno_nome', 'get_total_pdis', 'get_ultimo_pdi', 'get_view_button']
+    list_display = ['get_aluno_nome', 'get_idade', 'get_total_pdis', 'get_ultimo_pdi', 'get_view_button', 'get_status', 'get_qtd_metas', 'get_responsavel']
     list_filter = ['neurodivergente']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     list_per_page = 20
@@ -355,9 +355,9 @@ class PDIAdmin(admin.ModelAdmin):
         """
         self.request = request
         if 'neurodivergente__id__exact' in request.GET:
-            self.list_display = ['get_aluno_nome', 'data_criacao', 'get_progresso', 'status', 'get_view_button']
+            self.list_display = ['get_aluno_nome', 'data_criacao', 'get_status', 'get_qtd_metas', 'get_responsavel', 'get_print_button']
         else:
-            self.list_display = ['get_aluno_nome', 'get_total_pdis', 'get_ultimo_pdi', 'get_view_button']
+            self.list_display = ['get_aluno_nome', 'get_idade', 'get_total_pdis', 'get_ultimo_pdi', 'get_view_button', 'get_status', 'get_qtd_metas', 'get_responsavel']
         return super().changelist_view(request, extra_context)
 
     def get_progresso(self, obj):
@@ -381,22 +381,80 @@ class PDIAdmin(admin.ModelAdmin):
 
         if hasattr(self, 'request') and 'neurodivergente__id__exact' in self.request.GET:
             return format_html(
-                '<button type="button" onclick="loadPDIDetails({})" class="view-pdi-btn" '
-                'style="background-color: #447e9b; color: white; padding: 5px 10px; '
-                'border-radius: 3px; border: none; cursor: pointer;">'
-                '<i class="fas fa-eye" style="margin-right: 5px;"></i> Visualizar PDI</button>',
-                obj.id
+                '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" target="_blank">'                
+                '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir</a>',
+                reverse('admin:neurodivergentes_pdi_change', args=[obj.id])
             )
         else:
             url = f"{reverse('admin:neurodivergentes_pdi_changelist')}?neurodivergente__id__exact={obj.neurodivergente.id}"
             return format_html(
-                '<a href="{}" class="button" style="background-color: #447e9b; color: white; '
-                'padding: 5px 10px; border-radius: 3px; text-decoration: none; display: inline-block;">'
-                '<i class="fas fa-eye" style="margin-right: 5px;"></i> Visualizar PDIs</a>',
+                '<a href="{}" class="btn btn-outline-primary btn-sm mb-0">'                
+                '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">visibility</i> Ver PDIs</a>',
                 url
             )
     get_view_button.short_description = 'Ações'
 
+    def get_print_button(self, obj):
+        """
+        Gera um botão de impressão para o PDI.
+        """
+        if not obj.id:
+            return '-'
+            
+        return format_html(
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" target="_blank">'            
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir</a>',
+            reverse('neurodivergentes:imprimir_pdi', args=[obj.id])
+        )
+    get_print_button.short_description = 'Ações'
+
+    def get_idade(self, obj):
+        """
+        Retorna a idade e gênero do aluno.
+        """
+        if not obj.neurodivergente:
+            return '-'
+        return format_html(
+            '{} anos<br><span class="text-xs text-secondary">{}</span>',
+            obj.neurodivergente.idade(),
+            'Masculino' if obj.neurodivergente.genero == 'M' else 'Feminino'
+        )
+    get_idade.short_description = 'Idade'
+
+    def get_status(self, obj):
+        """
+        Retorna o status do PDI baseado no progresso das metas.
+        """
+        metas = obj.metas_habilidades.all()
+        if not metas:
+            return format_html('<span class="badge bg-secondary">Pendente</span>')
+            
+        total_progresso = sum(meta.progresso for meta in metas)
+        media_progresso = total_progresso / len(metas) if metas else 0
+        
+        if media_progresso >= 100:
+            return format_html('<span class="badge bg-success">Concluído</span>')
+        elif media_progresso > 0:
+            return format_html('<span class="badge bg-warning">Em andamento</span>')
+        else:
+            return format_html('<span class="badge bg-secondary">Pendente</span>')
+    get_status.short_description = 'Status'
+    
+    def get_qtd_metas(self, obj):
+        """
+        Retorna a quantidade de metas associadas ao PDI.
+        """
+        return obj.metas_habilidades.count()
+    get_qtd_metas.short_description = 'Qtd. Metas'
+    
+    def get_responsavel(self, obj):
+        """
+        Retorna o nome do profissional responsável pelo PDI.
+        """
+        if hasattr(obj, 'pedagogo_responsavel') and obj.pedagogo_responsavel:
+            return obj.pedagogo_responsavel.user.get_full_name()
+        return '-'
+    get_responsavel.short_description = 'Responsável'
     
     class Media:
         """
@@ -434,15 +492,23 @@ class MonitoramentoAdmin(admin.ModelAdmin):
     list_per_page = 20
     
     def changelist_view(self, request, extra_context=None):
-        # Adiciona os dados para o modal de relatório
-        extra_context = extra_context or {}
-        extra_context['meses'] = MESES
-        extra_context['anos'] = range(2020, 2051)
-        return super().changelist_view(request, extra_context=extra_context)
+        """
+        Ajusta as colunas exibidas na listagem com base no contexto:
+        - Lista inicial: exibe agrupamento.
+        - Lista detalhada: exibe todos os PEIs do aluno.
+        """
+        self.request = request
+        if 'neurodivergente__id__exact' in request.GET:
+            self.list_display = ['get_aluno_nome', 'get_mes_ano', 'get_metas', 'get_acoes']
+        else:
+            self.list_display = ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
+        return super().changelist_view(request, extra_context)
 
     def get_queryset(self, request):
-        """Retorna apenas o PEI mais recente por aluno na lista inicial,
-        ou todos os PEIs se um filtro de aluno estiver ativo."""
+        """
+        Retorna apenas o PEI mais recente por aluno na lista inicial,
+        ou todos os PEIs se um filtro de aluno estiver ativo.
+        """
         self.request = request
         queryset = super().get_queryset(request).select_related('neurodivergente')
 
@@ -459,15 +525,19 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         return queryset.filter(id__in=latest_pei_ids).order_by('neurodivergente__primeiro_nome')
 
     def get_object(self, request, object_id, from_field=None):
-        """Personaliza a busca de objetos para garantir que qualquer PEI seja carregado,
-        independentemente do queryset usado na exibição agrupada."""
+        """
+        Personaliza a busca de objetos para garantir que qualquer PEI seja carregado,
+        independentemente do queryset usado na exibição agrupada.
+        """
         queryset = super().get_queryset(request)
         return get_object_or_404(Monitoramento, pk=object_id)
 
     def get_aluno_nome(self, obj):
-        """Gera o link correto para o nome do aluno:
+        """
+        Gera o link correto para o nome do aluno:
         - Lista inicial: redireciona para a lista de PEIs do aluno.
-        - Lista filtrada: redireciona para o detalhe do PEI."""
+        - Lista filtrada: redireciona para o detalhe do PEI.
+        """
         if not obj.neurodivergente:
             return '-'
 
@@ -488,14 +558,18 @@ class MonitoramentoAdmin(admin.ModelAdmin):
     get_aluno_nome.admin_order_field = 'neurodivergente__primeiro_nome'
 
     def get_total_peis(self, obj):
-        """Retorna o total de PEIs do aluno."""
+        """
+        Retorna o total de PEIs do aluno.
+        """
         if not obj.neurodivergente:
             return '0'
         return Monitoramento.objects.filter(neurodivergente=obj.neurodivergente).count()
     get_total_peis.short_description = 'Total de PEIs'
 
     def get_ultimo_pei(self, obj):
-        """Retorna o mês/ano do último PEI."""
+        """
+        Retorna o mês/ano do último PEI.
+        """
         if not obj.neurodivergente:
             return '-'
         ultimo = Monitoramento.objects.filter(
@@ -508,8 +582,10 @@ class MonitoramentoAdmin(admin.ModelAdmin):
     get_ultimo_pei.short_description = 'Último PEI'
 
     def get_list_display(self, request):
-        """Altera as colunas exibidas dependendo se estamos na lista inicial
-        ou na lista de PEIs de um aluno."""
+        """
+        Altera as colunas exibidas dependendo se estamos na lista inicial
+        ou na lista de PEIs de um aluno.
+        """
         if request.GET.get('neurodivergente__id__exact'):
             # Na página de PEIs do aluno
             return ['neurodivergente', 'get_mes_ano', 'get_metas', 'get_acoes']
@@ -517,18 +593,24 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         return ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
 
     def get_mes_ano(self, obj):
-        """Retorna o mês/ano formatado."""
+        """
+        Retorna o mês/ano formatado.
+        """
         return f"{obj.get_mes_display()}/{obj.ano}"
     get_mes_ano.short_description = 'Mês/Ano'
     get_mes_ano.admin_order_field = 'ano'
 
     def get_metas(self, obj):
-        """Retorna as metas do PEI."""
+        """
+        Retorna as metas do PEI.
+        """
         return ", ".join([meta.nome for meta in obj.metas.all()])
     get_metas.short_description = 'Metas/Habilidades'
 
     def get_view_button(self, obj):
-        """Retorna o botão de visualização que leva para a lista de PEIs do aluno."""
+        """
+        Retorna o botão de visualização que leva para a lista de PEIs do aluno.
+        """
         if not obj.neurodivergente:
             return ''
         
@@ -540,7 +622,9 @@ class MonitoramentoAdmin(admin.ModelAdmin):
     get_view_button.short_description = 'Ver PEIs'
 
     def get_acoes(self, obj):
-        """Retorna os botões de ação para a lista de PEIs do aluno."""
+        """
+        Retorna os botões de ação para a lista de PEIs do aluno.
+        """
         editar_url = reverse('admin:neurodivergentes_monitoramento_change', args=[obj.id])
         imprimir_url = reverse('neurodivergentes:imprimir_pei', args=[obj.id])
         
@@ -1008,4 +1092,3 @@ class AnamneseAdmin(admin.ModelAdmin):
 #            'fields': ('objetivos', 'estrategias', 'recursos')
 #        }),
 #    )
-    

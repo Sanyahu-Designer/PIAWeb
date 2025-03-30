@@ -15,21 +15,51 @@ CSS_LINE = '<link rel="stylesheet" type="text/css" href="{% static \'admin/css/f
 
 # Lista de templates a serem ignorados (caminhos completos)
 IGNORE_PATHS = [
-    os.path.join(TEMPLATES_DIR, 'change_form_material.html'),  # Template base
-    os.path.join(TEMPLATES_DIR, 'change_form.html'),          # Template base
+    os.path.join(TEMPLATES_DIR, 'change_form_material.html'),  # Template base já modificado
+    os.path.join(TEMPLATES_DIR, 'change_form.html'),          # Template base já modificado
     os.path.join(TEMPLATES_DIR, 'neurodivergentes', 'neurodivergente', 'change_form.html'),  # Já está correto
     os.path.join(TEMPLATES_DIR, 'adaptacao_curricular', 'adaptacaocurricularindividualizada', 'change_form.html')  # Não funcionou bem
+]
+
+# Lista de módulos específicos para adicionar o CSS
+TARGET_MODULES = [
+    'neurodivergentes/registroevolucao',  # Evolução
+    'neurodivergentes/neurodivergente',   # Neurodivergente
+    'neurodivergentes/pdi',              # PDIs
+    'adaptacao_curricular',               # PEI
+    'neurodivergentes/pareceravaliativo', # Pareceres
+    'bncc/codigobncc',                   # Códigos BNCC
+    'bncc/disciplinabncc',               # Disciplinas BNCC
+    'cid10/categoriacid10',              # Categorias CID-10
+    'cid10/condicaocid10',               # Condições CID-10
+    'metashabilidades/metahabilidade',    # Metas/Habilidades
+    'auth/user',                         # Autenticação e Autorização (Usuários)
+    'usuarios/usuario',                  # Usuários (alternativo)
+    'escola/escola',                     # Escolas
+    'profissionais_app/profissional'      # Profissionais
 ]
 
 # Função para encontrar todos os templates de cadastro
 def find_change_form_templates(base_dir):
     templates = []
-    for root, dirs, files in os.walk(base_dir):
-        for file in files:
-            if file == 'change_form.html':
-                full_path = os.path.join(root, file)
-                if full_path not in IGNORE_PATHS:
-                    templates.append(full_path)
+    
+    # Primeiro, procura por templates personalizados para os módulos alvo
+    for module in TARGET_MODULES:
+        module_path = os.path.join(base_dir, module)
+        if os.path.exists(module_path):
+            # Verifica se existe um template change_form.html no diretório do módulo
+            change_form_path = os.path.join(module_path, 'change_form.html')
+            if os.path.exists(change_form_path) and change_form_path not in IGNORE_PATHS:
+                templates.append(change_form_path)
+            
+            # Verifica se existem outros templates de cadastro no diretório do módulo
+            for root, dirs, files in os.walk(module_path):
+                for file in files:
+                    if file.startswith('change_form') and file.endswith('.html'):
+                        full_path = os.path.join(root, file)
+                        if full_path not in IGNORE_PATHS and full_path not in templates:
+                            templates.append(full_path)
+    
     return templates
 
 # Função para verificar se o CSS já está incluído no template
@@ -60,7 +90,7 @@ def add_css_to_template(template_path):
         new_block = f'''
 {{% load i18n admin_urls static %}}  {{# Garante que static está carregado #}}
 
-{{% block extrastyle %}}{{{{{ block.super }}}}}
+{{% block extrastyle %}}{{{{ block.super }}}}
 {CSS_LINE}
 {{% endblock %}}
 '''
@@ -77,18 +107,53 @@ def add_css_to_template(template_path):
     print(f"[Modificado] {os.path.relpath(template_path, TEMPLATES_DIR)}")
     return True
 
+# Função para criar um template de cadastro para módulos que não têm um
+def create_change_form_template(module_path):
+    # Verifica se o diretório do módulo existe
+    if not os.path.exists(module_path):
+        os.makedirs(module_path)
+    
+    # Caminho para o novo template
+    template_path = os.path.join(module_path, 'change_form.html')
+    
+    # Verifica se o template já existe
+    if os.path.exists(template_path):
+        return template_path
+    
+    # Conteúdo do novo template
+    template_content = '''{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}{{ block.super }}
+''' + CSS_LINE + '''
+{% endblock %}
+'''
+    
+    # Salva o novo template
+    with open(template_path, 'w', encoding='utf-8') as file:
+        file.write(template_content)
+    
+    print(f"[Criado] {os.path.relpath(template_path, TEMPLATES_DIR)}")
+    return template_path
+
 # Função principal
 def main():
     print("Iniciando a adição do CSS aos templates de cadastro...\n")
     
-    # Encontra todos os templates de cadastro
+    # Encontra todos os templates de cadastro para os módulos alvo
     templates = find_change_form_templates(TEMPLATES_DIR)
     
     if not templates:
-        print("Nenhum template de cadastro encontrado!")
-        return
+        print("Nenhum template de cadastro encontrado para os módulos alvo!")
+        print("Criando templates para os módulos que não têm um...\n")
+        
+        # Cria templates para os módulos que não têm um
+        for module in TARGET_MODULES:
+            module_path = os.path.join(TEMPLATES_DIR, module)
+            template_path = create_change_form_template(module_path)
+            templates.append(template_path)
     
-    print(f"Encontrados {len(templates)} templates de cadastro.\n")
+    print(f"Encontrados/Criados {len(templates)} templates de cadastro.\n")
     print("Templates a serem processados:")
     for template in templates:
         print(f"- {os.path.relpath(template, TEMPLATES_DIR)}")
