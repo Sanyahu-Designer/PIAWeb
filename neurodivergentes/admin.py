@@ -396,15 +396,24 @@ class PDIAdmin(admin.ModelAdmin):
 
     def get_print_button(self, obj):
         """
-        Gera um botão de impressão para o PDI.
+        Gera botões de ação para o PDI: Editar, Imprimir e Remover.
         """
         if not obj.id:
             return '-'
             
+        editar_url = reverse('admin:neurodivergentes_pdi_change', args=[obj.id])
+        imprimir_url = reverse('neurodivergentes:imprimir_pdi', args=[obj.id])
+        remover_url = reverse('admin:neurodivergentes_pdi_delete', args=[obj.id])
+        
         return format_html(
-            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" target="_blank">'            
-            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir</a>',
-            reverse('neurodivergentes:imprimir_pdi', args=[obj.id])
+            '<div class="btn-group">' 
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" title="Editar"><i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i></a>' 
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0 ms-2" target="_blank" title="Imprimir"><i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i></a>' 
+            '<a href="{}" class="btn btn-outline-danger btn-sm mb-0 ms-2" title="Remover"><i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i></a>' 
+            '</div>',
+            editar_url,
+            imprimir_url,
+            remover_url
         )
     get_print_button.short_description = 'Ações'
 
@@ -415,7 +424,7 @@ class PDIAdmin(admin.ModelAdmin):
         if not obj.neurodivergente:
             return '-'
         return format_html(
-            '{} anos<br><span class="text-xs text-secondary">{}</span>',
+            '<div class="d-flex flex-column"><span class="text-sm font-weight-bold">{} anos</span><span class="text-xs text-secondary">{}</span></div>',
             obj.neurodivergente.idade(),
             'Masculino' if obj.neurodivergente.genero == 'M' else 'Feminino'
         )
@@ -430,7 +439,7 @@ class PDIAdmin(admin.ModelAdmin):
             return format_html('<span class="badge bg-secondary">Pendente</span>')
             
         total_progresso = sum(meta.progresso for meta in metas)
-        media_progresso = total_progresso / len(metas) if metas else 0
+        media_progresso = total_progresso / len(metas)
         
         if media_progresso >= 100:
             return format_html('<span class="badge bg-success">Concluído</span>')
@@ -486,7 +495,7 @@ class PDIAdmin(admin.ModelAdmin):
 @admin.register(Monitoramento)
 class MonitoramentoAdmin(admin.ModelAdmin):
     form = MonitoramentoForm
-    list_display = ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
+    list_display = ['get_aluno_nome', 'get_idade_sexo', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
     list_filter = ['neurodivergente']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     list_per_page = 20
@@ -501,7 +510,7 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         if 'neurodivergente__id__exact' in request.GET:
             self.list_display = ['get_aluno_nome', 'get_mes_ano', 'get_metas', 'get_acoes']
         else:
-            self.list_display = ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
+            self.list_display = ['get_aluno_nome', 'get_idade_sexo', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
         return super().changelist_view(request, extra_context)
 
     def get_queryset(self, request):
@@ -509,20 +518,23 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         Retorna apenas o PEI mais recente por aluno na lista inicial,
         ou todos os PEIs se um filtro de aluno estiver ativo.
         """
-        self.request = request
-        queryset = super().get_queryset(request).select_related('neurodivergente')
-
-        neurodivergente_id = request.GET.get('neurodivergente__id__exact')
-        if neurodivergente_id:
-            # Lista todos os PEIs do aluno filtrado
-            return queryset.filter(neurodivergente_id=neurodivergente_id).order_by('-ano', '-mes')
-
-        # Lista inicial: retorna apenas o PEI mais recente por aluno
-        latest_pei_ids = queryset.values('neurodivergente').annotate(
-            max_id=models.Max('id')
-        ).values_list('max_id', flat=True)
-
-        return queryset.filter(id__in=latest_pei_ids).order_by('neurodivergente__primeiro_nome')
+        qs = super().get_queryset(request)
+        
+        # Se estamos na lista de PEIs de um aluno específico, retorna todos os PEIs desse aluno
+        if request.GET.get('neurodivergente__id__exact'):
+            return qs
+        
+        # Na lista inicial, agrupa por aluno e retorna apenas o PEI mais recente de cada aluno
+        latest_peis = {}
+        for pei in qs:
+            if pei.neurodivergente_id not in latest_peis or (
+                pei.ano > latest_peis[pei.neurodivergente_id].ano or 
+                (pei.ano == latest_peis[pei.neurodivergente_id].ano and pei.mes > latest_peis[pei.neurodivergente_id].mes)
+            ):
+                latest_peis[pei.neurodivergente_id] = pei
+        
+        # Retorna apenas os PEIs mais recentes
+        return qs.filter(id__in=[pei.id for pei in latest_peis.values()])
 
     def get_object(self, request, object_id, from_field=None):
         """
@@ -562,8 +574,9 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         Retorna o total de PEIs do aluno.
         """
         if not obj.neurodivergente:
-            return '0'
-        return Monitoramento.objects.filter(neurodivergente=obj.neurodivergente).count()
+            return 0
+        total = Monitoramento.objects.filter(neurodivergente=obj.neurodivergente).count()
+        return total
     get_total_peis.short_description = 'Total de PEIs'
 
     def get_ultimo_pei(self, obj):
@@ -590,7 +603,7 @@ class MonitoramentoAdmin(admin.ModelAdmin):
             # Na página de PEIs do aluno
             return ['neurodivergente', 'get_mes_ano', 'get_metas', 'get_acoes']
         # Na página inicial
-        return ['get_aluno_nome', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
+        return ['get_aluno_nome', 'get_idade_sexo', 'get_total_peis', 'get_ultimo_pei', 'get_view_button']
 
     def get_mes_ano(self, obj):
         """
@@ -627,18 +640,34 @@ class MonitoramentoAdmin(admin.ModelAdmin):
         """
         editar_url = reverse('admin:neurodivergentes_monitoramento_change', args=[obj.id])
         imprimir_url = reverse('neurodivergentes:imprimir_pei', args=[obj.id])
+        remover_url = reverse('admin:neurodivergentes_monitoramento_delete', args=[obj.id])
         
         return format_html(
             '<div class="btn-group">' 
-            '<a href="{}" class="btn btn-sm btn-info" title="Editar"><i class="fas fa-edit"></i></a>' 
-            '<button type="button" class="btn btn-sm btn-primary" onclick="window.open(\'{}\')" title="Imprimir">' 
-            '<i class="fas fa-print"></i> Imprimir</button>' 
+            '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" title="Editar"><i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i></a>' 
+            '<button type="button" class="btn btn-outline-primary btn-sm mb-0 ms-2" onclick="window.open(\'{}\')" title="Imprimir">' 
+            '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i></button>' 
+            '<a href="{}" class="btn btn-outline-danger btn-sm mb-0 ms-2" title="Remover"><i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i></a>' 
             '</div>',
             editar_url,
-            imprimir_url
+            imprimir_url,
+            remover_url
         )
     get_acoes.short_description = 'Ações'
 
+    def get_idade_sexo(self, obj):
+        """
+        Retorna a idade e gênero do aluno.
+        """
+        if not obj.neurodivergente:
+            return '-'
+        return format_html(
+            '<div class="d-flex flex-column"><span class="text-sm font-weight-bold">{} anos</span><span class="text-xs text-secondary">{}</span></div>',
+            obj.neurodivergente.idade(),
+            'Masculino' if obj.neurodivergente.genero == 'M' else 'Feminino'
+        )
+    get_idade_sexo.short_description = 'Idade/Sexo'
+    get_idade_sexo.admin_order_field = 'neurodivergente__data_nascimento'
     
     class Media:
         css = {
@@ -987,6 +1016,11 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
     get_view_button.short_description = 'Ações'
 
     def changelist_view(self, request, extra_context=None):
+        """
+        Ajusta as colunas exibidas na listagem com base no contexto:
+        - Lista inicial: exibe agrupamento.
+        - Lista detalhada: exibe todos os pareceres do aluno.
+        """
         self.request = request
         
         # Adiciona botão de relatório geral no topo se estiver na lista de pareceres de um aluno

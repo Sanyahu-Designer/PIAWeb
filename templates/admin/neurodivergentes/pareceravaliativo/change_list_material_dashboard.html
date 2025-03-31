@@ -41,7 +41,7 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">{{ opts.app_config.verbose_name }</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">{{ opts.app_config.verbose_name }}</a></li>
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ cl.opts.verbose_name_plural|capfirst }}</li>
   </ol>
 </nav>
@@ -60,20 +60,33 @@
         <div class="card-body px-0 pb-2">
           <!-- Campo de Pesquisa Elegante -->
           <div class="px-4 py-3">
-            <form id="changelist-search" method="get" class="mb-0">
-              <div class="d-flex align-items-center">
-                <div class="input-group flex-grow-1">
-                  <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
-                
+            <div class="d-flex align-items-center justify-content-between">
+              <form id="changelist-search" method="get" class="mb-0 flex-grow-1">
+                <div class="d-flex align-items-center">
+                  <div class="input-group flex-grow-1">
+                    <input type="text" name="q" value="{{ cl.query }}" class="form-control" id="searchbar" placeholder="Pesquisar {{ cl.opts.verbose_name }}">
+                  
+                  </div>
+                  <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
+                  </button>
                 </div>
-                <button type="submit" class="btn btn-outline-primary btn-sm ms-2 mb-0 d-flex align-items-center justify-content-center">
-                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">search</i>
-                </button>
+                {% for pair in cl.params.items %}
+                  {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+                {% endfor %}
+              </form>
+              
+              <div class="d-flex align-items-center ms-3">
+                <a href="{% url 'admin:neurodivergentes_pareceravaliativo_add' %}" class="btn btn-outline-primary btn-sm mb-0">
+                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Adicionar Novo
+                </a>
+                {% if request.GET.neurodivergente__id__exact %}
+                <a href="javascript:void(0);" onclick="openRelatorioModal();" class="btn btn-outline-primary btn-sm mb-0 ms-3">
+                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">description</i> Relatório Geral
+                </a>
+                {% endif %}
               </div>
-              {% for pair in cl.params.items %}
-                {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
-              {% endfor %}
-            </form>
+            </div>
           </div>
           
           {% if cl.formset and cl.formset.errors %}
@@ -91,59 +104,124 @@
                   <table id="result_list" class="table align-items-center mb-0">
                     <thead>
                       <tr>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nome</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Contato</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Cidade</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+                        {% if request.GET.neurodivergente__id__exact %}
+                          <!-- Cabeçalho para lista de pareceres de um aluno específico -->
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Profissional Responsável</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data do Parecer</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Anexos</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+                        {% else %}
+                          <!-- Cabeçalho para lista geral de pareceres -->
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade/Sexo</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total de Pareceres</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Último Parecer</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+                        {% endif %}
                       </tr>
                     </thead>
                     <tbody>
                       {% for obj in cl.result_list %}
                         <tr>
-                          <td>
-                            <div class="d-flex px-2 py-1">
-                              <div>
-                                {% if obj.foto_perfil %}
-                                  <img src="{{ obj.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ obj.primeiro_nome }}">
-                                {% elif obj.genero == 'M' %}
-                                  <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #a8d8f0;">
-                                    <i class="material-symbols-rounded text-white">boy</i>
-                                  </div>
-                                {% else %}
-                                  <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #f8d0d3;">
-                                    <i class="material-symbols-rounded text-white">girl</i>
-                                  </div>
-                                {% endif %}
+                          {% if request.GET.neurodivergente__id__exact %}
+                            <!-- Linha para lista de pareceres de um aluno específico -->
+                            <td>
+                              <div class="d-flex px-2 py-1">
+                                <div>
+                                  {% if obj.neurodivergente.foto_perfil %}
+                                    <img src="{{ obj.neurodivergente.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ obj.neurodivergente.primeiro_nome }}">
+                                  {% elif obj.neurodivergente.genero == 'M' %}
+                                    <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #a8d8f0;">
+                                      <i class="material-symbols-rounded text-white">boy</i>
+                                    </div>
+                                  {% else %}
+                                    <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #f8d0d3;">
+                                      <i class="material-symbols-rounded text-white">girl</i>
+                                    </div>
+                                  {% endif %}
+                                </div>
+                                <div class="d-flex flex-column justify-content-center">
+                                  <h6 class="mb-0 text-sm">{{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}</h6>
+                                </div>
                               </div>
-                              <div class="d-flex flex-column justify-content-center">
-                                <h6 class="mb-0 text-sm">
-                                  <a href="{% url 'admin:neurodivergentes_neurodivergente_change' obj.pk %}">{{ obj.primeiro_nome }} {{ obj.ultimo_nome }}</a>
-                                </h6>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0">{{ obj.idade }} anos</p>
-                            <p class="text-xs text-secondary mb-0">{% if obj.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</p>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0">{% if obj.celular %}{{ obj.celular }}{% else %}Não informado{% endif %}</p>
-                            <p class="text-xs text-secondary mb-0">{% if obj.email %}{{ obj.email }}{% else %}Sem e-mail{% endif %}</p>
-                          </td>
-                          <td class="align-middle text-center">
-                            <span class="badge badge-sm" style="background-color: {% if obj.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.cidade }} - {{ obj.estado }}</span>
-                          </td>
-                          <td class="align-middle text-center">
-                            <div class="ms-auto">
-                              <a href="{% url 'admin:neurodivergentes_neurodivergente_change' obj.pk %}" class="btn btn-outline-primary btn-sm mb-0 me-2" data-toggle="tooltip" data-original-title="Edit user">
+                            </td>
+                            <td>
+                              <p class="text-xs font-weight-bold mb-0">{{ obj.profissional_responsavel }}</p>
+                            </td>
+                            <td>
+                              <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">
+                                {{ obj.data_avaliacao|date:"d/m/Y" }}
+                              </span>
+                            </td>
+                            <td>
+                              {% if obj.anexos %}
+                                <i class="material-symbols-rounded text-success">check_circle</i>
+                              {% else %}
+                                <i class="material-symbols-rounded text-secondary">cancel</i>
+                              {% endif %}
+                            </td>
+                            <td class="align-middle text-center">
+                              <a href="{% url 'admin:neurodivergentes_pareceravaliativo_change' obj.id %}" class="btn btn-outline-primary btn-sm mb-0" title="Editar">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
                               </a>
-                              <a href="{% url 'admin:neurodivergentes_neurodivergente_delete' obj.pk %}" class="btn btn-outline-danger btn-sm mb-0" data-toggle="tooltip" data-original-title="Delete user">
+                              <a href="{% url 'neurodivergentes:imprimir_parecer' obj.id %}" class="btn btn-outline-primary btn-sm mb-0 ms-2" target="_blank" title="Imprimir">
+                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
+                              </a>
+                              <a href="{% url 'admin:neurodivergentes_pareceravaliativo_delete' obj.id %}" class="btn btn-outline-danger btn-sm mb-0 ms-2" title="Remover">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
                               </a>
-                            </div>
-                          </td>
+                            </td>
+                          {% else %}
+                            <!-- Linha para lista geral de pareceres -->
+                            <td>
+                              <div class="d-flex px-2 py-1">
+                                <div>
+                                  {% if obj.neurodivergente.foto_perfil %}
+                                    <img src="{{ obj.neurodivergente.foto_perfil.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="{{ obj.neurodivergente.primeiro_nome }}">
+                                  {% elif obj.neurodivergente.genero == 'M' %}
+                                    <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #a8d8f0;">
+                                      <i class="material-symbols-rounded text-white">boy</i>
+                                    </div>
+                                  {% else %}
+                                    <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #f8d0d3;">
+                                      <i class="material-symbols-rounded text-white">girl</i>
+                                    </div>
+                                  {% endif %}
+                                </div>
+                                <div class="d-flex flex-column justify-content-center">
+                                  <h6 class="mb-0 text-sm">
+                                    <a href="{% url 'admin:neurodivergentes_pareceravaliativo_changelist' %}?neurodivergente__id__exact={{ obj.neurodivergente.id }}" style="color: #447e9b; text-decoration: none;">
+                                      {{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}
+                                    </a>
+                                  </h6>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <p class="text-xs font-weight-bold mb-0">{{ obj.neurodivergente.idade }} anos</p>
+                              <p class="text-xs text-secondary mb-0">{% if obj.neurodivergente.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</p>
+                            </td>
+                            <td>
+                              <p class="text-xs font-weight-bold mb-0">{{ obj.neurodivergente.pareceres.count }}</p>
+                            </td>
+                            <td>
+                              {% with ultimo_parecer=obj.neurodivergente.pareceres.all|dictsort:"data_avaliacao"|last %}
+                                <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">
+                                  {% if ultimo_parecer.data_avaliacao %}
+                                    {{ ultimo_parecer.data_avaliacao|date:"d/m/Y" }}
+                                  {% else %}
+                                    -
+                                  {% endif %}
+                                </span>
+                              {% endwith %}
+                            </td>
+                            <td class="align-middle text-center">
+                              <a href="{% url 'admin:neurodivergentes_pareceravaliativo_changelist' %}?neurodivergente__id__exact={{ obj.neurodivergente.id }}" class="btn btn-outline-primary btn-sm mb-0">
+                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">visibility</i> Ver Pareceres
+                              </a>
+                            </td>
+                          {% endif %}
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -154,7 +232,6 @@
                   </div>
                 {% endif %}
               </div>
-
             {% endblock %}
             
             {% block pagination %}
@@ -178,4 +255,121 @@
     </div>
   </div>
 </div>
+
+{% if request.GET.neurodivergente__id__exact %}
+<!-- Modal para Relatório Geral -->
+<div class="modal fade" id="relatorioGeralModal" tabindex="-1" role="dialog" aria-labelledby="relatorioGeralModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header p-0 position-relative mt-n4 mx-3 z-index-2">
+        <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae); width: 100%;">
+          <h6 class="text-white text-capitalize ps-3 mb-0">Gerar Relatório Geral</h6>
+        </div>
+      </div>
+      <form method="get" action="{% url 'neurodivergentes:gerar_relatorio_parecer_geral_pdf' request.GET.neurodivergente__id__exact %}" id="formRelatorioGeral" target="_blank">
+        <div class="modal-body p-4">
+          <div class="input-group input-group-static mb-4">
+            <label for="data_inicial_geral">Data Inicial</label>
+            <input type="date" name="data_inicial" id="data_inicial_geral" class="form-control" required>
+          </div>
+          <div class="input-group input-group-static mb-4">
+            <label for="data_final_geral">Data Final</label>
+            <input type="date" name="data_final" id="data_final_geral" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between px-4">
+          <button type="button" class="btn btn-outline-secondary" onclick="closeRelatorioModal()">
+            <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">close</i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">description</i> Gerar Relatório
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  function openRelatorioModal() {
+    var modal = document.getElementById('relatorioGeralModal');
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+    
+    // Criar backdrop
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    document.body.appendChild(backdrop);
+  }
+
+  function closeRelatorioModal() {
+    var modal = document.getElementById('relatorioGeralModal');
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    
+    // Remover backdrop
+    var backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.parentNode.removeChild(backdrop);
+    }
+  }
+
+  // Configura a validação do formulário
+  document.addEventListener('DOMContentLoaded', function() {
+    var formRelatorioGeral = document.getElementById('formRelatorioGeral');
+    if (formRelatorioGeral) {
+      formRelatorioGeral.onsubmit = function(e) {
+        var dataInicial = document.getElementById('data_inicial_geral').value;
+        var dataFinal = document.getElementById('data_final_geral').value;
+        
+        if (!dataInicial || !dataFinal) {
+          e.preventDefault();
+          alert('Por favor, preencha as datas inicial e final.');
+          return false;
+        }
+        
+        if (dataInicial > dataFinal) {
+          e.preventDefault();
+          alert('A data inicial não pode ser maior que a data final.');
+          return false;
+        }
+
+        // Fecha o modal após submeter
+        setTimeout(function() {
+          closeRelatorioModal();
+        }, 100);
+      };
+
+      // Configura os campos de data
+      var dataInicial = document.getElementById('data_inicial_geral');
+      var dataFinal = document.getElementById('data_final_geral');
+      
+      if (dataInicial && dataFinal) {
+        // Define a data máxima como hoje
+        var hoje = new Date().toISOString().split('T')[0];
+        dataInicial.max = hoje;
+        dataFinal.max = hoje;
+
+        // Atualiza a data mínima do campo data_final quando data_inicial mudar
+        dataInicial.addEventListener('change', function() {
+          dataFinal.min = this.value;
+          if (dataFinal.value && dataFinal.value < this.value) {
+            dataFinal.value = this.value;
+          }
+        });
+        
+        // Atualiza a data máxima do campo data_inicial quando data_final mudar
+        dataFinal.addEventListener('change', function() {
+          dataInicial.max = this.value;
+          if (dataInicial.value && dataInicial.value > this.value) {
+            dataInicial.value = this.value;
+          }
+        });
+      }
+    }
+  });
+</script>
+{% endif %}
 {% endblock %}

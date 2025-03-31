@@ -194,8 +194,11 @@
                               <a href="{% url 'admin:neurodivergentes_pdi_change' obj.id %}" class="btn btn-outline-primary btn-sm mb-0 me-2">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
                               </a>
-                              <a href="{% url 'neurodivergentes:imprimir_pdi' obj.id %}" class="btn btn-outline-primary btn-sm mb-0" target="_blank">
+                              <a href="{% url 'neurodivergentes:imprimir_pdi' obj.id %}" class="btn btn-outline-primary btn-sm mb-0 me-2" target="_blank">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
+                              </a>
+                              <a href="{% url 'admin:neurodivergentes_pdi_delete' obj.id %}" class="btn btn-outline-danger btn-sm mb-0">
+                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
                               </a>
                             </td>
                           {% else %}
