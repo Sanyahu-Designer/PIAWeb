@@ -6,66 +6,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" href="{% static 'css/floating-notification.css' %}" />
 <link rel="stylesheet" href="{% static 'css/hide-websocket-warning.css' %}" />
-<style>
-    .navbar-nav.notification-nav {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 1rem;
-        margin-right: 1rem;
-    }
-    .notification-nav .nav-item {
-        list-style: none;
-    }
-    .notification-nav .nav-link {
-        color: var(--link-fg);
-        padding: 0;
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-    .notification-nav .nav-link:hover {
-        color: var(--link-hover-color);
-    }
-    .badge-message-count {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        background-color: #dc3545;
-        color: white;
-        border-radius: 50%;
-        font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
-        min-width: 18px;
-        text-align: center;
-    }
-    
-    /* Estilo para o link de mensagens no menu lateral */
-    .messages-link {
-        display: flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        color: var(--link-fg);
-        text-decoration: none;
-        margin-bottom: 0.5rem;
-        border-radius: 0.25rem;
-    }
-    .messages-link:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: white;
-    }
-    .messages-link i {
-        margin-right: 0.5rem;
-    }
-    
-    /* Esconde o aviso de WebSocket desconectado */
-    .websocket-warning,
-    [class*="websocket-disconnected"],
-    [id*="websocket-disconnected"],
-    div:contains("WebSocket desconectado") {
-        display: none !important;
-    }
-</style>
+<script src="{% static 'admin/js/apply_styles.js' %}"></script>
 {% endblock %}
 
 <!-- Script para formatar todas as datas no formato dd/mm/aaaa -->
@@ -232,5 +173,5 @@
 {% endblock %}
 
 {% block footer %}
-Todos os direitos reservados © {% now "Y" %} PIA - Plano Individual de Aprendizagem - Desenvolvido por <a href="https://sanyahudesigner.com.br" target="_blank" class="text-muted">46.815.218/0001-03</a>
+Todos os direitos reservados  PIA - Plano Individual de Aprendizagem - Desenvolvido por <a href="https://sanyahudesigner.com.br" target="_blank" class="text-muted">46.815.218/0001-03</a>
 {% endblock %}

@@ -17,8 +17,6 @@ CSS_LINE = '<link rel="stylesheet" type="text/css" href="{% static \'admin/css/f
 IGNORE_PATHS = [
     os.path.join(TEMPLATES_DIR, 'change_form_material.html'),  # Template base já modificado
     os.path.join(TEMPLATES_DIR, 'change_form.html'),          # Template base já modificado
-    os.path.join(TEMPLATES_DIR, 'neurodivergentes', 'neurodivergente', 'change_form.html'),  # Já está correto
-    os.path.join(TEMPLATES_DIR, 'adaptacao_curricular', 'adaptacaocurricularindividualizada', 'change_form.html')  # Não funcionou bem
 ]
 
 # Lista de módulos específicos para adicionar o CSS
@@ -36,7 +34,8 @@ TARGET_MODULES = [
     'auth/user',                         # Autenticação e Autorização (Usuários)
     'usuarios/usuario',                  # Usuários (alternativo)
     'escola/escola',                     # Escolas
-    'profissionais_app/profissional'      # Profissionais
+    'profissionais_app/profissional',     # Profissionais
+    'neurodivergentes/anamnese',         # Anamnese
 ]
 
 # Função para encontrar todos os templates de cadastro

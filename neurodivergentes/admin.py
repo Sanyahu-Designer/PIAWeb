@@ -122,7 +122,7 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
     
     class Media:
         css = {
-            'all': ('admin/css/neurodivergentes_forms.css',)
+            'all': ('neurodivergentes/css/neurodivergentes_forms.css',)
         }
         js = (
             'admin/js/jquery.mask.min.js',
@@ -132,8 +132,8 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
 
 @admin.register(CategoriaNeurodivergente)
 class CategoriaNeurodivergentesAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'ordem']
-    ordering = ['ordem', 'nome']
+    list_display = ['nome']
+    ordering = ['nome']
     search_fields = ['nome']
     change_list_template = 'admin/cid10/categoriacid10/change_list_material_dashboard.html'
 
@@ -142,7 +142,7 @@ class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
     list_display = ['nome', 'categoria', 'cid_10', 'ativo']
     list_filter = ['categoria', 'ativo']
     search_fields = ['nome', 'cid_10']
-    ordering = ['categoria', 'nome']
+    ordering = ['nome']
     change_list_template = 'admin/cid10/condicaocid10/change_list_material_dashboard.html'
 
 # Formulário personalizado para DiagnosticoNeurodivergente
@@ -161,17 +161,19 @@ class DiagnosticoNeurodivergenteForms(forms.ModelForm):
             instance.save()
         return instance
 
-class DiagnosticoInline(admin.TabularInline):
+class DiagnosticoInline(admin.StackedInline):
     model = DiagnosticoNeurodivergente
     form = DiagnosticoNeurodivergenteForms
     extra = 1
     min_num = 1
+    verbose_name = 'Diagnóstico'
+    verbose_name_plural = 'Diagnósticos'
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
     }
     
-    # Oculta o campo categoria e mostra apenas os campos relevantes
-    fields = ('condicao', 'data_identificacao', 'observacoes')
+    fields = ('data_identificacao', 'condicao', 'observacoes')
+    classes = ('diagnosticos-container',)
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'condicao':
@@ -246,7 +248,7 @@ class NeurodivergenciaAdmin(admin.ModelAdmin):
     
     class Media:
         css = {
-            'all': ('admin/css/neurodivergentes_forms.css',)
+            'all': ('neurodivergentes/css/neurodivergentes_forms.css',)
         }
         js = ('admin/js/neurodivergentes_admin.js',)
 
@@ -471,8 +473,8 @@ class PDIAdmin(admin.ModelAdmin):
         """
         css = {
             'all': (
-                'admin/css/pdi_forms.css',
-                'admin/css/pdi_popup.css',
+                'neurodivergentes/css/pdi_forms.css',
+                'neurodivergentes/css/pdi_popup.css',
                 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
             )
         }
@@ -481,16 +483,6 @@ class PDIAdmin(admin.ModelAdmin):
             'admin/js/pdi_admin.js',
             'admin/js/pdi_popup.js',
         )
-
-    fieldsets = (
-        (None, {
-            'fields': ('neurodivergente', 'data_criacao', 'status', 'observacoes', 'pedagogo_responsavel')
-        }),
-    )
-
-    class Meta:
-        verbose_name = 'Adaptação Curricular Individualizada'
-        verbose_name_plural = 'Adaptações Curriculares Individualizadas'
 
 @admin.register(Monitoramento)
 class MonitoramentoAdmin(admin.ModelAdmin):
@@ -672,8 +664,8 @@ class MonitoramentoAdmin(admin.ModelAdmin):
     class Media:
         css = {
             'all': (
-                'admin/css/pei_forms.css',
-                'admin/css/pei_popup.css',
+                'neurodivergentes/css/pei_forms.css',
+                'neurodivergentes/css/pei_popup.css',
                 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
             )
         }
@@ -788,7 +780,8 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
     
     def get_list_display(self, request):
         """
-        Altera as colunas exibidas dependendo se estamos na lista inicial ou na lista de evoluções de um aluno.
+        Altera as colunas exibidas dependendo se estamos na lista inicial
+        ou na lista de evoluções de um aluno.
         """
         if request.GET.get('neurodivergente__id__exact'):
             # Na página de evoluções do aluno
@@ -843,7 +836,7 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
     
     class Media:
         css = {
-            'all': ('admin/css/neurodivergentes_forms.css',)
+            'all': ('neurodivergentes/css/neurodivergentes_forms.css',)
         }
         js = (
             'admin/js/vendor/jquery/jquery.min.js',
@@ -1095,12 +1088,18 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
 class AnamneseAdmin(admin.ModelAdmin):
     
     form = AnamneseForm
-    list_display = ['neurodivergente', 'tipo_parto', 'prematuridade', 'acoes']
+    list_display = ['neurodivergente', 'tipo_parto', 'prematuridade', 'tem_anexos', 'acoes']
     list_filter = ['tipo_parto', 'prematuridade']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
     }
+    
+    def tem_anexos(self, obj):
+        if obj.anexos:
+            return format_html('<i class="material-symbols-rounded text-danger opacity-10" style="font-size: 16px;">attach_file</i>')
+        return ""
+    tem_anexos.short_description = 'Anexos'
     
     def acoes(self, obj):
         imprimir_url = reverse('neurodivergentes:imprimir_anamnese', args=[obj.id])

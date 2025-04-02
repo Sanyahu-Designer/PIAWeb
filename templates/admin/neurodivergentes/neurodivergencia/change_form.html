@@ -1,0 +1,280 @@
+{% extends "admin/change_form_standard.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}{{ block.super }}
+<script src="{% static 'admin/js/apply_styles.js' %}"></script>
+<!-- Removido: script de inicialização do Select2 que estava duplicado -->
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/form_fields_style.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+  /* Estilos para o formulário */
+  .card-body {
+    padding: 1.5rem 2rem;
+  }
+  .fieldset-container {
+    background-color: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+  }
+  .fieldset-container:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  .fieldset-container h5 {
+    font-weight: 600;
+    color: #344767;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .form-row {
+    margin-bottom: 1.25rem;
+  }
+  .form-row label {
+    font-weight: 500;
+    color: #344767;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  /* Estilos para os botões */
+  .submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #dee2e6;
+  }
+  
+  /* Estilos para o Select2 seguindo o padrão visual do sistema */
+  .select2-container--default .select2-selection--single,
+  .select2-container--default .select2-selection--multiple {
+    border: 1px solid #d2d6da;
+    border-radius: 0.5rem;
+    height: auto;
+    min-height: 38px;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #495057;
+    line-height: 1.5;
+    padding: 0.375rem 0.5rem; /* Ajuste para centralizar verticalmente */
+  }
+  
+  /* Remover a seta para baixo */
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    display: none !important;
+  }
+  
+  /* Remover o X de limpar */
+  .select2-container--default .select2-selection--single .select2-selection__clear {
+    display: none !important;
+  }
+  
+  /* Cor mais neutra para o item selecionado (cinza suave) */
+  .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #e9ecef; /* Cinza suave (10%) */
+    color: #344767; /* Cor do texto escura para contraste */
+  }
+  
+  /* Cor de fundo para o item selecionado no dropdown */
+  .select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #f8f9fa; /* Cinza mais claro (5%) */
+    color: #344767;
+  }
+  
+  /* Cor de fundo ao passar o mouse */
+  .select2-container--default .select2-results__option:hover {
+    background-color: #e9ecef;
+    color: #344767;
+  }
+  
+  .select2-dropdown {
+    border: 1px solid #d2d6da;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .select2-search__field {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem !important;
+  }
+  
+  .select2-search__field:focus {
+    border-color: #e91e63 !important; /* Mantendo a cor rosa para o contorno/foco */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25) !important; /* Mantendo a sombra rosa */
+  }
+  
+  /* Garantir que o card de Diagnósticos tenha no máximo duas colunas */
+  #diagnosticos.module .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(calc(50% - 1rem), 1fr));
+    gap: 1rem;
+  }
+  
+  @media (max-width: 768px) {
+    #diagnosticos.module .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Ocultar botões de editar, incluir e visualizar */
+  .related-widget-wrapper-link {
+    display: none !important;
+  }
+  
+  /* Alterações para tons de cinza neutros */
+  .select2-container--default .select2-results__option {
+    background-color: #f8f9fa;
+    color: #495057;
+  }
+  
+  .select2-container--default .select2-results__option:hover {
+    background-color: #e9ecef;
+    color: #495057;
+  }
+  
+  .select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #e9ecef;
+    color: #495057;
+  }
+</style>
+{% endblock %}
+
+{% block navbar_buttons %}{{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">{{ opts.app_config.verbose_name }}</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ opts.verbose_name_plural|capfirst }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block field_sets %}
+  {% for fieldset in adminform %}
+    <div class="fieldset-container mb-4">
+      <h5 class="text-dark mb-3">
+        {% if fieldset.name %}{{ fieldset.name }}{% else %}Informações Gerais{% endif %}
+      </h5>
+      {% if fieldset.description %}
+        <div class="description mb-3 text-secondary">{{ fieldset.description|safe }}</div>
+      {% endif %}
+      
+      <div class="row">
+        {% for line in fieldset %}
+          {% for field in line %}
+            <div class="col-md-6 mb-3">
+              <div class="form-group{% if field.field.required %} required{% endif %}">
+                <div class="form-field {% if field.field.errors %}errors{% endif %}">
+                  {% if field.is_checkbox %}
+                    <div class="form-check">
+                      {{ field.field }}
+                      <label for="{{ field.field.id_for_label }}" class="form-check-label">
+                        {{ field.field.label }}
+                      </label>
+                    </div>
+                  {% else %}
+                    <label for="{{ field.field.id_for_label }}" class="form-label">
+                      {{ field.field.label }}
+                      {% if field.field.field.required %}
+                        <span class="required-indicator text-danger">*</span>
+                      {% endif %}
+                    </label>
+                    {{ field.field }}
+                  {% endif %}
+                  
+                  {% if field.field.help_text %}
+                    <div class="help-text text-muted mt-1 small">{{ field.field.help_text|safe }}</div>
+                  {% endif %}
+                  
+                  {% if field.field.errors %}
+                    <div class="error-message text-danger mt-1 small">{{ field.field.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  <div class="submit-row d-flex justify-content-between mt-4">
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary mb-0" name="_save">
+        <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">save</i> {% translate 'Salvar' %}
+      </button>
+      
+      {% if show_save_and_continue %}
+        <button type="submit" class="btn btn-outline-dark mb-0" name="_continue">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i>
+          {% translate 'Salvar e continuar editando' %}
+        </button>
+      {% endif %}
+      
+      {% if show_save_and_add_another %}
+        <button type="submit" class="btn btn-outline-dark mb-0" name="_addanother">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">add</i> {% translate 'Salvar e adicionar outro' %}
+        </button>
+      {% endif %}
+    </div>
+    
+    <div>
+      {% if show_delete_link and original %}
+        <a href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}" class="btn btn-outline-danger mb-0">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> {% translate 'Excluir' %}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+  (function($) {
+    $(document).ready(function() {
+      // Melhora a aparência dos campos de formulário
+      $('.form-control, select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"]').addClass('form-control');
+      
+      // Garante que todos os campos no card Diagnósticos estejam em duas colunas
+      $('.fieldset-container').each(function() {
+        const title = $(this).find('h5').text().trim();
+        if (title.includes('Diagnósticos')) {
+          $(this).find('.form-field').closest('div').removeClass('col-12').addClass('col-md-6');
+        }
+      });
+      
+      // Adiciona o campo de pesquisa no menu suspenso se não existir
+      if ($('#navbar .ms-md-auto.pe-md-3').length === 0) {
+        const searchField = `
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text text-body"><i class="material-symbols-rounded opacity-10">search</i></span>
+              <input type="text" class="form-control" placeholder="Pesquisar...">
+            </div>
+          </div>
+        `;
+        $('#navbar').prepend(searchField);
+      }
+    });
+  })(django.jQuery);
+</script>
+{% endblock %}

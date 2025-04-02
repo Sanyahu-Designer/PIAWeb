@@ -49,12 +49,49 @@
     }
     
     .border-radius-lg {
-        border-radius: 0.5rem !important;
+        border-radius: 0.75rem;
     }
     
-    .card-footer {
-        border-top: 1px solid #dee2e6;
-        background-color: #f8f9fa;
+    .pt-4 {
+        padding-top: 1.5rem !important;
+    }
+    
+    .pb-3 {
+        padding-bottom: 1rem !important;
+    }
+    
+    /* Estilos para o corpo do card */
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Estilos para os campos de formulário */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Estilos específicos para os labels dos campos de habilidade e descritivo */
+    .form-group label[for$="-habilidade"],
+    .form-group label[for$="-descritivo_adaptacao"] {
+        display: block !important;
+        width: 100% !important;
+        float: none !important;
+        text-align: left !important;
+        margin-bottom: 0.5rem !important;
+        font-weight: 500 !important;
+        color: #344767 !important;
+        position: static !important;
+        padding: 0 !important;
+    }
+    
+    /* Forçar os campos para ficarem abaixo dos labels */
+    .form-group select[id$="-habilidade"],
+    .form-group textarea[id$="-descritivo_adaptacao"],
+    .form-group .select2-container {
+        display: block !important;
+        width: 100% !important;
+        margin-top: 0.5rem !important;
+        clear: both !important;
     }
     
     /* Melhorias para a exibição dos detalhes da habilidade */
@@ -199,9 +236,63 @@
     .form-group label {
         display: block;
         margin-bottom: 0.5rem;
-        font-size: 0.875rem;
         font-weight: 500;
         color: #344767;
+    }
+    
+    /* Correção específica para os campos de habilidade e descritivo */
+    .form-group label[for$="-habilidade"],
+    .form-group label[for$="-descritivo"] {
+        display: block !important;
+        position: static !important;
+        float: none !important;
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
+        text-align: left !important;
+        padding-top: 0 !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        color: #344767 !important;
+        opacity: 1 !important;
+        transform: none !important;
+        z-index: 10 !important;
+    }
+    
+    /* Forçar o campo para ficar abaixo do label */
+    .form-group input[id$="-habilidade"],
+    .form-group textarea[id$="-descritivo"],
+    .form-group select[id$="-habilidade"],
+    .form-group .select2-container {
+        display: block !important;
+        width: 100% !important;
+        clear: both !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Garantir que o container do Select2 não afete o posicionamento do label */
+    .form-group .select2-container {
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Corrigir o posicionamento do Select2 */
+    .form-group .select2-container .select2-selection {
+        margin-top: 0 !important;
+    }
+    
+    /* Estilos específicos para os wrappers de label e campo */
+    .field-label-wrapper {
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
+        position: relative !important;
+        z-index: 5 !important;
+    }
+    
+    .field-input-wrapper {
+        display: block !important;
+        width: 100% !important;
+        position: relative !important;
+        z-index: 1 !important;
     }
     
     .form-group select,
@@ -313,6 +404,62 @@
       }, 100);
     }
     
+    // Função para corrigir a posição dos labels
+    function fixLabelPositions() {
+      setTimeout(function() {
+        // Seleciona os labels específicos para habilidade e descritivo
+        $('label[for$="-habilidade"], label[for$="-descritivo_adaptacao"]').each(function() {
+          var $label = $(this);
+          var $parent = $label.parent();
+          
+          // Forçar o label para o topo
+          $label.css({
+            'display': 'block',
+            'position': 'static',
+            'float': 'none',
+            'width': '100%',
+            'margin-bottom': '0.5rem',
+            'text-align': 'left',
+            'padding-top': '0',
+            'z-index': '10'
+          });
+          
+          // Forçar o campo para baixo do label
+          var $field = $parent.find('input, textarea, select, .select2-container');
+          $field.css({
+            'display': 'block',
+            'width': '100%',
+            'clear': 'both',
+            'margin-top': '0.5rem',
+            'z-index': '1'
+          });
+          
+          // Garantir que o Select2 não sobreponha o label
+          if ($field.hasClass('select2-container')) {
+            $field.find('.select2-selection').css({
+              'margin-top': '0'
+            });
+          }
+        });
+        
+        // Garantir que os wrappers também estejam corretamente estilizados
+        $('.field-label-wrapper').css({
+          'display': 'block',
+          'width': '100%',
+          'margin-bottom': '0.5rem',
+          'position': 'relative',
+          'z-index': '5'
+        });
+        
+        $('.field-input-wrapper').css({
+          'display': 'block',
+          'width': '100%',
+          'position': 'relative',
+          'z-index': '1'
+        });
+      }, 200);
+    }
+    
     // Função principal de inicialização
     function initHabilidades() {
       // Inicializa o Select2 para todos os selects
@@ -333,6 +480,9 @@
       
       // Configura a exibição dos detalhes das habilidades
       setupHabilidadesDetails();
+      
+      // Corrige a posição dos labels
+      fixLabelPositions();
     }
     
     // Função para configurar os detalhes das habilidades
@@ -530,8 +680,22 @@
       // Corrige o problema de cabeçalho cortado na inicialização
       fixHeaderDisplay();
       
-      // Inicializa todas as funções principais
+      // Inicializa o componente de habilidades
       initHabilidades();
+      
+      // Garante que os labels sejam corrigidos mesmo após carregamento completo da página
+      setTimeout(fixLabelPositions, 500);
+      
+      // Observa mudanças na DOM para reajustar os labels quando necessário
+      var observer = new MutationObserver(function(mutations) {
+        fixLabelPositions();
+      });
+      
+      // Configura o observador para monitorar mudanças na estrutura do DOM
+      observer.observe(document.querySelector('.habilidades-container'), {
+        childList: true,
+        subtree: true
+      });
     });
   })(django.jQuery);
 </script>
@@ -589,8 +753,25 @@
                           {% for field in line %}
                             <div class="col-12 {% if field.field.name != 'habilidade' %}col-md-6{% endif %}">
                               <div class="form-group{% if field.field.required %} required{% endif %}">
-                                {{ field.label_tag }}
-                                {{ field.field }}
+                                {% if field.field.name == 'habilidade' or field.field.name == 'descritivo_adaptacao' %}
+                                  <table style="width: 100%; border-collapse: collapse; border: none; margin: 0 !important; padding: 0 !important;">
+                                    <tr>
+                                      <td style="padding-bottom: 8px; display: block !important; width: 100% !important;">
+                                        <label for="{{ field.field.id_for_label }}" class="required" style="display: block !important; width: 100% !important; float: none !important; text-align: left !important; margin-bottom: 5px !important;">
+                                          {{ field.field.label }}
+                                        </label>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td style="display: block !important; width: 100% !important;">
+                                        {{ field.field }}
+                                      </td>
+                                    </tr>
+                                  </table>
+                                {% else %}
+                                  {{ field.label_tag }}
+                                  {{ field.field }}
+                                {% endif %}
                                 
                                 {% if field.field.help_text %}
                                   <div class="help-text">{{ field.field.help_text|safe }}</div>
@@ -663,11 +844,10 @@
 {% block admin_change_form_document_ready %}
 {{ block.super }}
 <script type="text/javascript">
-    django.jQuery(function($) {
+    $(document).ready(function() {
+        // Inicializar o Select2 para os campos de habilidades
         if (typeof initializeAllFields === 'function') {
-            setTimeout(function() {
-                initializeAllFields();
-            }, 100);
+            initializeAllFields();
         } else {
             console.error('initializeAllFields não está definida');
         }

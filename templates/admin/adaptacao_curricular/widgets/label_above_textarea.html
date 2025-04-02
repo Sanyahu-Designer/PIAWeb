@@ -1,0 +1,13 @@
+{% load i18n %}
+<div class="label-above-field-container" style="display: block; width: 100%;">
+  <div class="label-container" style="display: block; width: 100%; margin-bottom: 8px;">
+    <label for="{{ widget.attrs.id }}" style="display: block; width: 100%; text-align: left; font-weight: bold;">
+      {% if widget.label %}{{ widget.label }}{% else %}{{ widget.name|title }}{% endif %}
+      {% if widget.required %}<span class="required">*</span>{% endif %}
+    </label>
+  </div>
+  <div class="field-container" style="display: block; width: 100%;">
+    <textarea name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+{% if widget.value %}{{ widget.value }}{% endif %}</textarea>
+  </div>
+</div>

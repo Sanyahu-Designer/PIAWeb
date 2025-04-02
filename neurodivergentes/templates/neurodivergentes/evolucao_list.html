@@ -102,7 +102,12 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         {% if evolucao.anexos %}
-                                            <i class="material-symbols-rounded text-danger opacity-10" style="font-size: 16px;">attach_file</i>
+                                            <a href="{{ evolucao.anexos.url }}" 
+                                               class="btn btn-outline-danger btn-sm mb-0"
+                                               target="_blank"
+                                               title="Visualizar anexo">
+                                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">attach_file</i>
+                                            </a>
                                         {% endif %}
                                     </td>
                                     <td class="align-middle text-center">

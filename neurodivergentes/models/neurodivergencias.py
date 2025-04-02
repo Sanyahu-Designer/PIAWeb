@@ -71,7 +71,7 @@ class Neurodivergencia(models.Model):
         verbose_name_plural = 'Neurodivergentes'
 
     def __str__(self):
-        return f"Neurodivergências de {self.neurodivergente}"
+        return f"Neurodivergências - {self.neurodivergente}"
 
 class DiagnosticoNeurodivergente(models.Model):
     neurodivergencia = models.ForeignKey(
@@ -106,7 +106,8 @@ class DiagnosticoNeurodivergente(models.Model):
         unique_together = ['neurodivergencia', 'condicao']
 
     def __str__(self):
-        return f"{self.condicao} - {self.data_identificacao}"
+        data_formatada = self.data_identificacao.strftime('%d/%m/%Y') if self.data_identificacao else ''
+        return f"{self.condicao} - {data_formatada}"
 
     def clean(self):
         # Garante que a categoria seja definida com base na condição

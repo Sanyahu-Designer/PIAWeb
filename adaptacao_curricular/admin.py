@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.db import models
 from django.core.exceptions import PermissionDenied
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from profissionais_app.models import Profissional
 from .models import (
     BNCCDisciplina,
@@ -13,43 +14,88 @@ from .models import (
     AdaptacaoHabilidade
 )
 
-@admin.register(BNCCDisciplina)
-class BNCCDisciplinaAdmin(admin.ModelAdmin):
-    list_display = ('nome',)
-    search_fields = ('nome',)
-    change_list_template = 'admin/bncc/disciplinabncc/change_list_material_dashboard.html'
-    
+from django.forms.widgets import Select, Textarea
+from django.utils.safestring import mark_safe
 
-@admin.register(BNCCHabilidade)
-class BNCCHabilidadeAdmin(admin.ModelAdmin):
-    fields = ('disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'codigo', 'descricao')
-    change_list_template = 'admin/bncc/codigobncc/change_list_material_dashboard.html'
+class LabelAboveWidget(Select):
+    """Widget personalizado que renderiza o label acima do campo."""
     
-    list_filter = ('disciplina', 'ano', 'trimestre')
-    search_fields = ('codigo', 'descricao', 'objeto_conhecimento')
-    autocomplete_fields = ['disciplina']
-    list_select_related = ['disciplina']
+    def render(self, name, value, attrs=None, renderer=None):
+        # Renderiza o select normalmente
+        select_html = super().render(name, value, attrs, renderer)
+        
+        # Obtém o label do campo
+        label = self.attrs.get('label', name.replace('_', ' ').title())
+        
+        # Cria o HTML com o label acima do campo
+        html = f'''
+        <div style="display: block; width: 100%;">
+            <div style="display: block; width: 100%; margin-bottom: 8px;">
+                <label for="{attrs.get('id', '')}" style="display: block; width: 100%; text-align: left; font-weight: bold;">
+                    {label}
+                </label>
+            </div>
+            <div style="display: block; width: 100%;">
+                {select_html}
+            </div>
+        </div>
+        '''
+        
+        return mark_safe(html)
+
+class LabelAboveTextarea(Textarea):
+    """Widget personalizado que renderiza o label acima do campo."""
+    
+    def render(self, name, value, attrs=None, renderer=None):
+        # Renderiza o textarea normalmente
+        textarea_html = super().render(name, value, attrs, renderer)
+        
+        # Obtém o label do campo
+        label = self.attrs.get('label', name.replace('_', ' ').title())
+        
+        # Cria o HTML com o label acima do campo
+        html = f'''
+        <div style="display: block; width: 100%;">
+            <div style="display: block; width: 100%; margin-bottom: 8px;">
+                <label for="{attrs.get('id', '')}" style="display: block; width: 100%; text-align: left; font-weight: bold;">
+                    {label}
+                </label>
+            </div>
+            <div style="display: block; width: 100%;">
+                {textarea_html}
+            </div>
+        </div>
+        '''
+        
+        return mark_safe(html)
 
 class AdaptacaoHabilidadeForm(forms.ModelForm):
     class Meta:
         model = AdaptacaoHabilidade
         fields = ('habilidade', 'descritivo_adaptacao')
+        widgets = {
+            'habilidade': LabelAboveWidget(attrs={
+                'class': 'select2-habilidade',
+                'data-placeholder': 'Digite o código ou palavras-chave da habilidade',
+                'style': 'width: 100%; display: block;',
+                'label': 'Buscar Habilidade',
+            }),
+            'descritivo_adaptacao': LabelAboveTextarea(attrs={
+                'rows': 3,
+                'placeholder': 'Descreva a adaptação curricular para esta habilidade',
+                'style': 'width: 100%; display: block;',
+                'label': 'Descritivo da Adaptação Curricular',
+            }),
+        }
+        labels = {
+            'habilidade': 'Buscar Habilidade',
+            'descritivo_adaptacao': 'Descritivo da Adaptação Curricular',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Configura o campo de habilidade
         self.fields['habilidade'].label = 'Buscar Habilidade'
-        self.fields['habilidade'].widget.attrs.update({
-            'class': 'select2-habilidade',
-            'data-placeholder': 'Digite o código ou palavras-chave da habilidade',
-            'style': 'width: 100%',
-        })
-        
-        # Configura o campo de descrição
-        self.fields['descritivo_adaptacao'].widget.attrs.update({
-            'rows': 3,
-            'placeholder': 'Descreva a adaptação curricular para esta habilidade'
-        })
         
         # Configura o queryset inicial
         self.fields['habilidade'].queryset = BNCCHabilidade.objects.all().select_related('disciplina')
@@ -70,7 +116,6 @@ class AdaptacaoHabilidadeInline(admin.StackedInline):
     can_delete = True
     show_change_link = True
     classes = ('adaptacao-inline',)
-    template = 'admin/adaptacao_curricular/edit_inline/adaptacao_stacked.html'
     
     def has_change_permission(self, request, obj=None):
         return True
@@ -80,6 +125,26 @@ class AdaptacaoHabilidadeInline(admin.StackedInline):
         formset.form.base_fields['habilidade'].widget.can_add_related = False
         formset.form.base_fields['habilidade'].widget.can_change_related = False
         return formset
+
+@admin.register(BNCCDisciplina)
+class BNCCDisciplinaAdmin(admin.ModelAdmin):
+    list_display = ('nome',)
+    search_fields = ('nome',)
+    ordering = ['nome']
+    change_list_template = 'admin/bncc/disciplinabncc/change_list_material_dashboard.html'
+    
+
+@admin.register(BNCCHabilidade)
+class BNCCHabilidadeAdmin(admin.ModelAdmin):
+    fields = ('disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'codigo', 'descricao')
+    change_list_template = 'admin/bncc/codigobncc/change_list_material_dashboard.html'
+    
+    list_filter = ('disciplina', 'ano', 'trimestre')
+    search_fields = ('codigo', 'descricao', 'objeto_conhecimento')
+    autocomplete_fields = ['disciplina']
+    list_select_related = ['disciplina']
+    list_display = ('codigo', 'disciplina', 'ano', 'trimestre', 'objeto_conhecimento')
+    ordering = ['codigo']
 
 @admin.register(AdaptacaoCurricularIndividualizada)
 class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
@@ -469,55 +534,6 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
             return JsonResponse({'error': str(e)}, status=500)
             print(f'Erro ao buscar habilidades: {str(e)}')
             return JsonResponse({'error': str(e)}, status=500)
-
-        js = (
-            'admin/js/jquery.init.js',
-            'admin/js/core.js',
-            'admin/js/vendor/jquery/jquery.js',
-            'admin/js/vendor/select2/select2.full.js',
-            'admin/js/adaptacao.js',
-        )
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        form.base_fields['profissional_responsavel'].initial = request.user
-        return form
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('buscar-habilidades/',
-                 self.admin_site.admin_view(self.buscar_habilidades),
-                 name='buscar_habilidades'),
-        ]
-        return custom_urls + urls
-
-    def buscar_habilidades(self, request):
-        if not request.user.is_authenticated:
-            return JsonResponse({'error': 'Não autorizado'}, status=403)
-
-        term = request.GET.get('term', '')
-        if not term:
-            return JsonResponse({'results': []}, safe=False)
-
-        habilidades = BNCCHabilidade.objects.filter(
-            models.Q(codigo__icontains=term) |
-            models.Q(descricao__icontains=term) |
-            models.Q(objeto_conhecimento__icontains=term)
-        ).select_related('disciplina')[:20]
-
-        results = [{
-            'id': h.id,
-            'text': f'{h.codigo} - {h.descricao[:100]}...',
-            'codigo': h.codigo,
-            'disciplina': h.disciplina.nome,
-            'ano': dict(h.ANOS_CHOICES)[h.ano],
-            'trimestre': dict(h.TRIMESTRE_CHOICES)[h.trimestre],
-            'objeto_conhecimento': h.objeto_conhecimento,
-            'descricao': h.descricao
-        } for h in habilidades]
-
-        return JsonResponse({'results': results}, safe=False)
 
     def get_anos(self, request, disciplina_id):
         anos = BNCCHabilidade.objects.filter(

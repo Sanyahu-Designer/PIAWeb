@@ -177,7 +177,7 @@ class Anamnese(models.Model):
         verbose_name_plural = 'Anamneses'
 
     def __str__(self):
-        return f"Anamnese de {self.neurodivergente}"
+        return f"Anamnese - {self.neurodivergente}"
 
     def clean(self):
         if self.prematuridade and not self.tempo_prematuridade:

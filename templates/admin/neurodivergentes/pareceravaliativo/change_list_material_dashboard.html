@@ -154,11 +154,16 @@
                                 {{ obj.data_avaliacao|date:"d/m/Y" }}
                               </span>
                             </td>
-                            <td>
-                              {% if obj.anexos %}
-                                <i class="material-symbols-rounded text-success">check_circle</i>
+                            <td class="align-middle text-center">
+                              {% if obj.anexos and obj.anexos.name %}
+                                <a href="{{ obj.anexos.url }}" 
+                                   class="btn btn-outline-danger btn-sm mb-0"
+                                   target="_blank"
+                                   title="Visualizar anexo">
+                                  <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">attach_file</i>
+                                </a>
                               {% else %}
-                                <i class="material-symbols-rounded text-secondary">cancel</i>
+                                <i class="material-symbols-rounded text-secondary opacity-5" style="font-size: 16px;">attachment</i>
                               {% endif %}
                             </td>
                             <td class="align-middle text-center">
