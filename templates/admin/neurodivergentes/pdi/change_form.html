@@ -1,0 +1,251 @@
+{% extends "admin/change_form_standard.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  /* Estilos específicos para o PDI */
+  
+  /* Corrigir alinhamento dos labels */
+  .form-group label {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #344767;
+  }
+  
+  /* Estilos para os campos Select2 */
+  .select2-container--default .select2-selection--single,
+  .select2-container--default .select2-selection--multiple {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    min-height: 38px !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 0.5rem;
+  }
+  
+  /* Remover seta para baixo */
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    display: none !important;
+  }
+  
+  /* Remover botão X para limpar */
+  .select2-container--default .select2-selection--single .select2-selection__clear {
+    display: none !important;
+  }
+  
+  /* Ocultar botões de ação nos campos relacionados */
+  .field-neurodivergente .related-widget-wrapper-link,
+  .field-pedagogo_responsavel .related-widget-wrapper-link,
+  .field-neurodivergente .related-lookup,
+  .field-pedagogo_responsavel .related-lookup {
+    display: none !important;
+  }
+  
+  /* Garantir que o Select2 no campo Aluno/Paciente tenha o estilo correto */
+  .field-neurodivergente .select2-container {
+    width: 100% !important;
+  }
+  
+  .field-neurodivergente .select2-selection,
+  .field-pedagogo_responsavel .select2-selection {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    min-height: 38px !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  /* Ajuste para o fieldset de Informações Gerais */
+  .fieldset-container {
+    background-color: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* Título do fieldset */
+  .fieldset-container h5 {
+    font-weight: 600;
+    color: #344767;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  /* Ajustes para textarea */
+  textarea.form-control {
+    width: 100%;
+    min-height: 100px;
+  }
+  
+  /* Campos que devem ocupar linha inteira */
+  .field-observacoes .col-md-6,
+  .field-descricao .col-md-6,
+  .field-conclusao .col-md-6,
+  .field-diario_de_classe .col-md-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+</style>
+{% endblock %}
+
+{% block navbar_buttons %}{{ block.super }}{% endblock %}
+
+{% block field_sets %}
+  {% for fieldset in adminform %}
+    <div class="fieldset-container mb-4">
+      <h5 class="text-dark mb-3">
+        {% if fieldset.name %}{{ fieldset.name }}{% else %}Informações Gerais{% endif %}
+      </h5>
+      {% if fieldset.description %}
+        <div class="description">{{ fieldset.description|safe }}</div>
+      {% endif %}
+      
+      <div class="row">
+        {% for line in fieldset %}
+          {% for field in line %}
+            <div class="{% if field.field.name == 'id' %}d-none{% else %}col-md-6 mb-3{% endif %} {% if field.field.name in 'observacoes,descricao,conclusao,diario_de_classe' %}field-{{ field.field.name }}{% endif %} {% if field.field.name == 'neurodivergente' %}field-neurodivergente{% endif %} {% if field.field.name == 'pedagogo_responsavel' %}field-pedagogo_responsavel{% endif %}">
+              <div class="form-group{% if field.field.required %} required{% endif %}">
+                {% if field.is_checkbox %}
+                  <div class="form-check">
+                    {{ field.field }}
+                    <label class="form-check-label" for="{{ field.field.id_for_label }}">
+                      {{ field.field.label }}
+                    </label>
+                  </div>
+                {% else %}
+                  <div class="input-group input-group-outline">
+                    {% if field.field.errors %}
+                      <div class="text-danger">
+                        {{ field.field.errors }}
+                      </div>
+                    {% endif %}
+                    
+                    {{ field.field.label_tag }}
+                    {{ field.field }}
+                    
+                    {% if field.field.help_text %}
+                      <div class="help-text">
+                        {{ field.field.help_text|safe }}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}
+
+{% block inline_field_sets %}
+  {% for inline_admin_formset in inline_admin_formsets %}
+    <div class="fieldset-container mb-4">
+      <h5 class="text-dark mb-3">{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h5>
+      {{ inline_admin_formset.formset.management_form }}
+      {{ inline_admin_formset.formset.non_form_errors }}
+      
+      {% for inline_admin_form in inline_admin_formset %}
+        <div class="inline-related {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}" id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+          {% if inline_admin_form.form.non_field_errors %}
+            <div class="errors">{{ inline_admin_form.form.non_field_errors }}</div>
+          {% endif %}
+          
+          <h6 class="mb-3">
+            {% if inline_admin_form.original %}
+              {{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}
+              {% if inline_admin_form.model_admin.show_delete_link and inline_admin_formset.has_delete_permission %}
+                <span class="delete">
+                  <input type="checkbox" name="{{ inline_admin_form.deletion_field.name }}" id="{{ inline_admin_form.deletion_field.id }}" />
+                  <label for="{{ inline_admin_form.deletion_field.id }}" class="text-danger ms-2">{% translate "Remover" %}</label>
+                </span>
+              {% endif %}
+            {% else %}
+              {{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}
+            {% endif %}
+          </h6>
+          
+          {% for fieldset in inline_admin_form %}
+            <div class="row">
+              {% for line in fieldset %}
+                {% for field in line %}
+                  <div class="col-md-6 mb-3">
+                    <div class="form-group{% if field.field.required %} required{% endif %}">
+                      {% if field.is_checkbox %}
+                        <div class="form-check">
+                          {{ field.field }}
+                          <label class="form-check-label" for="{{ field.field.id_for_label }}">
+                            {{ field.field.label }}
+                          </label>
+                        </div>
+                      {% else %}
+                        <div class="input-group input-group-outline">
+                          {% if field.field.errors %}
+                            <div class="text-danger">
+                              {{ field.field.errors }}
+                            </div>
+                          {% endif %}
+                          
+                          {{ field.field.label_tag }}
+                          {{ field.field }}
+                          
+                          {% if field.field.help_text %}
+                            <div class="help-text">
+                              {{ field.field.help_text|safe }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+          
+          {% if inline_admin_form.has_auto_field or inline_admin_form.needs_explicit_pk_field %}
+            {{ inline_admin_form.pk_field.field }}
+          {% endif %}
+          {{ inline_admin_form.fk_field.field }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% endblock %}
+
+{% block extrajs %}{{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Garantir que os botões de ação nos campos relacionados estejam ocultos
+    const hideRelatedButtons = function() {
+      const relatedButtons = document.querySelectorAll('.field-neurodivergente .related-widget-wrapper-link, .field-pedagogo_responsavel .related-widget-wrapper-link, .field-neurodivergente .related-lookup, .field-pedagogo_responsavel .related-lookup');
+      relatedButtons.forEach(button => {
+        button.style.display = 'none';
+      });
+    };
+    
+    // Executar imediatamente e também após um pequeno atraso para garantir que funcione
+    hideRelatedButtons();
+    setTimeout(hideRelatedButtons, 500);
+    
+    // Modificar o título da página
+    if (!document.querySelector('body.add-form')) {
+      const titleElement = document.querySelector('.card-header .shadow-dark h6');
+      if (titleElement) {
+        // Obter o nome do neurodivergente
+        const neurodivergenteName = document.querySelector('#id_neurodivergente').selectedOptions[0].text;
+        if (neurodivergenteName) {
+          titleElement.textContent = 'PDI - ' + neurodivergenteName;
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

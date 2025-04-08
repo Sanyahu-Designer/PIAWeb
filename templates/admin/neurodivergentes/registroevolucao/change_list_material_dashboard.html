@@ -9,12 +9,24 @@
     <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
   {% endif %}
   <link rel="stylesheet" type="text/css" href="{% static "css/search-fixes.css" %}">
+  <link rel="stylesheet" type="text/css" href="{% static "css/button-fixes.css" %}">
   {% if cl.formset or action_form %}
     <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script src="{% static 'admin/js/jquery.init.js' %}"></script>
     <script src="{% static 'admin/js/actions.js' %}"></script>
   {% endif %}
+  <style>
+    .btn-outline-primary {
+      color: #e91e63;
+      border-color: #e91e63;
+    }
+    .btn-outline-primary:hover {
+      color: #fff;
+      background-color: #e91e63;
+      border-color: #e91e63;
+    }
+  </style>
 {% endblock extrastyle %}
 
 {% block extrahead %}

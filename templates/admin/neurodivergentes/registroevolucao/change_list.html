@@ -251,6 +251,9 @@
                   <a href="{% url 'neurodivergentes:imprimir_evolucao' result.id %}" target="_blank" class="btn btn-outline-primary btn-sm mb-0 ms-2">
                     <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
                   </a>
+                  <a href="{% url 'admin:neurodivergentes_registroevolucao_delete' result.id %}" class="btn btn-outline-danger btn-sm mb-0 ms-2">
+                    <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
+                  </a>
                 </div>
               </td>
             </tr>

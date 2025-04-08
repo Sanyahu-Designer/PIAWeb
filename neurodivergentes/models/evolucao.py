@@ -8,7 +8,8 @@ class RegistroEvolucao(models.Model):
     neurodivergente = models.ForeignKey(
         Neurodivergente,
         on_delete=models.CASCADE,
-        related_name='registros_evolucao'
+        related_name='registros_evolucao',
+        verbose_name='Aluno/Paciente'
     )
     data = models.DateField('Data')
     descricao = models.TextField('Descrição da Evolução')
@@ -32,4 +33,4 @@ class RegistroEvolucao(models.Model):
         ordering = ['-data', '-created_at']
 
     def __str__(self):
-        return f"Evolução de {self.neurodivergente} em {self.data}"
+        return f"Evolução - {self.neurodivergente}"

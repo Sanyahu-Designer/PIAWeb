@@ -1,0 +1,766 @@
+{% extends "admin/change_form_standard.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  /* Estilos específicos para o Parecer */
+  
+  /* Corrigir alinhamento dos labels */
+  .form-group label {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #344767;
+  }
+  
+  /* Estilos para os campos Select2 */
+  .select2-container--default .select2-selection--single,
+  .select2-container--default .select2-selection--multiple {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    min-height: 38px !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 0.5rem;
+  }
+  
+  /* Remover seta para baixo */
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    display: none !important;
+  }
+  
+  /* Remover botão X para limpar */
+  .select2-container--default .select2-selection--single .select2-selection__clear {
+    display: none !important;
+  }
+  
+  /* Ocultar botões de ação nos campos relacionados */
+  .field-neurodivergente .related-widget-wrapper-link,
+  .field-pedagogo_responsavel .related-widget-wrapper-link,
+  .field-neurodivergente .related-lookup,
+  .field-pedagogo_responsavel .related-lookup {
+    display: none !important;
+  }
+  
+  /* Garantir que o Select2 no campo Aluno/Paciente tenha o estilo correto */
+  .field-neurodivergente .select2-container,
+  .field-pedagogo_responsavel .select2-container {
+    width: 100% !important;
+  }
+  
+  .field-neurodivergente .select2-selection,
+  .field-pedagogo_responsavel .select2-selection {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    min-height: 38px !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  /* Ajuste para o fieldset de Informações Gerais */
+  .fieldset-container {
+    background-color: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* Título do fieldset */
+  .fieldset-container h5 {
+    font-weight: 600;
+    color: #344767;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  /* Ajustes para textarea */
+  textarea.form-control {
+    width: 100%;
+    min-height: 100px;
+  }
+  
+  /* Campos que devem ocupar linha inteira */
+  .field-observacoes .col-md-6,
+  .field-conclusao .col-md-6,
+  .field-recomendacoes .col-md-6,
+  .field-evolucao .col-md-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Estilo para o botão Salvar */
+  .submit-row .btn-outline-primary,
+  .submit-row button[name="_save"] {
+    color: #fff !important;
+    background-color: #e91e63 !important;
+    border-color: #e91e63 !important;
+    box-shadow: 0 3px 3px 0 rgba(233, 30, 99, 0.15), 0 3px 1px -2px rgba(233, 30, 99, 0.2), 0 1px 5px 0 rgba(233, 30, 99, 0.15) !important;
+  }
+  
+  .submit-row .btn-outline-primary:hover,
+  .submit-row button[name="_save"]:hover {
+    background-color: #d81b60 !important;
+    border-color: #c2185b !important;
+    box-shadow: 0 14px 26px -12px rgba(233, 30, 99, 0.4), 0 4px 23px 0 rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(233, 30, 99, 0.2) !important;
+  }
+  
+  /* Estilo para botões de ação personalizados */
+  .custom-action-button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 5px 0;
+    background-color: #e91e63;
+    color: white !important;
+    text-decoration: none !important;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .custom-action-button:hover {
+    background-color: #d81b60;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .custom-action-button i {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
+  /* Estilos para os gráficos */
+  .grafico-box {
+    height: 400px;
+    padding: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+  }
+  
+  .grafico-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.2em;
+  }
+  
+  .periodo-analise {
+    background: white;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .periodo-analise label {
+    margin-right: 10px;
+  }
+  
+  .periodo-analise input[type="date"] {
+    margin-right: 20px;
+  }
+  
+  .periodo-analise button {
+    background: #e91e63;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .periodo-analise button:hover {
+    background: #d81b60;
+  }
+</style>
+{% endblock %}
+
+{% block field_sets %}
+  {% for fieldset in adminform %}
+    <div class="fieldset-container mb-4">
+      <h5 class="text-dark mb-3">
+        {% if fieldset.name %}{{ fieldset.name }}{% else %}Informações Gerais{% endif %}
+      </h5>
+      {% if fieldset.description %}
+        <div class="description">{{ fieldset.description|safe }}</div>
+      {% endif %}
+      
+      <div class="row">
+        {% for line in fieldset %}
+          {% for field in line %}
+            <div class="{% if field.field.name == 'id' %}d-none{% else %}col-md-6 mb-3{% endif %} {% if field.field.name in 'observacoes,conclusao,recomendacoes' %}field-{{ field.field.name }}{% endif %} {% if field.field.name == 'neurodivergente' %}field-neurodivergente{% endif %} {% if field.field.name == 'pedagogo_responsavel' %}field-pedagogo_responsavel{% endif %} {% if field.field.name == 'evolucao' %}col-md-12{% endif %} {% if field.field.name == 'ver_graficos' %}d-none{% endif %}">
+              <div class="form-group{% if field.field.required %} required{% endif %}">
+                {% if field.is_checkbox %}
+                  <div class="form-check">
+                    {{ field.field }}
+                    <label class="form-check-label" for="{{ field.field.id_for_label }}">
+                      {{ field.field.label }}
+                    </label>
+                  </div>
+                {% else %}
+                  <div class="input-group input-group-outline">
+                    {% if field.field.errors %}
+                      <div class="text-danger">
+                        {{ field.field.errors }}
+                      </div>
+                    {% endif %}
+                    
+                    {% if field.field.name != 'anexos' and field.field.name != 'evolucao' and field.field.name != 'parecer_descritivo' %}
+                      <label for="{{ field.field.id_for_label }}">{{ field.field.label }}</label>
+                    {% endif %}
+                    
+                    {# Renderização para campos calculados #}
+                    {% if field.field.name == 'idade' %}
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        value="{{ adminform.form.instance.idade }}" 
+                        readonly
+                      >
+                    {% elif field.field.name == 'ver_graficos' %}
+                      {# Campo ver_graficos oculto #}
+                    {% elif field.field.name == 'evolucao' %}
+                      {% if adminform.form.instance.pk %}
+                        <!-- Filtro de período para os gráficos -->
+                        <div class="periodo-analise" style="width: 100%;">
+                          <div class="row align-items-center">
+                            <div class="col-md-3">
+                              <label for="data_inicio" class="mb-0">Período de Análise:</label>
+                            </div>
+                            <div class="col-md-3">
+                              <input type="date" id="data_inicio" name="data_inicio" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-1 text-center">
+                              <span>até</span>
+                            </div>
+                            <div class="col-md-3">
+                              <input type="date" id="data_fim" name="data_fim" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-2">
+                              <button 
+                                type="button" 
+                                onclick="atualizarGraficos()" 
+                                class="btn btn-outline-primary btn-sm mb-0 w-100"
+                                style="display: inline-flex; align-items: center; justify-content: center; color: #e91e63 !important; border: 1px solid #e91e63 !important; background-color: transparent !important;"
+                                onmouseover="this.style.color='#d81557 !important'; this.style.borderColor='#d81557 !important'; this.style.boxShadow='0 3px 5px -1px rgba(233, 30, 99, 0.15) !important';"
+                                onmouseout="this.style.color='#e91e63 !important'; this.style.borderColor='#e91e63 !important'; this.style.boxShadow='none';"
+                              >
+                                <i class="material-symbols-rounded opacity-10 me-1" style="font-size: 16px;">refresh</i>
+                                Atualizar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Gráfico de Frequência -->
+                        <div class="grafico-box">
+                          <h3>Frequência de Atendimento</h3>
+                          <canvas id="graficoFrequencia"></canvas>
+                        </div>
+                        
+                        <!-- Gráfico de Monitoramento -->
+                        <div class="grafico-box">
+                          <h3>Monitoramento de Metas/Habilidades</h3>
+                          <canvas id="graficoMonitoramento"></canvas>
+                        </div>
+                      {% endif %}
+                      
+                      {{ field.field }}
+                    {% elif field.field.name == 'parecer_descritivo' %}
+                      <label for="{{ field.field.id_for_label }}">{{ field.field.label }}</label>
+                      {{ field.field }}
+                    {% elif field.field.name == 'anexos' %}
+                      <div class="card card-body blur shadow-blur mb-4">
+                        <div class="form-group">
+                          <h6 class="text-dark mb-3">
+                            Anexar Documentos Complementares
+                            <span class="text-muted" style="font-size: 0.7em; margin-left: 5px;">(opcional)</span>
+                          </h6>
+                          <div class="input-group input-group-outline">
+                            <input 
+                              type="file" 
+                              class="form-control" 
+                              id="{{ field.field.id_for_label }}" 
+                              name="{{ field.field.name }}"
+                              style="opacity: 0; position: absolute; z-index: -1;"
+                            >
+                            <div class="input-group-prepend">
+                              <span class="input-group-text bg-gradient-primary">
+                                <i class="material-symbols-rounded text-white">upload_file</i>
+                              </span>
+                            </div>
+                            <input 
+                              type="text" 
+                              class="form-control" 
+                              placeholder="Selecionar Arquivo" 
+                              readonly 
+                              style="background-color: #f8f9fa; cursor: pointer;"
+                              onclick="document.getElementById('{{ field.field.id_for_label }}').click();"
+                              id="{{ field.field.id_for_label }}_display"
+                            >
+                          </div>
+                          <small class="form-text text-muted mt-2">
+                            Você pode anexar documentos como relatórios, laudos ou outros documentos relevantes para complementar o parecer.
+                          </small>
+                        </div>
+                      </div>
+                      <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                          var fileInput = document.getElementById('{{ field.field.id_for_label }}');
+                          var displayInput = document.getElementById('{{ field.field.id_for_label }}_display');
+                          
+                          // Configurar valor inicial se existir
+                          {% if field.field.initial %}
+                            var initialFileName = '{{ field.field.initial.name }}'.split('/').pop().split('\\').pop();
+                            displayInput.value = initialFileName;
+                          {% endif %}
+
+                          fileInput.addEventListener('change', function() {
+                            var fileName = this.value.split('\\').pop().split('/').pop();
+                            displayInput.value = fileName ? fileName : 'Selecionar Arquivo';
+                          });
+                        });
+                      </script>
+                    {% else %}
+                      {{ field.field }}
+                    {% endif %}
+                    
+                    {% if field.field.help_text %}
+                      <div class="help-text text-muted">
+                        {{ field.field.help_text|safe }}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}
+
+{% block inline_field_sets %}
+  {% for inline_admin_formset in inline_admin_formsets %}
+    <div class="fieldset-container mb-4">
+      <h5 class="text-dark mb-3">{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h5>
+      {{ inline_admin_formset.formset.management_form }}
+      {{ inline_admin_formset.formset.non_form_errors }}
+      
+      {% for inline_admin_form in inline_admin_formset %}
+        <div class="inline-related {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}" id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+          {% if inline_admin_form.form.non_field_errors %}
+            <div class="errors">{{ inline_admin_form.form.non_field_errors }}</div>
+          {% endif %}
+          
+          <h6 class="mb-3">
+            {% if inline_admin_form.original %}
+              {{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}
+              {% if inline_admin_form.model_admin.show_delete_link and inline_admin_formset.has_delete_permission %}
+                <span class="delete">
+                  <input type="checkbox" name="{{ inline_admin_form.deletion_field.name }}" id="{{ inline_admin_form.deletion_field.id }}" />
+                  <label for="{{ inline_admin_form.deletion_field.id }}" class="text-danger ms-2">{% translate "Remover" %}</label>
+                </span>
+              {% endif %}
+            {% else %}
+              {{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}
+            {% endif %}
+          </h6>
+          
+          {% for fieldset in inline_admin_form %}
+            <div class="row">
+              {% for line in fieldset %}
+                {% for field in line %}
+                  <div class="col-md-6 mb-3">
+                    <div class="form-group{% if field.field.required %} required{% endif %}">
+                      {% if field.is_checkbox %}
+                        <div class="form-check">
+                          {{ field.field }}
+                          <label class="form-check-label" for="{{ field.field.id_for_label }}">
+                            {{ field.field.label }}
+                          </label>
+                        </div>
+                      {% else %}
+                        <div class="input-group input-group-outline">
+                          <label for="{{ field.field.id_for_label }}">{{ field.field.label }}</label>
+                          {{ field.field }}
+                          
+                          {% if field.field.help_text %}
+                            <div class="help-text text-muted">
+                              {{ field.field.help_text|safe }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  <div class="submit-row d-flex justify-content-between mt-4">
+    <div class="d-flex gap-2">
+      {% if show_save %}
+        <button type="submit" class="btn btn-primary mb-0" name="_save">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">save</i> {% translate 'Salvar' %}
+        </button>
+      {% endif %}
+      {% if show_save_and_continue %}
+        <button type="submit" class="btn btn-outline-primary mb-0" name="_continue">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">save</i> {% translate 'Salvar e continuar editando' %}
+        </button>
+      {% endif %}
+      {% if show_save_and_add_another %}
+        <button type="submit" class="btn btn-outline-primary mb-0" name="_addanother">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">add</i> {% translate 'Salvar e adicionar outro' %}
+        </button>
+      {% endif %}
+    </div>
+    {% if show_delete_link %}
+      <div>
+        <a href="delete/" class="btn btn-outline-danger mb-0">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> {% translate 'Excluir' %}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block extrajs %}{{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Modificar o título da página
+    if (!document.querySelector('body.add-form')) {
+      const titleElement = document.querySelector('.card-header .shadow-dark h6');
+      if (titleElement) {
+        titleElement.textContent = 'Editar Parecer Avaliativo';
+      }
+    }
+    
+    // Função para ocultar os botões de ação nos campos relacionados
+    function hideRelatedButtons() {
+      const relatedButtons = document.querySelectorAll('.field-neurodivergente .related-widget-wrapper-link, .field-pedagogo_responsavel .related-widget-wrapper-link, .field-neurodivergente .related-lookup, .field-pedagogo_responsavel .related-lookup');
+      relatedButtons.forEach(button => {
+        button.style.display = 'none';
+      });
+    }
+    
+    // Executar imediatamente e também após um pequeno atraso para garantir que funcione
+    hideRelatedButtons();
+    setTimeout(hideRelatedButtons, 500);
+    
+    // Inicializar os gráficos se estiver na página de edição
+    if (document.getElementById('graficoFrequencia') && document.getElementById('graficoMonitoramento')) {
+      // Definir datas padrão (últimos 6 meses)
+      const hoje = new Date();
+      const seisMesesAtras = new Date();
+      seisMesesAtras.setMonth(hoje.getMonth() - 6);
+      
+      document.getElementById('data_inicio').valueAsDate = seisMesesAtras;
+      document.getElementById('data_fim').valueAsDate = hoje;
+      
+      // Inicializar os gráficos
+      atualizarGraficos();
+    }
+  });
+  
+  // Variáveis globais para os gráficos
+  let chartFrequencia = null;
+  let chartMonitoramento = null;
+  
+  // Função para criar o gráfico de frequência
+  function criarGraficoFrequencia(dados) {
+    console.log('Criando gráfico de frequência com dados:', dados);
+    
+    try {
+      const canvas = document.getElementById('graficoFrequencia');
+      if (!canvas) {
+        throw new Error('Canvas graficoFrequencia não encontrado');
+      }
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Contexto 2d não disponível');
+      }
+      
+      if (chartFrequencia) {
+        console.log('Destruindo gráfico anterior');
+        chartFrequencia.destroy();
+      }
+      
+      chartFrequencia = new Chart(ctx, {
+        type: 'bar',
+        data: dados,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: {
+              left: 20,
+              right: 20,
+              top: 30,
+              bottom: 30
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              padding: 20,
+              labels: {
+                padding: 15,
+                font: {
+                  size: 13
+                }
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              padding: 12,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label === 'Atendimentos') {
+                    return `Dias de atendimento: ${context.raw}`;
+                  }
+                  return `Média: ${context.raw}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                drawBorder: false
+              },
+              title: {
+                display: true,
+                text: 'Quantidade em Dias',
+                font: {
+                  weight: 'bold',
+                  size: 14
+                },
+                padding: {
+                  bottom: 25
+                }
+              },
+              ticks: {
+                padding: 12,
+                font: {
+                  size: 12
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: 'Mês',
+                font: {
+                  weight: 'bold',
+                  size: 14
+                },
+                padding: {
+                  top: 25
+                }
+              },
+              ticks: {
+                padding: 12,
+                font: {
+                  size: 12
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Erro ao criar gráfico de frequência:', e);
+    }
+  }
+  
+  // Função para criar o gráfico de monitoramento
+  function criarGraficoMonitoramento(dados) {
+    console.log('Criando gráfico de monitoramento com dados:', dados);
+    
+    try {
+      const canvas = document.getElementById('graficoMonitoramento');
+      if (!canvas) {
+        throw new Error('Canvas graficoMonitoramento não encontrado');
+      }
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Contexto 2d não disponível');
+      }
+      
+      if (chartMonitoramento) {
+        console.log('Destruindo gráfico anterior');
+        chartMonitoramento.destroy();
+      }
+      
+      chartMonitoramento = new Chart(ctx, {
+        type: 'bubble',
+        data: dados,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: {
+              left: 20,
+              right: 20,
+              top: 30,
+              bottom: 30
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              padding: 20,
+              labels: {
+                padding: 15,
+                font: {
+                  size: 13
+                }
+              }
+            },
+            tooltip: {
+              mode: 'point',
+              intersect: false,
+              padding: 12,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  let progresso = context.raw.y || 0;
+                  let data = dados.labels[context.raw.data_idx] || '';
+                  return `${label}: ${progresso}% (${data})`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              grid: {
+                drawBorder: false
+              },
+              title: {
+                display: true,
+                text: 'Progresso (%)',
+                font: {
+                  weight: 'bold',
+                  size: 14
+                },
+                padding: {
+                  bottom: 25
+                }
+              },
+              ticks: {
+                padding: 12,
+                font: {
+                  size: 12
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: 'Data',
+                font: {
+                  weight: 'bold',
+                  size: 14
+                },
+                padding: {
+                  top: 25
+                }
+              },
+              ticks: {
+                padding: 12,
+                font: {
+                  size: 12
+                },
+                callback: function(value) {
+                  return dados.labels[value] || '';
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Erro ao criar gráfico de monitoramento:', e);
+    }
+  }
+  
+  // Função para atualizar os gráficos
+  function atualizarGraficos() {
+    if (!document.getElementById('graficoFrequencia') || !document.getElementById('graficoMonitoramento')) {
+      console.log('Elementos dos gráficos não encontrados');
+      return;
+    }
+    
+    const dataInicio = document.getElementById('data_inicio').value;
+    const dataFim = document.getElementById('data_fim').value;
+    
+    if (!dataInicio || !dataFim) {
+      alert('Por favor, selecione as datas de início e fim.');
+      return;
+    }
+    
+    // Obter o ID do aluno do campo neurodivergente
+    const neurodivergentePk = document.querySelector('select[name="neurodivergente"]').value;
+    
+    if (!neurodivergentePk) {
+      alert('Por favor, selecione um aluno/paciente.');
+      return;
+    }
+    
+    console.log(`Buscando dados para aluno ${neurodivergentePk} de ${dataInicio} até ${dataFim}`);
+    
+    // Fazer a requisição para a API
+    fetch(`/neurodivergentes/api/graficos-parecer/?aluno_id=${neurodivergentePk}&data_inicio=${dataInicio}&data_fim=${dataFim}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Dados recebidos:', data);
+        
+        // Criar os gráficos com os dados recebidos
+        criarGraficoFrequencia(data.dados_frequencia);
+        criarGraficoMonitoramento(data.dados_monitoramento);
+      })
+      .catch(error => {
+        console.error('Erro ao buscar dados:', error);
+        alert('Ocorreu um erro ao buscar os dados dos gráficos. Por favor, tente novamente.');
+      });
+  }
+</script>
+{% endblock %}
