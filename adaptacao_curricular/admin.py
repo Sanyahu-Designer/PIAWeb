@@ -20,21 +20,19 @@ from django.utils.safestring import mark_safe
 class LabelAboveWidget(Select):
     """Widget personalizado que renderiza o label acima do campo."""
     
+    def __init__(self, attrs=None):
+        # Garantir que attrs não seja None
+        attrs = attrs or {}
+        attrs['data-hide-label'] = 'true'  # Flag para identificar que o label deve ser removido
+        super().__init__(attrs=attrs)
+
     def render(self, name, value, attrs=None, renderer=None):
         # Renderiza o select normalmente
         select_html = super().render(name, value, attrs, renderer)
         
-        # Obtém o label do campo
-        label = self.attrs.get('label', name.replace('_', ' ').title())
-        
-        # Cria o HTML com o label acima do campo
+        # Cria o HTML sem label
         html = f'''
         <div style="display: block; width: 100%;">
-            <div style="display: block; width: 100%; margin-bottom: 8px;">
-                <label for="{attrs.get('id', '')}" style="display: block; width: 100%; text-align: left; font-weight: bold;">
-                    {label}
-                </label>
-            </div>
             <div style="display: block; width: 100%;">
                 {select_html}
             </div>
@@ -132,12 +130,20 @@ class BNCCDisciplinaAdmin(admin.ModelAdmin):
     search_fields = ('nome',)
     ordering = ['nome']
     change_list_template = 'admin/bncc/disciplinabncc/change_list_material_dashboard.html'
-    
+    change_form_template = 'admin/bncc/disciplinabncc/change_form.html'
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Remover o label "Nome"
+        if form.base_fields['nome'].label == 'Nome':
+            form.base_fields['nome'].label = ''
+        return form
 
 @admin.register(BNCCHabilidade)
 class BNCCHabilidadeAdmin(admin.ModelAdmin):
-    fields = ('disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'codigo', 'descricao')
+    fields = ('codigo', 'disciplina', 'ano', 'trimestre', 'objeto_conhecimento', 'descricao')
     change_list_template = 'admin/bncc/codigobncc/change_list_material_dashboard.html'
+    change_form_template = 'admin/bncc/codigobncc/change_form.html'
     
     list_filter = ('disciplina', 'ano', 'trimestre')
     search_fields = ('codigo', 'descricao', 'objeto_conhecimento')
@@ -145,6 +151,18 @@ class BNCCHabilidadeAdmin(admin.ModelAdmin):
     list_select_related = ['disciplina']
     list_display = ('codigo', 'disciplina', 'ano', 'trimestre', 'objeto_conhecimento')
     ordering = ['codigo']
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Remover o label "Disciplina"
+        if form.base_fields['disciplina'].label == 'Disciplina':
+            form.base_fields['disciplina'].label = ''
+        form.base_fields['disciplina'].widget = LabelAboveWidget(attrs={
+            'class': 'select2-disciplina',
+            'data-placeholder': 'Selecione a disciplina BNCC',
+            'style': 'width: 100%; display: block;',
+        })
+        return form
 
 @admin.register(AdaptacaoCurricularIndividualizada)
 class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):

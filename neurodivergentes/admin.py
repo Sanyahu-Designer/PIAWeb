@@ -137,6 +137,41 @@ class CategoriaNeurodivergentesAdmin(admin.ModelAdmin):
     search_fields = ['nome']
     change_list_template = 'admin/cid10/categoriacid10/change_list_material_dashboard.html'
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        
+        # Personalizar widget de seleção com classes do Select2
+        for field_name in form.base_fields:
+            form.base_fields[field_name].widget.attrs.update({
+                'class': 'form-control',
+                'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem;'
+            })
+        
+        return form
+
+    def __str__(self):
+        return self.nome
+
+    class Media:
+        css = {
+            'all': (
+                'admin/css/base.css',
+                'static/admin/css/edit_form_standard.css',
+                'static/admin/css/form_fields_style.css'
+            )
+        }
+        js = (
+            'admin/js/jquery.js',
+            'admin/js/jquery.init.js',
+            'admin/js/core.js',
+            'admin/js/admin/RelatedObjectLookups.js',
+            'admin/js/actions.js',
+            'admin/js/urlify.js',
+            'admin/js/prepopulate.js',
+            'admin/js/vendor/select2/select2.full.min.js',
+            'admin/js/vendor/select2/i18n/pt-BR.js'
+        )
+
 @admin.register(CondicaoNeurodivergente)
 class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
     list_display = ['nome', 'categoria', 'cid_10', 'ativo']
@@ -169,21 +204,38 @@ class DiagnosticoInline(admin.StackedInline):
     verbose_name = 'Diagnóstico'
     verbose_name_plural = 'Diagnósticos'
     formfield_overrides = {
-        models.DateField: {'widget': forms.DateInput(attrs={'class': 'vDateField', 'type': 'date'})}
+        models.DateField: {'widget': forms.DateInput(attrs={
+            'class': 'vDateField form-control datetimepicker', 
+            'type': 'date',
+            'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;'
+        })}
     }
     
-    fields = ('data_identificacao', 'condicao', 'observacoes')
-    classes = ('diagnosticos-container',)
+    fields = (
+        ('data_identificacao',),
+        ('condicao',),
+        ('observacoes',)
+    )
+    classes = ('diagnosticos-container', 'card', 'card-body', 'blur', 'shadow-blur')
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'condicao':
             # Organiza as condições por categoria para melhor visualização
             condicoes = CondicaoNeurodivergente.objects.all().order_by('categoria__nome', 'nome')
             kwargs['queryset'] = condicoes
-            kwargs['widget'] = forms.Select(attrs={'style': 'min-width: 300px;', 'class': 'condicao-select'})
+            kwargs['widget'] = forms.Select(attrs={
+                'style': 'min-width: 300px; border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;', 
+                'class': 'condicao-select form-control'
+            })
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-    
+
     class Media:
+        css = {
+            'all': (
+                'admin/css/base.css',
+                'neurodivergentes/css/neurodivergentes_forms.css',
+            )
+        }
         js = ('admin/js/neurodivergentes_admin.js',)
     
     def get_formset(self, request, obj=None, **kwargs):

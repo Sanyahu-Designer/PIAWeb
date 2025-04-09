@@ -198,7 +198,7 @@
       <div class="row">
         {% for line in fieldset %}
           {% for field in line %}
-            <div class="{% if field.field.name == 'id' %}d-none{% else %}col-md-6 mb-3{% endif %} {% if field.field.name in 'observacoes,conclusao,recomendacoes' %}field-{{ field.field.name }}{% endif %} {% if field.field.name == 'neurodivergente' %}field-neurodivergente{% endif %} {% if field.field.name == 'pedagogo_responsavel' %}field-pedagogo_responsavel{% endif %} {% if field.field.name == 'evolucao' %}col-md-12{% endif %} {% if field.field.name == 'ver_graficos' %}d-none{% endif %}">
+            <div class="{% if field.field.name == 'id' %}d-none{% else %}col-md-6 mb-3{% endif %} {% if field.field.name in 'observacoes,conclusao,recomendacoes' %}field-{{ field.field.name }}{% endif %} {% if field.field.name == 'neurodivergente' %}field-neurodivergente{% endif %} {% if field.field.name == 'pedagogo_responsavel' %}field-pedagogo_responsavel{% endif %} {% if field.field.name == 'evolucao' %}col-md-12{% endif %} {% if field.field.name == 'anexos' %}col-md-12{% endif %} {% if field.field.name == 'ver_graficos' %}d-none{% endif %}">
               <div class="form-group{% if field.field.required %} required{% endif %}">
                 {% if field.is_checkbox %}
                   <div class="form-check">
@@ -215,7 +215,7 @@
                       </div>
                     {% endif %}
                     
-                    {% if field.field.name != 'anexos' and field.field.name != 'evolucao' and field.field.name != 'parecer_descritivo' %}
+                    {% if field.field.name != 'anexos' and field.field.name != 'evolucao' %}
                       <label for="{{ field.field.id_for_label }}">{{ field.field.label }}</label>
                     {% endif %}
                     
@@ -232,55 +232,72 @@
                     {% elif field.field.name == 'evolucao' %}
                       {% if adminform.form.instance.pk %}
                         <!-- Filtro de período para os gráficos -->
-                        <div class="periodo-analise" style="width: 100%;">
-                          <div class="row align-items-center">
-                            <div class="col-md-3">
-                              <label for="data_inicio" class="mb-0">Período de Análise:</label>
-                            </div>
-                            <div class="col-md-3">
-                              <input type="date" id="data_inicio" name="data_inicio" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-1 text-center">
-                              <span>até</span>
-                            </div>
-                            <div class="col-md-3">
-                              <input type="date" id="data_fim" name="data_fim" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-2">
-                              <button 
-                                type="button" 
-                                onclick="atualizarGraficos()" 
-                                class="btn btn-outline-primary btn-sm mb-0 w-100"
-                                style="display: inline-flex; align-items: center; justify-content: center; color: #e91e63 !important; border: 1px solid #e91e63 !important; background-color: transparent !important;"
-                                onmouseover="this.style.color='#d81557 !important'; this.style.borderColor='#d81557 !important'; this.style.boxShadow='0 3px 5px -1px rgba(233, 30, 99, 0.15) !important';"
-                                onmouseout="this.style.color='#e91e63 !important'; this.style.borderColor='#e91e63 !important'; this.style.boxShadow='none';"
-                              >
-                                <i class="material-symbols-rounded opacity-10 me-1" style="font-size: 16px;">refresh</i>
-                                Atualizar
-                              </button>
+                        <div class="card card-body blur shadow-blur mb-4">
+                          <div class="periodo-analise" style="width: 100%;">
+                            <div class="row align-items-center">
+                              <div class="col-md-3">
+                                <label for="data_inicio" class="mb-0">Período de Análise:</label>
+                              </div>
+                              <div class="col-md-3">
+                                <input type="date" id="data_inicio" name="data_inicio" class="form-control form-control-sm">
+                              </div>
+                              <div class="col-md-1 text-center">
+                                <span>até</span>
+                              </div>
+                              <div class="col-md-3">
+                                <input type="date" id="data_fim" name="data_fim" class="form-control form-control-sm">
+                              </div>
+                              <div class="col-md-2">
+                                <button 
+                                  type="button" 
+                                  onclick="atualizarGraficos()" 
+                                  class="btn btn-outline-primary btn-sm mb-0 w-100"
+                                  style="display: inline-flex; align-items: center; justify-content: center; color: #e91e63 !important; border: 1px solid #e91e63 !important; background-color: transparent !important;"
+                                  onmouseover="this.style.color='#d81557 !important'; this.style.borderColor='#d81557 !important'; this.style.boxShadow='0 3px 5px -1px rgba(233, 30, 99, 0.15) !important';"
+                                  onmouseout="this.style.color='#e91e63 !important'; this.style.borderColor='#e91e63 !important'; this.style.boxShadow='none';"
+                                >
+                                  <i class="material-symbols-rounded opacity-10 me-1" style="font-size: 16px;">refresh</i>
+                                  Atualizar
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                         
-                        <!-- Gráfico de Frequência -->
-                        <div class="grafico-box">
-                          <h3>Frequência de Atendimento</h3>
-                          <canvas id="graficoFrequencia"></canvas>
-                        </div>
-                        
-                        <!-- Gráfico de Monitoramento -->
-                        <div class="grafico-box">
-                          <h3>Monitoramento de Metas/Habilidades</h3>
-                          <canvas id="graficoMonitoramento"></canvas>
+                        <div class="row">
+                          <div class="col-12">
+                            <!-- Gráfico de Frequência -->
+                            <div class="card card-body blur shadow-blur mb-4 w-100">
+                              <div class="grafico-box w-100">
+                                <h3>Frequência de Atendimento</h3>
+                                <canvas id="graficoFrequencia" class="w-100"></canvas>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <!-- Gráfico de Monitoramento -->
+                            <div class="card card-body blur shadow-blur mb-4 w-100">
+                              <div class="grafico-box w-100">
+                                <h3>Monitoramento de Metas/Habilidades</h3>
+                                <canvas id="graficoMonitoramento" class="w-100"></canvas>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       {% endif %}
-                      
-                      {{ field.field }}
-                    {% elif field.field.name == 'parecer_descritivo' %}
-                      <label for="{{ field.field.id_for_label }}">{{ field.field.label }}</label>
-                      {{ field.field }}
+                      <div class="card card-body blur shadow-blur mb-3">
+                        <div class="form-group">
+                          <h6 class="text-dark mb-3">
+                            Parecer Descritivo
+                          </h6>
+                          <div class="input-group input-group-outline">
+                            {{ field.field }}
+                          </div>
+                        </div>
+                      </div>
+                     
                     {% elif field.field.name == 'anexos' %}
-                      <div class="card card-body blur shadow-blur mb-4">
+                      <div class="card card-body blur shadow-blur mb-3">
                         <div class="form-group">
                           <h6 class="text-dark mb-3">
                             Anexar Documentos Complementares
@@ -451,7 +468,7 @@
     if (!document.querySelector('body.add-form')) {
       const titleElement = document.querySelector('.card-header .shadow-dark h6');
       if (titleElement) {
-        titleElement.textContent = 'Editar Parecer Avaliativo';
+        titleElement.textContent = 'Parecer - ' + (document.querySelector('.field-neurodivergente .select2-selection__rendered').textContent || 'Aluno/Paciente');
       }
     }
     
@@ -628,10 +645,10 @@
           maintainAspectRatio: false,
           layout: {
             padding: {
-              left: 20,
-              right: 20,
-              top: 30,
-              bottom: 30
+              left: 40,
+              right: 40,
+              top: 40,
+              bottom: 40
             }
           },
           plugins: {
@@ -681,10 +698,17 @@
                 padding: 12,
                 font: {
                   size: 12
-                }
+                },
+                min: -5,
+                max: 105
+              },
+              afterFit: function(scaleInstance) {
+                scaleInstance.paddingTop = 40;
+                scaleInstance.paddingBottom = 40;
               }
             },
             x: {
+              offset: true,
               grid: {
                 display: false
               },
@@ -706,7 +730,13 @@
                 },
                 callback: function(value) {
                   return dados.labels[value] || '';
-                }
+                },
+                maxRotation: 45,
+                minRotation: 45
+              },
+              afterFit: function(scaleInstance) {
+                scaleInstance.paddingLeft = 40;
+                scaleInstance.paddingRight = 40;
               }
             }
           }

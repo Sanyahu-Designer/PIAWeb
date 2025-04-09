@@ -17,7 +17,7 @@ class ParecerAvaliativo(models.Model):
         on_delete=models.PROTECT,
         related_name='pareceres'
     )
-    evolucao = models.TextField('Parecer Descritivo')
+    evolucao = models.TextField('Parecer Descritivo', blank=True, null=True)
     data_avaliacao = models.DateField('Data do Parecer')
     profissional_responsavel = models.ForeignKey(
         Profissional,
@@ -43,7 +43,7 @@ class ParecerAvaliativo(models.Model):
         ordering = ['-data_avaliacao']
 
     def __str__(self):
-        return f"Parecer de {self.neurodivergente} - {self.data_avaliacao}"
+        return f"Parecer - {self.neurodivergente}"
 
     @property
     def idade(self):

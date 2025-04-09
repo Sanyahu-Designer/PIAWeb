@@ -33,7 +33,7 @@ class BNCCHabilidade(models.Model):
         ('3', '3º Trimestre'),
     ]
 
-    disciplina = models.ForeignKey(BNCCDisciplina, on_delete=models.CASCADE, related_name='habilidades', verbose_name='Disciplina')
+    disciplina = models.ForeignKey(BNCCDisciplina, on_delete=models.CASCADE, related_name='habilidades', verbose_name='Disciplina:')
     codigo = models.CharField('Código', max_length=20)
     objeto_conhecimento = models.TextField('Objetos do Conhecimento')
     descricao = models.TextField('Descrição da Habilidade')
@@ -41,7 +41,7 @@ class BNCCHabilidade(models.Model):
     trimestre = models.CharField('Trimestre', max_length=1, choices=TRIMESTRE_CHOICES)
 
     def __str__(self):
-        return f"{self.disciplina} - {self.objeto_conhecimento} - {self.codigo}"
+        return f"{self.disciplina} - {self.codigo}"
 
     class Meta:
         verbose_name = 'Código BNCC'
