@@ -3,8 +3,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.template.response import TemplateResponse
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from django.contrib.auth.models import User
-from .views import CustomLoginView
+from django.contrib.auth.models import User, Group
+from .views import CustomLoginView, dashboard_gerente, genero_por_neurodivergencia, ausencias_por_aluno, alunos_por_profissional
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
@@ -16,49 +16,76 @@ urlpatterns = [
     # URLs do realtime (devem vir antes do admin)
     path('dashboard/realtime/', include('realtime.urls', namespace='realtime')),
     
-    # URLs do admin
-    path('dashboard/', admin.site.urls),
+    # Dashboard principal - Agora usa a view dashboard_gerente
+    path('dashboard/', dashboard_gerente, name='dashboard'),
+    path('dashboard/admin/', admin.site.urls, name='admin'),  # Admin site com prefixo 'admin'
+    
+    # O Django Admin já gerencia automaticamente as URLs para todos os modelos registrados
+    # Não é necessário incluir admin.site.urls múltiplas vezes
+    # A linha 'path('dashboard/', admin.site.urls, name='dashboard')' acima já inclui o admin site
     
     # URLs personalizadas para usar os templates do Material Dashboard 3
-    path('dashboard/adaptacao_curricular/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/aci/change_list_material_dashboard.html', {'title': 'ACI', 'cl': {'opts': {'verbose_name_plural': 'Adaptações Curriculares Individualizadas', 'app_label': 'adaptacao_curricular', 'app_config': {'verbose_name': 'Adaptação Curricular'}}}})), name='aci_dashboard'),
-    path('dashboard/neurodivergentes/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergente/change_list_material_dashboard.html', {'title': 'Neurodivergentes'})), name='neurodivergentes_dashboard'),
-    path('dashboard/neurodivergentes/neurodivergencia/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergencia/change_list_material_dashboard.html', {'title': 'Neurodivergências', 'cl': {'opts': {'verbose_name_plural': 'Neurodivergências', 'app_label': 'neurodivergentes', 'app_config': {'verbose_name': 'Neurodivergentes'}}}})), name='neurodivergencia_dashboard'),
-    path('dashboard/bncc/codigobncc/', staff_member_required(lambda request: TemplateResponse(request, 'admin/bncc/codigobncc/change_list_material_dashboard.html', {'title': 'Códigos BNCC'})), name='codigobncc_dashboard'),
-    path('dashboard/bncc/disciplinabncc/', staff_member_required(lambda request: TemplateResponse(request, 'admin/bncc/disciplinabncc/change_list_material_dashboard.html', {'title': 'Disciplinas BNCC'})), name='disciplinabncc_dashboard'),
-    path('dashboard/cid10/categoriacid10/', staff_member_required(lambda request: TemplateResponse(request, 'admin/cid10/categoriacid10/change_list_material_dashboard.html', {'title': 'Categorias CID-10'})), name='categoriacid10_dashboard'),
-    path('dashboard/cid10/condicaocid10/', staff_member_required(lambda request: TemplateResponse(request, 'admin/cid10/condicaocid10/change_list_material_dashboard.html', {'title': 'Condições CID-10'})), name='condicaocid10_dashboard'),
-    path('dashboard/metashabilidades/metahabilidade/', staff_member_required(lambda request: TemplateResponse(request, 'admin/metashabilidades/metahabilidade/change_list_material_dashboard.html', {'title': 'Metas/Habilidades'})), name='metahabilidade_dashboard'),
-    path('dashboard/auth/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index.html', {
+    path('dashboard/admin/adaptacao_curricular/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/aci/change_list_material_dashboard.html', {'title': 'ACI', 'cl': {'opts': {'verbose_name_plural': 'Adaptações Curriculares Individualizadas', 'app_label': 'adaptacao_curricular', 'app_config': {'verbose_name': 'Adaptação Curricular'}}}})), name='aci_dashboard'),
+    path('dashboard/admin/neurodivergentes/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergente/change_list_material_dashboard.html', {'title': 'Neurodivergentes'})), name='neurodivergentes_dashboard'),
+    path('dashboard/admin/neurodivergentes/neurodivergencia/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergencia/change_list_material_dashboard.html', {'title': 'Neurodivergências', 'cl': {'opts': {'verbose_name_plural': 'Neurodivergências', 'app_label': 'neurodivergentes', 'app_config': {'verbose_name': 'Neurodivergentes'}}}})), name='neurodivergencia_dashboard'),
+    path('dashboard/admin/bncc/codigobncc/', staff_member_required(lambda request: TemplateResponse(request, 'admin/bncc/codigobncc/change_list_material_dashboard.html', {'title': 'Códigos BNCC'})), name='codigobncc_dashboard'),
+    path('dashboard/admin/bncc/disciplinabncc/', staff_member_required(lambda request: TemplateResponse(request, 'admin/bncc/disciplinabncc/change_list_material_dashboard.html', {'title': 'Disciplinas BNCC'})), name='disciplinabncc_dashboard'),
+    path('dashboard/admin/cid10/categoriacid10/', staff_member_required(lambda request: TemplateResponse(request, 'admin/cid10/categoriacid10/change_list_material_dashboard.html', {'title': 'Categorias CID-10'})), name='categoriacid10_dashboard'),
+    path('dashboard/admin/cid10/condicaocid10/', staff_member_required(lambda request: TemplateResponse(request, 'admin/cid10/condicaocid10/change_list_material_dashboard.html', {'title': 'Condições CID-10'})), name='condicaocid10_dashboard'),
+    
+    # URL para dados do gráfico de gênero por neurodivergência
+    path('api/genero-por-neurodivergencia/', genero_por_neurodivergencia, name='genero_por_neurodivergencia'),
+    path('api/ausencias-por-aluno/', ausencias_por_aluno, name='ausencias_por_aluno'),
+    path('api/alunos-por-profissional/', alunos_por_profissional, name='alunos_por_profissional'),
+    path('dashboard/admin/metashabilidades/metahabilidade/', staff_member_required(lambda request: TemplateResponse(request, 'admin/metashabilidades/metahabilidade/change_list_material_dashboard.html', {'title': 'Metas/Habilidades'})), name='metahabilidade_dashboard'),
+    path('dashboard/admin/auth/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index.html', {
         'title': 'Autenticação e Autorização',
         'app_label': 'auth',
         'app_list': [{
             'name': 'Autenticação e Autorização',
             'app_label': 'auth',
-            'app_url': '/dashboard/auth/',
+            'app_url': '/dashboard/admin/auth/',
             'has_module_perms': True,
             'models': [
                 {
                     'name': 'Grupos',
                     'object_name': 'group',
                     'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
-                    'admin_url': '/dashboard/auth/group/',
-                    'add_url': '/dashboard/auth/group/add/'
+                    'admin_url': '/dashboard/admin/auth/group/',
+                    'add_url': '/dashboard/admin/auth/group/add/'
                 },
                 {
                     'name': 'Usuários',
                     'object_name': 'person',
                     'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
-                    'admin_url': '/dashboard/auth/user/',
-                    'add_url': '/dashboard/auth/user/add/'
+                    'admin_url': '/dashboard/admin/auth/user/',
+                    'add_url': '/dashboard/admin/auth/user/add/'
                 }
             ]
         }]
     })), name='auth_dashboard'),
-    path('dashboard/auth/user/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index_material_dashboard.html', {
+    path('dashboard/admin/auth/user/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index_material_dashboard.html', {
         'title': 'Usuários',
         'app_label': 'auth',
         'users': User.objects.all().order_by('first_name', 'last_name')
     })), name='usuarios_dashboard'),
+    
+    path('dashboard/admin/auth/group/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/group/change_list_material_dashboard.html', {
+        'title': 'Grupos',
+        'app_label': 'auth',
+        'cl': {
+            'result_list': Group.objects.all().order_by('name'),
+            'result_count': Group.objects.count(),
+            'full_result_count': Group.objects.count(),
+            'opts': {
+                'verbose_name': 'grupo',
+                'verbose_name_plural': 'Grupos',
+                'app_label': 'auth',
+                'app_config': {'verbose_name': 'Autenticação e Autorização'}
+            },
+            'query': request.GET.get('q', '')
+        }
+    })), name='grupos_dashboard'),
     
     # Outras URLs
     path('', CustomLoginView.as_view(

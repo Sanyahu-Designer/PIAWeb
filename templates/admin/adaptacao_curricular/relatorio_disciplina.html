@@ -1,9 +1,28 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Adaptação Curricular - {{ disciplina.nome }}</title>
+    <title>Relatório de PEI - {{ disciplina.nome }}</title>
     <style>
+        /* Abordagem com múltiplas fontes para garantir compatibilidade em diferentes ambientes */
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{{ STATIC_URL }}fonts/Roboto-Regular.ttf') format('truetype'),
+                 url('/static/fonts/Roboto-Regular.ttf') format('truetype'),
+                 url('{% static "fonts/Roboto-Regular.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{{ STATIC_URL }}fonts/Roboto-Bold.ttf') format('truetype'),
+                 url('/static/fonts/Roboto-Bold.ttf') format('truetype'),
+                 url('{% static "fonts/Roboto-Bold.ttf" %}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
         :root {
             --primary-color: #4e73df;
             --text-color: #333;
@@ -21,7 +40,7 @@
             }
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             line-height: 1.4;
             margin: 0;
             padding: 0;
@@ -299,7 +318,7 @@
     <div class="container">
         <div class="header">
             <div class="header-main">
-                <h1>Adaptação Curricular Individualizada</h1>
+                <h1>RELATÓRIO INDIVIDUAL - PEI</h1>
                 <h2>{{ disciplina.nome }}</h2>
             </div>
             <div class="header-dates">

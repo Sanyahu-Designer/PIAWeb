@@ -1,0 +1,205 @@
+{% load i18n admin_urls static admin_modify %}
+
+<div class="fieldset-container mb-4">
+  <h5 class="text-dark mb-3">
+    <i class="material-symbols-rounded opacity-10 me-2">medical_information</i>
+    {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
+  </h5>
+  
+  {{ inline_admin_formset.formset.management_form }}
+  {{ inline_admin_formset.formset.non_form_errors }}
+  
+  <div class="js-inline-admin-formset inline-group diagnosticos-container" id="{{ inline_admin_formset.formset.prefix }}-group"
+       data-inline-type="stacked"
+       data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+    
+    <div class="diagnosticos-container">
+      <div class="diagnosticos-grid">
+        {% for inline_admin_form in inline_admin_formset %}
+          <div class="{% if not forloop.last %}w-100{% else %}empty-form d-none{% endif %} mb-4 diagnostico-item">
+            <div class="inline-related{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}"
+                 id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+              
+              {% if not forloop.last %}
+                <div class="card h-100 shadow-sm">
+                  <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-secondary border-radius-lg pt-4 pb-3">
+                      <h6 class="text-white text-capitalize ps-3">Diagnóstico #{{ forloop.counter }}</h6>
+                      {% if inline_admin_formset.formset.can_delete and inline_admin_form.original %}
+                        <div class="delete" style="position: absolute; top: 10px; right: 10px;">
+                          {{ inline_admin_form.deletion_field.field }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="card-body p-3">
+                    {% if inline_admin_form.form.non_field_errors %}
+                      <div class="alert alert-danger text-white mt-2 p-2">
+                        {{ inline_admin_form.form.non_field_errors }}
+                      </div>
+                    {% endif %}
+                    
+                    <div class="row g-3">
+                      {% for fieldset in inline_admin_form %}
+                        {% for line in fieldset %}
+                          {% for field in line %}
+                            <div class="col-12 col-md-6">
+                              <div class="form-group{% if field.field.required %} required{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field.field }}
+                                
+                                {% if field.field.help_text %}
+                                  <div class="help-text">{{ field.field.help_text|safe }}</div>
+                                {% endif %}
+                                
+                                {% if field.field.errors %}
+                                  <div class="alert alert-danger text-white mt-2 p-2">
+                                    {{ field.field.errors }}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
+                        {% endfor %}
+                      {% endfor %}
+                    </div>
+                  </div>
+                  
+                  <div class="card-footer p-2 text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-button w-100" data-id="{{ inline_admin_form.original.id|default:'0' }}">
+                      <i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir
+                    </button>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      {% if inline_admin_formset.formset.can_add %}
+      <div class="add-row mt-3 text-center">
+        <a href="#" class="btn btn-primary btn-sm add-inline-link">
+          <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i>
+          <span>Adicionar outro(a) {{ inline_admin_formset.opts.verbose_name|capfirst }}</span>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Estilos para o layout vertical */
+  .diagnosticos-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  /* Correção para o cabeçalho */
+  .card-header {
+    margin-bottom: 0;
+  }
+  
+  /* Estilos para o botão de adicionar */
+  .add-row .btn-primary {
+    background-color: #e91e63;
+    border-color: #e91e63;
+    box-shadow: 0 4px 6px -1px rgba(233, 30, 99, 0.15), 0 2px 4px -1px rgba(233, 30, 99, 0.1);
+    transition: all 0.15s ease-in;
+  }
+  
+  .add-row .btn-primary:hover {
+    background-color: #d81b60;
+    border-color: #d81b60;
+    box-shadow: 0 8px 15px -3px rgba(233, 30, 99, 0.2), 0 4px 6px -2px rgba(233, 30, 99, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  /* Estilos para o botão de excluir */
+  .delete-button {
+    color: #dc3545;
+    border-color: #dc3545;
+  }
+  
+  .delete-button:hover {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+  
+  /* Ocultar checkbox de exclusão padrão */
+  .delete input[type="checkbox"] {
+    display: none;
+  }
+</style>
+
+<script type="text/javascript">
+// Definir URL para a função get_condicoes
+if (!django.urls) {
+    django.urls = {};
+}
+if (!django.urls.diagnostico) {
+    django.urls.diagnostico = {};
+}
+django.urls.diagnostico.get_condicoes = "{% url 'neurodivergentes:get_condicoes' %}";
+
+// Adicionar funcionalidade para os botões de excluir
+(function($) {
+  $(document).ready(function() {
+    // Manipulador de clique para botões de exclusão
+    $('.delete-button').on('click', function() {
+      var id = $(this).data('id');
+      var $checkbox = $(this).closest('.card').find('.delete input[type="checkbox"]');
+      $checkbox.prop('checked', true);
+      $(this).closest('.diagnostico-item').fadeOut(300);
+    });
+    
+    // Observar quando novos diagnósticos são adicionados
+    $(document).on('formset:added', function(event, $row, formsetName) {
+      if (formsetName === 'diagnostico_set') {
+        // Atualizar condições para o novo formulário
+        setTimeout(function() {
+          var $categoria = $row.find('select[name$="-categoria"]');
+          var $condicao = $row.find('select[name$="-condicao"]');
+          
+          // Adicionar manipulador de eventos para a categoria
+          $categoria.on('change', function() {
+            var categoriaId = $(this).val();
+            if (categoriaId) {
+              $.getJSON(django.urls.diagnostico.get_condicoes, {
+                categoria_id: categoriaId
+              }).done(function(data) {
+                var options = '<option value="">---------</option>';
+                $.each(data.condicoes, function(index, item) {
+                  options += '<option value="' + item.id + '">' + 
+                            item.nome + ' (CID-10: ' + item.cid_10 + ')</option>';
+                });
+                $condicao.html(options);
+              });
+            } else {
+              $condicao.html('<option value="">---------</option>');
+            }
+          });
+          
+          // Adicionar botão de exclusão personalizado
+          var $deleteButton = $('<button type="button" class="btn btn-sm btn-outline-danger delete-button w-100">');
+          $deleteButton.html('<i class="material-symbols-rounded" style="font-size: 16px;">delete</i> Excluir');
+          $deleteButton.on('click', function() {
+            var $checkbox = $row.find('.delete input[type="checkbox"]');
+            $checkbox.prop('checked', true);
+            $row.closest('.diagnostico-item').fadeOut(300);
+          });
+          
+          // Adicionar o botão ao footer do card
+          var $cardFooter = $('<div class="card-footer p-2 text-center"></div>');
+          $cardFooter.append($deleteButton);
+          $row.find('.card').append($cardFooter);
+        }, 100);
+      }
+    });
+  });
+})(django.jQuery);
+</script>

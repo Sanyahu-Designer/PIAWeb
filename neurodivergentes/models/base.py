@@ -102,6 +102,25 @@ class Neurodivergente(models.Model):
         null=True
     )
     
+    # Escola e Ano Escolar
+    escola = models.ForeignKey(
+        'escola.Escola',
+        verbose_name='Escola',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='alunos'
+    )
+    ano_escolar = models.ForeignKey(
+        'neurodivergentes.SeriesCursadas',
+        verbose_name='Ano Escolar',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='alunos'
+    )
+    ativo = models.BooleanField('Ativo', default=True)
+    
     # Campos de controle
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)

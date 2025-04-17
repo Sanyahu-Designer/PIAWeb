@@ -110,7 +110,11 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ pdi.status_class }}">{{ pdi.get_status_display }}</span>
+                                    {% if pdi.status == 'ausente' %}
+  <span class="badge bg-danger">{{ pdi.get_status_display }}</span>
+{% else %}
+  <span class="badge bg-{{ pdi.status }}">{{ pdi.get_status_display }}</span>
+{% endif %}
                                 </td>
                                 <td>
                                     <div class="btn-group">

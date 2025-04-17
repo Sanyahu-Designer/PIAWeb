@@ -18,7 +18,23 @@ class NeurodivergenteForms(forms.ModelForm):
             'data_nascimento': forms.DateInput(
                 attrs={'type': 'date'},
                 format='%Y-%m-%d'
-            )
+            ),
+            'escola': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione a escola',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
+            'ano_escolar': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione o ano escolar',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
+            'ativo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'style': 'margin-left: 0.5rem;'
+            })
         }
 
     def clean_cep(self):
@@ -30,19 +46,8 @@ class NeurodivergenteForms(forms.ModelForm):
         # Formata o CEP
         cep_formatado = f'{cep[:5]}-{cep[5:]}'
         
-        # Consulta o CEP na API
-        try:
-            response = requests.get(f'https://viacep.com.br/ws/{cep}/json/')
-            data = response.json()
-            
-            if not data.get('erro'):
-                # Atualiza os campos com os dados do CEP
-                self.cleaned_data['endereco'] = data.get('logradouro', '')
-                self.cleaned_data['bairro'] = data.get('bairro', '')
-                self.cleaned_data['cidade'] = data.get('localidade', '')
-                self.cleaned_data['estado'] = data.get('uf', '').upper()
-        except:
-            pass  # Silently fail if API is unavailable
+        # A consulta à API do ViaCEP agora é feita via JavaScript no frontend
+        # para evitar lentidão durante o salvamento
         
         return cep_formatado
 
@@ -54,7 +59,23 @@ class GrupoFamiliarForm(forms.ModelForm):
             'data_nascimento': forms.DateInput(
                 attrs={'type': 'date'},
                 format='%Y-%m-%d'
-            )
+            ),
+            'escola': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione a escola',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
+            'ano_escolar': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione o ano escolar',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
+            'ativo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'style': 'margin-left: 0.5rem;'
+            })
         }
 
 class NeurodivergenciaForm(forms.ModelForm):
@@ -84,7 +105,8 @@ class PDIForm(forms.ModelForm):
             'observacoes': forms.Textarea(attrs={
                 'rows': 4,
                 'placeholder': 'Observações adicionais sobre o PDI'
-            })
+            }),
+            'neurodivergente': forms.Select(attrs={'class': 'form-select select2', 'data-minimum-results-for-search': '0'})
         }
 
 class PlanoEducacionalForm(forms.ModelForm):

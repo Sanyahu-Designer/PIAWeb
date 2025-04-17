@@ -1,7 +1,7 @@
 {% extends "neurodivergentes/base_pdf.html" %}
 {% load i18n static %}
 
-{% block title %}Relatório PEI - {{ aluno.nome_completo }}{% endblock %}
+{% block title %}Relatório PAEE - {{ aluno.nome_completo }}{% endblock %}
 
 {% block extrastyle %}
 <style>
@@ -131,14 +131,14 @@
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>Relatório Geral - PEI</h1>
+        <h1>RELATÓRIO GERAL - PAEE</h1>
         <h2>{{ aluno.nome_completo }}</h2>
         <p>Período: {{ periodo }}</p>
     </div>
 
     {% for pei in peis %}
     <div class="pei-section">
-        <h3 class="pei-title">PEI - {{ pei.get_mes_display }}/{{ pei.ano }}</h3>
+        <h3 class="pei-title">PAEE - {{ pei.get_mes_display }}/{{ pei.ano }}</h3>
         
         <div class="pei-content">
             <div class="info-row">
@@ -169,7 +169,7 @@
     </div>
     {% empty %}
     <div class="empty-message">
-        <p>Nenhum PEI encontrado no período selecionado.</p>
+        <p>Nenhum PAEE encontrado no período selecionado.</p>
     </div>
     {% endfor %}
 

@@ -101,12 +101,12 @@
                       <tr>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Código INEP</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Escola</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Diretor(a)</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Telefone/Whatsapp</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Cidade</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Estado</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tipo</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Turno</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ativo</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Cidade</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Profissionais</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Capacidade</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
                     </thead>
@@ -124,24 +124,22 @@
                             <p class="text-xs font-weight-bold mb-0">{{ obj.nome }}</p>
                           </td>
                           <td>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.diretor }}</p>
+                          </td>
+                          <td>
                             <p class="text-xs font-weight-bold mb-0">{{ obj.telefone }}</p>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0">{{ obj.cidade }}</p>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0">{{ obj.get_estado_display }}</p>
                           </td>
                           <td>
                             <p class="text-xs font-weight-bold mb-0">{{ obj.get_tipo_display }}</p>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0">{{ obj.get_turnos_display }}</p>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.cidade }}</p>
                           </td>
-                          <td class="align-middle text-center">
-                            <span class="badge badge-sm {% if obj.ativo %}bg-gradient-success{% else %}bg-gradient-secondary{% endif %}">
-                              {% if obj.ativo %}Sim{% else %}Não{% endif %}
-                            </span>
+                          <td>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.profissionais_educacao.count|add:obj.profissionais_saude.count }}</p>
+                          </td>
+                          <td>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.capacidade_atendimento }}</p>
                           </td>
                           <td class="align-middle text-center">
                             <div class="ms-auto">

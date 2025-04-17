@@ -470,6 +470,9 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+        # Garante que o campo 'trimestre' sempre tenha o label correto
+        if 'trimestre' in form.base_fields:
+            form.base_fields['trimestre'].label = 'Trimestre/Bimestre'
         if not obj:  # Se é um novo objeto
             try:
                 profissional = Profissional.objects.get(user=request.user)

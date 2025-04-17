@@ -213,3 +213,15 @@ class Escola(models.Model):
     def clean(self):
         # Validação personalizada pode ser adicionada aqui
         pass
+
+class AnoEscolar(models.Model):
+    nome = models.CharField('Ano Escolar', max_length=50)
+    ativo = models.BooleanField('Ativo', default=True)
+
+    class Meta:
+        verbose_name = 'Ano Escolar'
+        verbose_name_plural = 'Anos Escolares'
+        ordering = ['nome']
+
+    def __str__(self):
+        return self.nome

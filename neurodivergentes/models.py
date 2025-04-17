@@ -5,6 +5,7 @@ from django.utils.html import mark_safe
 from django.core.exceptions import ValidationError
 from datetime import date
 from escola.models import Escola
+from neurodivergentes.models.historico_escolar import SeriesCursadas
 from profissionais.models import Profissional
 
 def validate_future_date(value):
@@ -104,7 +105,28 @@ class Neurodivergente(models.Model):
         blank=True,
         null=True
     )
-    
+
+    # Escola e Ano Escolar
+    escola = models.ForeignKey(
+        Escola,
+        verbose_name='Escola',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='alunos',
+        db_column='escola_id'  # Garante que o Django use a coluna correta
+    )
+    ano_escolar = models.ForeignKey(
+        SeriesCursadas,
+        verbose_name='Ano Escolar',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='alunos',
+        db_column='ano_escolar_id'  # Ajuste se o nome da coluna for diferente
+    )
+    ativo = models.BooleanField('Ativo', default=True)
+
     # Campos de controle
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)

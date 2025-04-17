@@ -1,0 +1,42 @@
+{% extends "admin/edit_inline/tabular.html" %}
+{% load i18n admin_urls static %}
+
+{% block field_sets %}
+  {% for fieldset in inline_admin_form %}
+    {% for line in fieldset %}
+      {% for field in line %}
+        <td class="{% if field.field.name %}field-{{ field.field.name }}{% endif %}">
+          {% if field.is_readonly %}
+            <p>{{ field.contents }}</p>
+          {% else %}
+            {{ field.field.errors.as_ul }}
+            {{ field.field }}
+          {% endif %}
+        </td>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+{% endblock %}
+
+{% block after_related_objects %}
+<script>
+jQuery(function($) {
+  // Estilizar o botão de adicionar
+  $('.add-row a').html('<span class="material-symbols-rounded align-middle opacity-10" style="font-size: 16px;">add</span> Adicionar Meta/Habilidade');
+  $('.add-row a').addClass('btn btn-outline-primary mb-0');
+  
+  // Estilizar os botões de exclusão
+  $('.inline-deletelink').each(function() {
+    var $checkbox = $(this).siblings('input[type=checkbox]');
+    var $label = $('<label>')
+      .attr('for', $checkbox.attr('id'))
+      .addClass('text-danger')
+      .css('cursor', 'pointer')
+      .html('<span class="material-symbols-rounded align-middle opacity-10" style="font-size: 18px;">delete</span> <span class="align-middle">Excluir</span>');
+    
+    $(this).after($label);
+    $(this).hide();
+  });
+});
+</script>
+{% endblock %}

@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de Evolução - {% if evolucao %}{{ evolucao.neurodivergente.nome_completo }}{% else %}{{ neurodivergente.nome_completo }}{% endif %}</title>
+    <title>Relatório de Histórico de Evolução - {% if evolucao %}{{ evolucao.neurodivergente.nome_completo }}{% else %}{{ neurodivergente.nome_completo }}{% endif %}</title>
     <style>
         @font-face {
             font-family: 'Roboto';
@@ -280,11 +280,11 @@
     <div class="container">
         <div class="header">
             {% if evolucao %}
-            <h1>Relatório Individual - Evolução</h1>
+            <h1>RELATÓRIO INDIVIDUAL - HISTÓRICO DE EVOLUÇÃO</h1>
             <h2>{{ evolucao.neurodivergente.nome_completo }}</h2>
-            <p>Data da Evolução: {{ evolucao.data|date:"d/m/Y" }}</p>
+            <p>Data do Histórico de Evolução: {{ evolucao.data|date:"d/m/Y" }}</p>
             {% else %}
-            <h1 style="margin-top: 10px;">Relatório Geral - Evoluções</h1>
+            <h1 style="margin-top: 10px;">RELATÓRIO GERAL - HISTÓRICO DE EVOLUÇÃO</h1>
             <h2>{{ neurodivergente.nome_completo }}</h2>
             <p>Período: {{ data_inicial }} a {{ data_final }}</p>
             {% endif %}
@@ -294,7 +294,7 @@
         {% if evolucao %}
         <!-- Relatório Individual -->
         <div class="evolucao-section">
-            <h3 class="evolucao-title">Detalhes da Evolução</h3>
+            <h3 class="evolucao-title">Detalhes do Histórico de Evolução</h3>
             <div class="evolucao-content">
                 <div class="info-row">
                     <div class="info-col">

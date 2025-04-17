@@ -103,6 +103,7 @@
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade/Sexo</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data do Diagnóstico</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Profissional Responsável</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
                     </thead>
@@ -128,6 +129,7 @@
                                 <h6 class="mb-0 text-sm">
                                   <a href="{% url 'admin:neurodivergentes_neurodivergente_change' obj.neurodivergente.pk %}">{{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}</a>
                                 </h6>
+                                <p class="text-xs text-secondary mb-0">{{ obj.neurodivergente.escola.nome|default:"Sem escola" }}</p>
                               </div>
                             </div>
                           </td>
@@ -145,7 +147,12 @@
                             </span>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0">{% if obj.profissional_diagnostico %}{{ obj.profissional_diagnostico }}{% else %}Não informado{% endif %}</p>
+                            <p class="text-xs font-weight-bold mb-0">{{ obj.profissional_diagnostico|default:"Não informado" }}</p>
+                          </td>
+                          <td class="align-middle text-center">
+                            <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.ativo %}#4CAF50{% else %}#F44336{% endif %}">
+                              {% if obj.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                            </span>
                           </td>
                           <td class="align-middle text-center">
                             <div class="ms-auto">

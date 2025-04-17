@@ -1,12 +1,52 @@
 {% extends "admin/change_form_standard.html" %}
 {% load i18n admin_urls static admin_modify %}
 
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  /* Estilos para o formulário */
+  .fieldset-container {
+    background-color: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+  }
+  .fieldset-container:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  .fieldset-container h5 {
+    font-weight: 600;
+    color: #344767;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.75rem;
+    padding-top: 0; /* Remove o padding superior */
+    margin-top: 0; /* Remove a margem superior */
+    margin-bottom: 1.25rem;
+    text-transform: none; /* Garante que o texto não seja transformado em maiúsculas */
+    font-size: 1.25rem; /* Garante o tamanho adequado da fonte */
+  }
+  .form-row {
+    margin-bottom: 1.25rem;
+  }
+  .form-row label {
+    font-weight: 500;
+    color: #344767;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+</style>
+{% endblock %}
+
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Início' %}</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">Neurodivergentes</a></li>
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:neurodivergentes_categoriacid10_changelist' %}">Categorias CID-10</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:neurodivergentes_categorianeurodivergente_changelist' %}">Categorias CID-10</a></li>
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">
       {% if add %}{% blocktranslate with name=opts.verbose_name %}Adicionar {{ name }}{% endblocktranslate %}
       {% else %}{{ original|truncatewords:"18" }}
@@ -34,7 +74,37 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="col-12">
     <div class="card">
       <div class="card-body">
-        {{ block.super }}
+        {% for fieldset in adminform %}
+          <div class="fieldset-container mb-4">
+            <h5 class="text-dark mb-3">
+              {% if fieldset.name %}{{ fieldset.name }}{% else %}Informações Gerais{% endif %}
+            </h5>
+            {% if fieldset.description %}
+              <div class="description mb-3 text-secondary">{{ fieldset.description|safe }}</div>
+            {% endif %}
+            
+            <div class="row">
+              {% for line in fieldset %}
+                {% for field in line %}
+                  <div class="{% if field.field.name == 'id' %}d-none{% else %}col-md-6 mb-3{% endif %}">
+                    <div class="form-group{% if field.field.required %} required{% endif %}">
+                      <label for="{{ field.field.id_for_label }}">{{ field.field.label }}</label>
+                      {{ field.field }}
+                      
+                      {% if field.field.help_text %}
+                        <div class="help-text text-muted mt-1 small">{{ field.field.help_text|safe }}</div>
+                      {% endif %}
+                      
+                      {% if field.field.errors %}
+                        <div class="error-message text-danger mt-1 small">{{ field.field.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
       </div>
     </div>
   </div>

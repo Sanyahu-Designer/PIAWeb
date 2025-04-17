@@ -118,6 +118,7 @@
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade/Sexo</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total de PDIs</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Último PDI</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                         {% endif %}
                       </tr>
@@ -154,6 +155,7 @@
                                     -
                                   {% endif %}
                                 </h6>
+                                <p class="text-xs text-secondary mb-0">{{ obj.neurodivergente.escola.nome|default:"Sem escola" }}</p>
                               </div>
                             </div>
                           </td>
@@ -164,7 +166,9 @@
                               <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.data_criacao|date:"d/m/Y" }}</span>
                             </td>
                             <td>
-                              {% if obj.status == 'concluido' %}
+                              {% if obj.status == 'ausente' %}
+                                <span class="badge badge-sm" style="background-color: #e53935">Ausente</span>
+                              {% elif obj.status == 'concluido' %}
                                 <span class="badge badge-sm" style="background-color: #66BB6A">Concluído</span>
                               {% elif obj.status == 'em_andamento' %}
                                 <span class="badge badge-sm" style="background-color: #29B6F6">Em andamento</span>
@@ -220,6 +224,11 @@
                             </td>
                             <td>
                               <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.data_criacao|date:"d/m/Y" }}</span>
+                            </td>
+                            <td class="align-middle text-center">
+                              <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.ativo %}#4CAF50{% else %}#F44336{% endif %}">
+                                {% if obj.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                              </span>
                             </td>
                             <td class="align-middle text-center">
                               {% if obj.neurodivergente %}

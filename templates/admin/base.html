@@ -119,16 +119,9 @@
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/neurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/neurodivergente/">
+            <a class="nav-link text-dark {% if 'neurodivergentes/neurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/admin/neurodivergentes/neurodivergente/">
               <i class="material-symbols-rounded opacity-5">person</i>
               <span class="nav-link-text ms-1">Alunos/Pacientes</span>
-            </a>
-          </li>
-          
-          <li class="nav-item">
-            <a class="nav-link text-dark {% if 'adaptacao_curricular' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/">
-              <i class="material-symbols-rounded opacity-5">school</i>
-              <span class="nav-link-text ms-1">ACI</span>
             </a>
           </li>
           
@@ -142,7 +135,7 @@
           <li class="nav-item">
             <a class="nav-link text-dark {% if 'neurodivergentes/registroevolucao' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/registroevolucao/">
               <i class="material-symbols-rounded opacity-5">trending_up</i>
-              <span class="nav-link-text ms-1">Evolução</span>
+              <span class="nav-link-text ms-1">Histórico de Evolução</span>
             </a>
           </li>
           
@@ -154,6 +147,13 @@
           </li>
           
           <li class="nav-item">
+            <a class="nav-link text-dark {% if 'neurodivergentes/monitoramento' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/monitoramento/">
+              <i class="material-symbols-rounded opacity-5">assignment_ind</i>
+              <span class="nav-link-text ms-1">PAEE</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
             <a class="nav-link text-dark {% if 'neurodivergentes/pdi' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pdi/">
               <i class="material-symbols-rounded opacity-5">assignment</i>
               <span class="nav-link-text ms-1">PDIs</span>
@@ -161,8 +161,8 @@
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/monitoramento' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/monitoramento/">
-              <i class="material-symbols-rounded opacity-5">assignment_ind</i>
+            <a class="nav-link text-dark {% if 'adaptacao_curricular' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/">
+              <i class="material-symbols-rounded opacity-5">school</i>
               <span class="nav-link-text ms-1">PEI</span>
             </a>
           </li>

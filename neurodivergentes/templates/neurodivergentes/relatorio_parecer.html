@@ -82,11 +82,10 @@
         }
         
         .assinatura {
-            position: fixed;
-            bottom: 70px;
-            left: 0;
-            right: 0;
             text-align: center;
+            margin-top: 100px;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
         }
         
         .assinatura-linha {
@@ -102,6 +101,18 @@
             
             .no-print {
                 display: none;
+            }
+            
+            .assinatura {
+                position: relative;
+                page-break-before: avoid;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+            
+            .footer {
+                position: fixed;
+                bottom: 20px;
             }
         }
     </style>
@@ -139,7 +150,31 @@
             <span class="info-label">Profissional Responsável:</span>
             <span class="info-value">{{ parecer.profissional_responsavel|default:"-" }}</span>
         </div>
+        {% if parecer.grafico_data_inicio and parecer.grafico_data_fim %}
+        <div class="info-item">
+            <span class="info-label">Período de Análise:</span>
+            <span class="info-value">{{ parecer.grafico_data_inicio|date:"d/m/Y" }} a {{ parecer.grafico_data_fim|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
     </div>
+    
+    {% if parecer.grafico_frequencia %}
+    <div class="section">
+        <h3>Gráfico de Frequência de Atendimento</h3>
+        <div style="text-align: center; margin: 15px 0;">
+            <img src="{{ parecer.grafico_frequencia.url }}" alt="Gráfico de Frequência" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+    {% endif %}
+
+    {% if parecer.grafico_monitoramento %}
+    <div class="section">
+        <h3>Gráfico de Monitoramento de Metas/Habilidades</h3>
+        <div style="text-align: center; margin: 15px 0;">
+            <img src="{{ parecer.grafico_monitoramento.url }}" alt="Gráfico de Monitoramento" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+    {% endif %}
 
     <div class="section">
         <h3>Parecer Descritivo</h3>
@@ -147,7 +182,7 @@
             {{ parecer.evolucao|linebreaks }}
         </div>
     </div>
-
+    
     {% if parecer.anexos %}
     <div class="section">
         <h3>Anexos</h3>
@@ -156,7 +191,9 @@
         </div>
     </div>
     {% endif %}
-
+    
+    <div style="margin-top: 80px;"></div>
+    
     <div class="assinatura">
         <div class="assinatura-linha"></div>
         <p style="margin: 0;">Assinatura do responsável</p>

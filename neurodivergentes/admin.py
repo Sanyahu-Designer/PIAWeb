@@ -115,6 +115,12 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
                 'celular', 'email'
             ),
             'classes': ('tab-contato',)
+        }),
+        ('Informações Escolares', {
+            'fields': (
+                'escola', 'ano_escolar', 'ativo'
+            ),
+            'classes': ('tab-informacoes-escolares',)
         })
     )
 
@@ -122,12 +128,13 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
     
     class Media:
         css = {
-            'all': ('neurodivergentes/css/neurodivergentes_forms.css',)
+            'all': ('admin/css/neurodivergentes_forms.css',)
         }
         js = (
             'admin/js/jquery.mask.min.js',
             'admin/js/neurodivergentes_admin.js',
             'admin/js/grupo_familiar.js',
+            'admin/js/cep_autocomplete.js',
         )
 
 @admin.register(CategoriaNeurodivergente)
@@ -135,7 +142,15 @@ class CategoriaNeurodivergentesAdmin(admin.ModelAdmin):
     list_display = ['nome']
     ordering = ['nome']
     search_fields = ['nome']
+    exclude = ['ordem']
     change_list_template = 'admin/cid10/categoriacid10/change_list_material_dashboard.html'
+    change_form_template = 'admin/cid10/categoriacid10/change_form.html'
+    
+    fieldsets = [
+        ('Informações Gerais', {
+            'fields': ['nome', 'descricao']
+        }),
+    ]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -149,6 +164,14 @@ class CategoriaNeurodivergentesAdmin(admin.ModelAdmin):
         
         return form
 
+    def save_model(self, request, obj, form, change):
+        # Se for uma nova categoria (sem ordem definida), define a ordem automaticamente
+        if not change or obj.ordem == 0:
+            # Obtém o maior valor de ordem existente e adiciona 1
+            max_ordem = CategoriaNeurodivergente.objects.aggregate(models.Max('ordem'))['ordem__max'] or 0
+            obj.ordem = max_ordem + 1
+        super().save_model(request, obj, form, change)
+        
     def __str__(self):
         return self.nome
 
@@ -174,39 +197,100 @@ class CategoriaNeurodivergentesAdmin(admin.ModelAdmin):
 
 @admin.register(CondicaoNeurodivergente)
 class CondicaoNeurodivergentesAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'categoria', 'cid_10', 'ativo']
-    list_filter = ['categoria', 'ativo']
+    list_display = ['nome', 'categoria', 'cid_10']
+    list_filter = ['categoria']
     search_fields = ['nome', 'cid_10']
     ordering = ['nome']
+    exclude = ['ativo']  # Excluir o campo 'ativo' do formulário
     change_list_template = 'admin/cid10/condicaocid10/change_list_material_dashboard.html'
-
+    change_form_template = 'admin/cid10/condicaocid10/change_form.html'
+    
+    fieldsets = [
+        ('Informações Gerais', {
+            'fields': ['categoria', 'nome', 'cid_10', 'descricao']
+        }),
+    ]
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        
+        # Personalizar widget de seleção com classes do Select2
+        for field_name in form.base_fields:
+            form.base_fields[field_name].widget.attrs.update({
+                'class': 'form-control',
+                'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem;'
+            })
+        
+        return form
+        
+    def save_model(self, request, obj, form, change):
+        # Garantir que o campo 'ativo' sempre seja True
+        obj.ativo = True
+        super().save_model(request, obj, form, change)
+    
+    class Media:
+        css = {
+            'all': (
+                'admin/css/base.css',
+                'static/admin/css/edit_form_standard.css',
+                'static/admin/css/form_fields_style.css'
+            )
+        }
+        js = (
+            'admin/js/jquery.js',
+            'admin/js/jquery.init.js',
+            'admin/js/core.js',
+            'admin/js/admin/RelatedObjectLookups.js',
+            'admin/js/actions.js',
+            'admin/js/urlify.js',
+            'admin/js/prepopulate.js',
+            'admin/js/vendor/select2/select2.full.min.js',
+            'admin/js/vendor/select2/i18n/pt-BR.js'
+        )
+    
 # Formulário personalizado para DiagnosticoNeurodivergente
     
 class DiagnosticoNeurodivergenteForms(forms.ModelForm):
     class Meta:
         model = DiagnosticoNeurodivergente
         fields = ('condicao', 'data_identificacao', 'observacoes')
-        
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Armazena o estado original do formulário para comparar depois
+        if self.instance and self.instance.pk:
+            self.original_condicao_id = self.instance.condicao_id
+        else:
+            self.original_condicao_id = None
+            
     def save(self, commit=True):
         instance = super().save(commit=False)
         # Garante que a categoria seja definida com base na condição
         if instance.condicao_id:
             instance.categoria = instance.condicao.categoria
+        
         if commit:
             instance.save()
+        
         return instance
 
 class DiagnosticoInline(admin.StackedInline):
     model = DiagnosticoNeurodivergente
     form = DiagnosticoNeurodivergenteForms
     extra = 1
-    min_num = 1
+    min_num = 0  # Alterado para permitir remover todos os diagnósticos
+    can_delete = True
     verbose_name = 'Diagnóstico'
     verbose_name_plural = 'Diagnósticos'
+    template = 'admin/neurodivergentes/diagnostico_stacked_custom.html'
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={
             'class': 'vDateField form-control datetimepicker', 
             'type': 'date',
+            'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;'
+        })},
+        models.ForeignKey: {'widget': forms.Select(attrs={
+            'class': 'form-control select2',
             'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;'
         })}
     }
@@ -239,15 +323,7 @@ class DiagnosticoInline(admin.StackedInline):
         js = ('admin/js/neurodivergentes_admin.js',)
     
     def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        
-        class CustomFormset(formset):
-            def _construct_form(self, *args, **kwargs):
-                form = super()._construct_form(*args, **kwargs)
-                if form.instance and form.instance.data_identificacao:
-                    form.initial['data_identificacao'] = form.instance.data_identificacao.strftime('%Y-%m-%d')
-                return form
-        return CustomFormset
+        return super().get_formset(request, obj, **kwargs)
 
 class AdaptacaoCurricularInline(admin.StackedInline):
     model = AdaptacaoCurricular
@@ -265,15 +341,26 @@ class NeurodivergenciaAdmin(admin.ModelAdmin):
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     change_list_template = 'admin/neurodivergentes/neurodivergencia/change_list_material_dashboard.html'
     
+    def save_model(self, request, obj, form, change):
+        """Salva o modelo principal"""
+        obj.save()
+        
     def save_formset(self, request, form, formset, change):
-        """Garante que a categoria seja definida corretamente antes de salvar"""
+        """Processa os formsets de diagnósticos"""
+        # Processa as exclusões normalmente
         instances = formset.save(commit=False)
+        
+        # Para cada instância, garante que a categoria seja definida corretamente
         for instance in instances:
-            # Verifica se é um DiagnosticoNeurodivergente e se tem condicao definida
             if isinstance(instance, DiagnosticoNeurodivergente) and instance.condicao_id:
-                # Define a categoria com base na condição selecionada
                 instance.categoria = instance.condicao.categoria
-            instance.save()
+                instance.save()
+        
+        # Processa as exclusões
+        for obj in formset.deleted_objects:
+            obj.delete()
+            
+        # Salva as relações many-to-many
         formset.save_m2m()
     
     fieldsets = (
@@ -306,18 +393,31 @@ class NeurodivergenciaAdmin(admin.ModelAdmin):
 
 @admin.register(MetaHabilidade)
 class MetaHabilidadeAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'descricao', 'ativo']
-    list_filter = ['ativo']
+    list_display = ['nome', 'descricao']
+    list_filter = []
     search_fields = ['nome', 'descricao']
     ordering = ['nome']
+    exclude = ['ativo']
     change_list_template = 'admin/metashabilidades/metahabilidade/change_list_material_dashboard.html'
+    change_form_template = 'admin/metashabilidades/metahabilidade/change_form.html'
+    
+    fieldsets = [
+        ('Informações Gerais', {
+            'fields': ['nome', 'descricao']
+        }),
+    ]
+    
+    def save_model(self, request, obj, form, change):
+        obj.ativo = True
+        super().save_model(request, obj, form, change)
     
 class PDIMetaHabilidadeInline(admin.TabularInline):
     model = PDIMetaHabilidade
     extra = 1
-    min_num = 1
+    can_delete = True
     fields = ('meta_habilidade', 'progresso')
-    classes = ('meta-habilidade-inline',)
+
+
 
 @admin.register(PDI)
 class PDIAdmin(admin.ModelAdmin):
@@ -525,8 +625,8 @@ class PDIAdmin(admin.ModelAdmin):
         """
         css = {
             'all': (
-                'neurodivergentes/css/pdi_forms.css',
-                'neurodivergentes/css/pdi_popup.css',
+                'admin/css/pdi_forms.css',
+                'admin/css/pdi_popup.css',
                 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
             )
         }
@@ -901,6 +1001,9 @@ from django import forms
 
 
 class ParecerAvaliativoAdminForm(forms.ModelForm):
+    grafico_frequencia_base64 = forms.CharField(required=False, widget=forms.HiddenInput())
+    grafico_monitoramento_base64 = forms.CharField(required=False, widget=forms.HiddenInput())
+    
     class Meta:
         model = ParecerAvaliativo
         fields = '__all__'
@@ -920,8 +1023,47 @@ class ParecerAvaliativoAdminForm(forms.ModelForm):
                 'placeholder': 'Descreva a evolução do aluno'
             }),
             'profissional_responsavel': forms.Select(attrs={'class': 'vLargeTextField'}),
-            'anexos': forms.ClearableFileInput(attrs={'class': 'vFileUploadField'})
+            'anexos': forms.ClearableFileInput(attrs={'class': 'vFileUploadField'}),
+            'grafico_data_inicio': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'vDateField',
+                    'id': 'data_inicio'
+                },
+                format='%Y-%m-%d'
+            ),
+            'grafico_data_fim': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'vDateField',
+                    'id': 'data_fim'
+                },
+                format='%Y-%m-%d'
+            ),
+            'grafico_frequencia': forms.HiddenInput(),
+            'grafico_monitoramento': forms.HiddenInput()
         }
+        
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Garantir que os campos de data sejam processados corretamente
+        if 'grafico_data_inicio' in self.data:
+            try:
+                instance.grafico_data_inicio = self.data['grafico_data_inicio']
+            except (ValueError, TypeError):
+                pass
+                
+        if 'grafico_data_fim' in self.data:
+            try:
+                instance.grafico_data_fim = self.data['grafico_data_fim']
+            except (ValueError, TypeError):
+                pass
+        
+        if commit:
+            instance.save()
+            
+        return instance
 
 @admin.register(ParecerAvaliativo)
 class ParecerAvaliativoAdmin(admin.ModelAdmin):
@@ -930,7 +1072,7 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
     list_filter = ['neurodivergente']
     search_fields = ['neurodivergente__primeiro_nome', 'neurodivergente__ultimo_nome']
     list_per_page = 20
-    readonly_fields = ['idade', 'ver_graficos']
+    readonly_fields = ['idade', 'ver_graficos', 'grafico_frequencia', 'grafico_monitoramento']
     
     
     class Media:
@@ -1043,6 +1185,49 @@ class ParecerAvaliativoAdmin(admin.ModelAdmin):
         return ultimo.data_avaliacao.strftime('%d/%m/%Y') if ultimo else '-'
     get_ultimo_parecer.short_description = 'Último Parecer'
 
+    def save_model(self, request, obj, form, change):
+        # Processar as imagens dos gráficos se existirem
+        grafico_frequencia_base64 = request.POST.get('grafico_frequencia_base64')
+        grafico_monitoramento_base64 = request.POST.get('grafico_monitoramento_base64')
+        
+        # Salvar o modelo normalmente
+        super().save_model(request, obj, form, change)
+        
+        if grafico_frequencia_base64 and grafico_frequencia_base64.startswith('data:image/png;base64,'):
+            # Remover o prefixo 'data:image/png;base64,'
+            image_data = grafico_frequencia_base64.split(',')[1]
+            # Decodificar a string base64
+            import base64
+            from django.core.files.base import ContentFile
+            
+            try:
+                image_binary = base64.b64decode(image_data)
+                # Criar um arquivo temporário
+                temp_file = ContentFile(image_binary)
+                # Salvar o arquivo no campo ImageField
+                filename = f'grafico_frequencia_{obj.id}.png'
+                obj.grafico_frequencia.save(filename, temp_file, save=True)
+            except Exception as e:
+                print(f"Erro ao salvar gráfico de frequência: {str(e)}")
+        
+        # Fazer o mesmo para o gráfico de monitoramento
+        if grafico_monitoramento_base64 and grafico_monitoramento_base64.startswith('data:image/png;base64,'):
+            # Remover o prefixo 'data:image/png;base64,'
+            image_data = grafico_monitoramento_base64.split(',')[1]
+            # Decodificar a string base64
+            import base64
+            from django.core.files.base import ContentFile
+            
+            try:
+                image_binary = base64.b64decode(image_data)
+                # Criar um arquivo temporário
+                temp_file = ContentFile(image_binary)
+                # Salvar o arquivo no campo ImageField
+                filename = f'grafico_monitoramento_{obj.id}.png'
+                obj.grafico_monitoramento.save(filename, temp_file, save=True)
+            except Exception as e:
+                print(f"Erro ao salvar gráfico de monitoramento: {str(e)}")
+    
     def get_view_button(self, obj):
         if 'neurodivergente__id__exact' in self.request.GET:
             return ''
@@ -1175,5 +1360,19 @@ class AnamneseAdmin(admin.ModelAdmin):
 #        }),
 #        ('Detalhes do Plano', {
 #            'fields': ('objetivos', 'estrategias', 'recursos')
+#        }),
+#    )       'fields': ('objetivos', 'estrategias', 'recursos')
+#        }),
+#    )   }),
+#    )       'fields': ('objetivos', 'estrategias', 'recursos')
+#        }),
+#    )   }),
+#        ('Detalhes do Plano', {
+#            'fields': ('objetivos', 'estrategias', 'recursos')
+#        }),
+#    )       'fields': ('objetivos', 'estrategias', 'recursos')
+#        }),
+#    )   }),
+#    )       'fields': ('objetivos', 'estrategias', 'recursos')
 #        }),
 #    )

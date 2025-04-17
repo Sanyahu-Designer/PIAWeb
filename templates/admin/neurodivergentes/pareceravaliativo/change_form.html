@@ -135,7 +135,7 @@
   
   /* Estilos para os gráficos */
   .grafico-box {
-    height: 400px;
+    height: 500px;
     padding: 20px;
     background: white;
     border: 1px solid #ddd;
@@ -183,6 +183,23 @@
     background: #d81b60;
   }
 </style>
+{% endblock %}
+
+{% block navbar_buttons %}{{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Início' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">
+      {% if add %}{% blocktranslate with name=opts.verbose_name %}Adicionar {{ name }}{% endblocktranslate %}
+      {% else %}{{ original|truncatewords:"18" }}
+      {% endif %}
+    </li>
+  </ol>
+</nav>
 {% endblock %}
 
 {% block field_sets %}
@@ -239,13 +256,13 @@
                                 <label for="data_inicio" class="mb-0">Período de Análise:</label>
                               </div>
                               <div class="col-md-3">
-                                <input type="date" id="data_inicio" name="data_inicio" class="form-control form-control-sm">
+                                <input type="date" id="data_inicio" name="grafico_data_inicio" class="form-control form-control-sm" value="{{ adminform.form.instance.grafico_data_inicio|date:'Y-m-d' }}">
                               </div>
                               <div class="col-md-1 text-center">
                                 <span>até</span>
                               </div>
                               <div class="col-md-3">
-                                <input type="date" id="data_fim" name="data_fim" class="form-control form-control-sm">
+                                <input type="date" id="data_fim" name="grafico_data_fim" class="form-control form-control-sm" value="{{ adminform.form.instance.grafico_data_fim|date:'Y-m-d' }}">
                               </div>
                               <div class="col-md-2">
                                 <button 
@@ -463,12 +480,69 @@
 
 {% block extrajs %}{{ block.super }}
 <script>
+  // Função para converter canvas em base64
+  function canvasToBase64(canvas) {
+    if (!canvas) return null;
+    try {
+      return canvas.toDataURL('image/png');
+    } catch (e) {
+      console.error('Erro ao converter canvas para base64:', e);
+      return null;
+    }
+  }
+  
+  // Adicionar handler para o evento de submit do formulário
   document.addEventListener('DOMContentLoaded', function() {
-    // Modificar o título da página
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        // Verificar se os gráficos existem
+        const canvasFrequencia = document.getElementById('graficoFrequencia');
+        const canvasMonitoramento = document.getElementById('graficoMonitoramento');
+        
+        if (canvasFrequencia) {
+          // Obter o campo oculto ou criar um novo
+          let frequenciaInput = document.querySelector('input[name="grafico_frequencia_base64"]');
+          if (!frequenciaInput) {
+            frequenciaInput = document.createElement('input');
+            frequenciaInput.type = 'hidden';
+            frequenciaInput.name = 'grafico_frequencia_base64';
+            form.appendChild(frequenciaInput);
+          }
+          frequenciaInput.value = canvasToBase64(canvasFrequencia);
+        }
+        
+        if (canvasMonitoramento) {
+          // Obter o campo oculto ou criar um novo
+          let monitoramentoInput = document.querySelector('input[name="grafico_monitoramento_base64"]');
+          if (!monitoramentoInput) {
+            monitoramentoInput = document.createElement('input');
+            monitoramentoInput.type = 'hidden';
+            monitoramentoInput.name = 'grafico_monitoramento_base64';
+            form.appendChild(monitoramentoInput);
+          }
+          monitoramentoInput.value = canvasToBase64(canvasMonitoramento);
+        }
+      });
+    }
+    
+    // Modificar o título da página e o breadcrumb
     if (!document.querySelector('body.add-form')) {
       const titleElement = document.querySelector('.card-header .shadow-dark h6');
-      if (titleElement) {
-        titleElement.textContent = 'Parecer - ' + (document.querySelector('.field-neurodivergente .select2-selection__rendered').textContent || 'Aluno/Paciente');
+      const breadcrumbLastItem = document.querySelector('.breadcrumb-item.active');
+      
+      if (titleElement || breadcrumbLastItem) {
+        const neurodivergenteName = document.querySelector('.field-neurodivergente .select2-selection__rendered').textContent || 'Aluno/Paciente';
+        
+        // Atualizar o título do cabeçalho
+        if (titleElement) {
+          titleElement.textContent = 'Parecer - ' + neurodivergenteName;
+        }
+        
+        // Atualizar o último item do breadcrumb
+        if (breadcrumbLastItem) {
+          breadcrumbLastItem.textContent = 'Parecer - ' + neurodivergenteName;
+        }
       }
     }
     
@@ -584,7 +658,9 @@
                 padding: 12,
                 font: {
                   size: 12
-                }
+                },
+                stepSize: 1,
+                max: 10
               }
             },
             x: {
@@ -606,7 +682,9 @@
                 padding: 12,
                 font: {
                   size: 12
-                }
+                },
+                stepSize: 1,
+                max: 10
               }
             }
           }
@@ -667,11 +745,18 @@
               intersect: false,
               padding: 12,
               callbacks: {
+                title: function(context) {
+                  // Retorna a data correta como título do tooltip
+                  if (context.length > 0 && context[0].raw && context[0].raw.data_idx !== undefined) {
+                    return dados.labels[context[0].raw.data_idx] || '';
+                  }
+                  return '';
+                },
                 label: function(context) {
                   let label = context.dataset.label || '';
                   let progresso = context.raw.y || 0;
-                  let data = dados.labels[context.raw.data_idx] || '';
-                  return `${label}: ${progresso}% (${data})`;
+                  // Não incluir a data aqui, pois já está no título
+                  return `${label}: ${progresso}%`;
                 }
               }
             }
@@ -699,8 +784,13 @@
                 font: {
                   size: 12
                 },
-                min: -5,
-                max: 105
+                stepSize: 10,
+                min: 0,
+                max: 100,
+                // Forçar a exibição apenas de valores múltiplos de 10
+                callback: function(value) {
+                  return value % 10 === 0 ? value : null;
+                }
               },
               afterFit: function(scaleInstance) {
                 scaleInstance.paddingTop = 40;
@@ -754,13 +844,30 @@
       return;
     }
     
-    const dataInicio = document.getElementById('data_inicio').value;
-    const dataFim = document.getElementById('data_fim').value;
+    const inputInicio = document.getElementById('data_inicio');
+    const inputFim = document.getElementById('data_fim');
+    
+    if (!inputInicio || !inputFim) {
+      console.error('Campos de data não encontrados');
+      return;
+    }
+    
+    const dataInicio = inputInicio.value;
+    const dataFim = inputFim.value;
     
     if (!dataInicio || !dataFim) {
       alert('Por favor, selecione as datas de início e fim.');
       return;
     }
+    
+    console.log(`Atualizando gráficos com datas: ${dataInicio} até ${dataFim}`);
+    
+    // Ajustar as escalas dos gráficos após a atualização
+    setTimeout(function() {
+      ajustarGraficoFrequencia();
+      ajustarGraficoMonitoramento();
+      console.log('Escalas dos gráficos ajustadas após atualização manual');
+    }, 1000);
     
     // Obter o ID do aluno do campo neurodivergente
     const neurodivergentePk = document.querySelector('select[name="neurodivergente"]').value;
@@ -792,5 +899,138 @@
         alert('Ocorreu um erro ao buscar os dados dos gráficos. Por favor, tente novamente.');
       });
   }
+
+  // Função para ajustar a escala do gráfico de frequência (de 1 em 1 até 10)
+  function ajustarGraficoFrequencia() {
+    if (chartFrequencia) {
+      chartFrequencia.options.scales.y.ticks.stepSize = 1;
+      chartFrequencia.options.scales.y.max = 10;
+      chartFrequencia.update();
+    }
+  }
+
+  // Função para ajustar a escala do gráfico de monitoramento (de 10 em 10 até 100)
+  function ajustarGraficoMonitoramento() {
+    if (chartMonitoramento) {
+      // Aumentar o espaço para o gráfico
+      chartMonitoramento.options.layout.padding = {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50
+      };
+      
+      // Definir configurações para mostrar apenas valores de 10 em 10
+      chartMonitoramento.options.scales.y = {
+        min: 0,
+        max: 100,
+        // Aumentar o espaço entre as linhas
+        border: {
+          display: false
+        },
+        ticks: {
+          stepSize: 10,
+          precision: 0,
+          autoSkip: false,
+          maxTicksLimit: 11, // 0, 10, 20, ..., 100 (11 valores)
+          padding: 15, // Aumentar o padding dos ticks
+          callback: function(value) {
+            // Mostrar apenas valores múltiplos de 10
+            if (value % 10 === 0) {
+              return value;
+            }
+            return null;
+          }
+        },
+        grid: {
+          drawBorder: false,
+          lineWidth: 1.5,
+          color: 'rgba(0, 0, 0, 0.1)',
+          tickLength: 8,
+          z: -1,
+          // Aumentar o espaçamento entre as linhas de grade
+          offset: true
+        },
+        title: {
+          display: true,
+          text: 'Progresso (%)',
+          font: {
+            weight: 'bold',
+            size: 14
+          },
+          padding: {
+            bottom: 25
+          }
+        }
+      };
+      
+      // Aplicar as alterações
+      chartMonitoramento.update();
+    }
+  }
+  
+  // Inicializar os gráficos quando a página carregar
+  document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se estamos em modo de edição e se os campos de data existem
+    const dataInicioField = document.getElementById('data_inicio');
+    const dataFimField = document.getElementById('data_fim');
+    
+    if (dataInicioField && dataFimField) {
+      console.log('Campos de data encontrados');
+      
+      // Se os campos estiverem vazios, definir valores padrão
+      if (!dataInicioField.value) {
+        // Definir data inicial como 6 meses atrás
+        const dataInicio = new Date();
+        dataInicio.setMonth(dataInicio.getMonth() - 6);
+        dataInicioField.value = dataInicio.toISOString().split('T')[0];
+        console.log('Data inicial definida para:', dataInicioField.value);
+      } else {
+        console.log('Data inicial já definida:', dataInicioField.value);
+      }
+      
+      if (!dataFimField.value) {
+        // Definir data final como hoje
+        const dataFim = new Date();
+        dataFimField.value = dataFim.toISOString().split('T')[0];
+        console.log('Data final definida para:', dataFimField.value);
+      } else {
+        console.log('Data final já definida:', dataFimField.value);
+      }
+      
+      // Se estamos em modo de edição e temos um ID de parecer, atualizar os gráficos
+      const neurodivergentePk = document.querySelector('select[name="neurodivergente"]');
+      if (neurodivergentePk && neurodivergentePk.value) {
+        // Atualizar os gráficos com as datas carregadas
+        setTimeout(function() {
+          atualizarGraficos();
+          
+          // Ajustar as escalas dos gráficos após a atualização
+          setTimeout(function() {
+            ajustarGraficoFrequencia();
+            ajustarGraficoMonitoramento();
+            console.log('Escalas dos gráficos ajustadas');
+          }, 500);
+        }, 500); // Pequeno delay para garantir que todos os elementos estejam carregados
+      }
+      
+      // Adicionar evento para garantir que os campos de data sejam atualizados antes do envio do formulário
+      document.querySelector('form').addEventListener('submit', function() {
+        console.log('Formulário sendo enviado, verificando campos de data...');
+        
+        // Garantir que os campos de data estejam atualizados com os valores mais recentes
+        if (dataInicioField && dataInicioField.value) {
+          console.log('Data inicial para envio:', dataInicioField.value);
+        }
+        
+        if (dataFimField && dataFimField.value) {
+          console.log('Data final para envio:', dataFimField.value);
+        }
+        
+        // Não interrompemos o envio normal do formulário
+        // O Django irá processar os campos normalmente
+      });
+    }
+  });
 </script>
 {% endblock %}

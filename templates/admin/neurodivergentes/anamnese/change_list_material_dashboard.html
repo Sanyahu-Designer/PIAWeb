@@ -103,6 +103,7 @@
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Contato</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Data de Registro</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Anexos</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
@@ -129,6 +130,7 @@
                                 <h6 class="mb-0 text-sm">
                                   <a href="{% url 'admin:neurodivergentes_anamnese_change' obj.pk %}">{{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}</a>
                                 </h6>
+                                <p class="text-xs text-secondary mb-0">{{ obj.neurodivergente.escola.nome|default:"Sem escola" }}</p>
                               </div>
                             </div>
                           </td>
@@ -140,8 +142,14 @@
                             <p class="text-xs font-weight-bold mb-0">{% if obj.neurodivergente.celular %}{{ obj.neurodivergente.celular }}{% else %}Não informado{% endif %}</p>
                             <p class="text-xs text-secondary mb-0">{% if obj.neurodivergente.email %}{{ obj.neurodivergente.email }}{% else %}Sem e-mail{% endif %}</p>
                           </td>
+
                           <td class="align-middle text-center">
                             <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.created_at|date:"d/m/Y" }}</span>
+                          </td>
+                          <td class="align-middle text-center">
+                            <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.ativo %}#4CAF50{% else %}#F44336{% endif %}">
+                              {% if obj.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                            </span>
                           </td>
                           <td class="align-middle text-center">
                             {% if obj.anexos and obj.anexos.name %}

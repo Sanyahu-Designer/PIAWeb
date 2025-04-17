@@ -63,6 +63,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Application definition
 INSTALLED_APPS = [
+    'neurodivergentes',
     'django.contrib.admin',
     'django.contrib.auth',  # Mantendo a aplicação auth original
     'django.contrib.contenttypes',
@@ -74,7 +75,6 @@ INSTALLED_APPS = [
     'core',
     'profissionais_app',
     'escola',
-    'neurodivergentes',
     'adaptacao_curricular',
     'django_ckeditor_5',
     'realtime',

@@ -202,6 +202,7 @@
 
 {% block field_sets %}
   {% for fieldset in adminform %}
+    {% if fieldset.name != 'Informações Escolares' %}
     <div class="fieldset-container mb-4">
       <h5 class="text-dark mb-3">
         {% if fieldset.name %}{{ fieldset.name }}{% else %}Informações Gerais{% endif %}
@@ -309,6 +310,7 @@
         {% endfor %}
       {% endif %}
     </div>
+    {% endif %}
   {% endfor %}
 {% endblock %}
 

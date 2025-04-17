@@ -116,6 +116,7 @@
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade/Sexo</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total de Evoluções</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Última Evolução</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
                     </thead>
@@ -141,6 +142,7 @@
                                 <h6 class="mb-0 text-sm">
                                   <a href="{% url 'neurodivergentes:lista_evolucao' obj.neurodivergente.id %}">{{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}</a>
                                 </h6>
+                                <p class="text-xs text-secondary mb-0">{{ obj.neurodivergente.escola.nome|default:"Sem escola" }}</p>
                               </div>
                             </div>
                           </td>
@@ -152,7 +154,24 @@
                             <p class="text-xs font-weight-bold mb-0">{{ obj.neurodivergente.registros_evolucao.count }}</p>
                           </td>
                           <td class="align-middle text-center">
-                            <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.data|date:"d/m/Y" }}</span>
+                            {% if obj.neurodivergente %}
+                              {% with ultima=obj.neurodivergente.registros_evolucao.all|dictsortreversed:"data"|first %}
+                                {% if ultima %}
+                                  <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">
+                                    {{ ultima.data|date:"d/m/Y" }}
+                                  </span>
+                                {% else %}
+                                  <span class="badge badge-sm bg-secondary">-</span>
+                                {% endif %}
+                              {% endwith %}
+                            {% else %}
+                              <span class="badge badge-sm bg-secondary">-</span>
+                            {% endif %}
+                          </td>
+                          <td class="align-middle text-center">
+                            <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.ativo %}#4CAF50{% else %}#F44336{% endif %}">
+                              {% if obj.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                            </span>
                           </td>
                           <td class="align-middle text-center">
                             <div class="ms-auto">

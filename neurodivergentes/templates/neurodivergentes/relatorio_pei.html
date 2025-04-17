@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de PEI - {{ aluno.nome_completo }}</title>
+    <title>Relatório de PAEE - {{ aluno.nome_completo }}</title>
     <style>
         @font-face {
             font-family: 'Roboto';
@@ -218,14 +218,14 @@
 
     <div class="container">
         <div class="header">
-            <h1>Relatório Individual - PEI</h1>
+            <h1>RELATÓRIO INDIVIDUAL - PAEE</h1>
             <h2>{{ aluno.nome_completo }}</h2>
-            <p>Data do PEI: {{ pei.get_mes_display }}/{{ pei.ano }}</p>
+            <p>Data do PAEE: {{ pei.get_mes_display }}/{{ pei.ano }}</p>
             <p>Relatório gerado em {{ data_impressao|date:"d/m/Y H:i" }}</p>
         </div>
 
         <div class="pei-section">
-            <h3 class="pei-title">Detalhes do PEI</h3>
+            <h3 class="pei-title">Detalhes do PAEE</h3>
             <div class="pei-content">
                 <div class="info-row">
                     <div class="info-col">

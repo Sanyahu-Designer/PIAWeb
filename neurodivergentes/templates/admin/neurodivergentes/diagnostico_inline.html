@@ -51,6 +51,15 @@
 </div>
 
 <script type="text/javascript">
+// Definir URL para a função get_condicoes
+if (!django.urls) {
+    django.urls = {};
+}
+if (!django.urls.diagnostico) {
+    django.urls.diagnostico = {};
+}
+django.urls.diagnostico.get_condicoes = "{% url 'neurodivergentes:get_condicoes' %}";
+
 (function($) {
     'use strict';
     $(document).ready(function() {
@@ -80,6 +89,9 @@
             }
         }
 
+        // Não precisamos mais adicionar o evento onclick diretamente ao botão de adicionar
+        // O script diagnostico_inline_fix.js cuidará disso
+
         // Atualizar condições quando uma categoria é selecionada
         $('.diagnosticos-container').on('change', 'select[name$="-categoria"]', function() {
             updateCondicoes($(this).closest('tr'));
@@ -90,15 +102,17 @@
             updateCondicoes($(this));
         });
 
-        // Atualizar condições quando uma nova linha é adicionada
-        $('.add-row a').click(function() {
-            setTimeout(function() {
-                $('.diagnosticos-container tr:not(.empty-form)').each(function() {
-                    if (!$(this).find('select[name$="-condicao"]').html()) {
-                        updateCondicoes($(this));
-                    }
-                });
-            }, 100);
+        // Observar quando um novo diagnóstico é adicionado para atualizar as condições
+        $(document).on('formset:added', function(event, $row, formsetName) {
+            if (formsetName === '{{ inline_admin_formset.formset.prefix }}') {
+                setTimeout(function() {
+                    $('.diagnosticos-container tr:not(.empty-form)').each(function() {
+                        if (!$(this).find('select[name$="-condicao"]').html()) {
+                            updateCondicoes($(this));
+                        }
+                    });
+                }, 100);
+            }
         });
     });
 })(django.jQuery);

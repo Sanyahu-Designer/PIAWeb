@@ -39,6 +39,22 @@ input[type="date"] {
 
 /* Estilo para campos de texto */
 textarea {
+
+/* === Destaque para status 'Ausente' === */
+select[name="status"] option[value="ausente"] {
+    color: #fff;
+    background: #e53935;
+    font-weight: bold;
+}
+
+/* Para Select2 (se utilizado) */
+.select2-results__option[aria-label="Ausente"],
+.select2-selection__rendered[title="Ausente"] {
+    color: #fff !important;
+    background: #e53935 !important;
+    font-weight: bold;
+}
+
     width: 100%;
     min-height: 100px;
     padding: 8px;

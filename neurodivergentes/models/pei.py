@@ -60,8 +60,8 @@ class Monitoramento(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'PEI'
-        verbose_name_plural = 'PEI'
+        verbose_name = 'PAEE'
+        verbose_name_plural = 'PAEE'
         ordering = ['-ano', '-mes']
         unique_together = ['neurodivergente', 'mes', 'ano']
 

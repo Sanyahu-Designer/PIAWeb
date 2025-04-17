@@ -5,6 +5,15 @@
 <link rel="stylesheet" type="text/css" href="{% static 'admin/css/form_fields_style.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'admin/css/grupo_familiar.css' %}">
 <style>
+  /* Estilo personalizado para o switch Ativo */
+  .form-check-input:checked {
+    background-color: #e91e63 !important;
+    border-color: #e91e63 !important;
+  }
+  .form-check-input:focus {
+    border-color: #e91e63 !important;
+    box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25) !important;
+  }
   .card-body {
     padding: 1.5rem 2rem;
   }
@@ -231,6 +240,7 @@
 
 {% block field_sets %}
   {% for fieldset in adminform %}
+    {% if fieldset.name != 'Informações Escolares' %}
     <div class="fieldset-container mb-4">
       <h5 class="text-dark mb-3">
         {% if fieldset.name %}{{ fieldset.name }}{% else %}Informações Gerais{% endif %}
@@ -370,7 +380,80 @@
         {% endfor %}
       {% endif %}
     </div>
+    {% endif %}
   {% endfor %}
+{% endblock %}
+
+{% block after_field_sets %}
+    {{ block.super }}
+    
+    {% if show_relatorio_geral %}
+    <div class="module aligned">
+        <h2>Relatório Geral do Aluno</h2>
+        <div class="form-row">
+            {% include "neurodivergentes/filtro_relatorio.html" with aluno=original %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Card de Informações Escolares -->
+    <div class="fieldset-container mb-4">
+        <h5 class="text-dark mb-3">
+            <i class="material-symbols-rounded opacity-10 me-2">school</i>
+            Informações Escolares
+        </h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-group{% if adminform.form.fields.escola.required %} required{% endif %}">
+                    <label for="id_escola">{{ adminform.form.fields.escola.label }}</label>
+                    {{ adminform.form.escola }}
+                    {% if adminform.form.fields.escola.help_text %}
+                        <div class="help-text">{{ adminform.form.fields.escola.help_text|safe }}</div>
+                    {% endif %}
+                    {% if adminform.form.errors.escola %}
+                        <div class="alert alert-danger text-white mt-2 p-2">
+                            {{ adminform.form.errors.escola }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-group{% if adminform.form.fields.ano_escolar.required %} required{% endif %}">
+                    <label for="id_ano_escolar">{{ adminform.form.fields.ano_escolar.label }}</label>
+                    {{ adminform.form.ano_escolar }}
+                    {% if adminform.form.fields.ano_escolar.help_text %}
+                        <div class="help-text">{{ adminform.form.fields.ano_escolar.help_text|safe }}</div>
+                    {% endif %}
+                    {% if adminform.form.errors.ano_escolar %}
+                        <div class="alert alert-danger text-white mt-2 p-2">
+                            {{ adminform.form.errors.ano_escolar }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-12 mb-3">
+                <div class="form-group{% if adminform.form.fields.ativo.required %} required{% endif %}">
+                    <div style="margin-top: 15px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; justify-content: flex-start;">
+                            <div class="form-check form-switch" style="margin: 0; padding-left: 40px;">
+                                {{ adminform.form.ativo }}
+                            </div>
+                            <span style="font-size: 14px; color: #344767; font-weight: 500; margin-left: 15px;">Inativo/Ativo</span>
+                        </div>
+                    </div>
+                    </div>
+                    {% if adminform.form.fields.ativo.help_text %}
+                        <div class="help-text">{{ adminform.form.fields.ativo.help_text|safe }}</div>
+                    {% endif %}
+                    {% if adminform.form.errors.ativo %}
+                        <div class="alert alert-danger text-white mt-2 p-2">
+                            {{ adminform.form.errors.ativo }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block submit_buttons_bottom %}

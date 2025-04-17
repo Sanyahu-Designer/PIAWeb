@@ -96,6 +96,21 @@
 
 {% block navbar_buttons %}{{ block.super }}{% endblock %}
 
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Início' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">
+      {% if add %}{% blocktranslate with name=opts.verbose_name %}Adicionar {{ name }}{% endblocktranslate %}
+      {% else %}{{ original|truncatewords:"18" }}
+      {% endif %}
+    </li>
+  </ol>
+</nav>
+{% endblock %}
+
 {% block field_sets %}
   {% for fieldset in adminform %}
     <div class="fieldset-container mb-4">
@@ -162,10 +177,13 @@
             {% if inline_admin_form.original %}
               {{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}
               {% if inline_admin_form.model_admin.show_delete_link and inline_admin_formset.has_delete_permission %}
-                <span class="delete">
-                  <input type="checkbox" name="{{ inline_admin_form.deletion_field.name }}" id="{{ inline_admin_form.deletion_field.id }}" />
-                  <label for="{{ inline_admin_form.deletion_field.id }}" class="text-danger ms-2">{% translate "Remover" %}</label>
-                </span>
+                <a href="javascript:void(0);" class="btn-excluir-meta-habilidade text-danger d-inline-flex align-items-center ms-2"
+                  onclick="var cb=document.getElementById('{{ inline_admin_form.deletion_field.id }}'); if(cb){cb.checked = !cb.checked; this.style.fontWeight=cb.checked?'bold':'normal';} return false;"
+                  style="background: none; border: none; font-weight: normal; text-decoration: none;">
+                  <span class="material-symbols-rounded align-middle opacity-10" style="font-size: 18px; vertical-align: middle;">delete</span>
+                  <span class="align-middle" style="vertical-align: middle;">{% translate "Excluir" %}</span>
+                  <input type="checkbox" name="{{ inline_admin_form.deletion_field.name }}" id="{{ inline_admin_form.deletion_field.id }}" style="display:none;">
+                </a>
               {% endif %}
             {% else %}
               {{ inline_admin_formset.opts.verbose_name|capfirst }} #{{ forloop.counter }}
@@ -216,11 +234,51 @@
           {{ inline_admin_form.fk_field.field }}
         </div>
       {% endfor %}
+      
+      {% if inline_admin_formset.has_add_permission %}
+        <div class="add-row d-flex justify-content-end mt-2">
+          <a href="javascript:void(0);" class="btn btn-outline-primary mb-0">
+            <span class="material-symbols-rounded align-middle opacity-10" style="font-size: 16px;">add</span>
+            {% translate "Adicionar Meta/Habilidade" %}
+          </a>
+        </div>
+      {% endif %}
     </div>
   {% endfor %}
 {% endblock %}
 
 {% block extrajs %}{{ block.super }}
+<script src="{% static 'admin/js/inlines.js' %}"></script>
+<script>
+// Inicialização padrão dos formsets do Django
+django.jQuery(document).ready(function() {
+  // Estilizar os botões após o carregamento da página
+  setTimeout(function() {
+    // Estilizar botão de adicionar
+    var addButtons = document.querySelectorAll('.add-row a');
+    addButtons.forEach(function(button) {
+      button.innerHTML = '<span class="material-symbols-rounded align-middle opacity-10" style="font-size: 16px;">add</span> Adicionar Meta/Habilidade';
+      button.classList.add('btn', 'btn-outline-primary', 'mb-0');
+    });
+    
+    // Estilizar botões de excluir
+    var deleteLinks = document.querySelectorAll('.inline-deletelink');
+    deleteLinks.forEach(function(link) {
+      var checkbox = link.previousElementSibling;
+      if (checkbox && checkbox.type === 'checkbox') {
+        var label = document.createElement('label');
+        label.setAttribute('for', checkbox.id);
+        label.classList.add('text-danger');
+        label.style.cursor = 'pointer';
+        label.innerHTML = '<span class="material-symbols-rounded align-middle opacity-10" style="font-size: 18px;">delete</span> <span class="align-middle">Excluir</span>';
+        
+        link.parentNode.insertBefore(label, link.nextSibling);
+        link.style.display = 'none';
+      }
+    });
+  }, 500);
+});
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Garantir que os botões de ação nos campos relacionados estejam ocultos
@@ -235,17 +293,40 @@
     hideRelatedButtons();
     setTimeout(hideRelatedButtons, 500);
     
-    // Modificar o título da página
+    // Modificar o título da página e o breadcrumb
     if (!document.querySelector('body.add-form')) {
       const titleElement = document.querySelector('.card-header .shadow-dark h6');
-      if (titleElement) {
+      const breadcrumbLastItem = document.querySelector('.breadcrumb-item.active');
+      
+      if (titleElement || breadcrumbLastItem) {
         // Obter o nome do neurodivergente
         const neurodivergenteName = document.querySelector('#id_neurodivergente').selectedOptions[0].text;
         if (neurodivergenteName) {
-          titleElement.textContent = 'PDI - ' + neurodivergenteName;
+          // Atualizar o título do cabeçalho
+          if (titleElement) {
+            titleElement.textContent = 'PDI - ' + neurodivergenteName;
+          }
+          
+          // Atualizar o último item do breadcrumb
+          if (breadcrumbLastItem) {
+            breadcrumbLastItem.textContent = 'PDI - ' + neurodivergenteName;
+          }
         }
       }
     }
   });
+</script>
+<script>
+// Script para modificar o título da página e o breadcrumb
+document.addEventListener('DOMContentLoaded', function() {
+  const $ = window.django ? django.jQuery : window.jQuery;
+  
+  // Inicializar Select2 nos campos existentes
+  if ($.fn.select2) {
+    $('select').select2({
+      minimumResultsForSearch: 0
+    });
+  }
+});
 </script>
 {% endblock %}

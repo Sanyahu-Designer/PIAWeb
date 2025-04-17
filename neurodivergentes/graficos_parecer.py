@@ -56,14 +56,23 @@ def gerar_dados_monitoramento(dados_monitoramento):
         datas_unicas = []
         datas_formatadas = {}
         
-        # Primeiro passo: extrair datas únicas
+        # Primeiro passo: extrair datas únicas e ordená-las cronologicamente
+        datas_originais = {}
         for dado in dados_monitoramento:
             data = dado['data']
             data_formatada = datetime.strptime(data, '%Y-%m-%d').strftime('%d/%m/%Y')
+            data_obj = datetime.strptime(data, '%Y-%m-%d')
             
-            if data_formatada not in datas_formatadas:
-                datas_formatadas[data_formatada] = len(datas_unicas)
-                datas_unicas.append(data_formatada)
+            if data_formatada not in datas_originais:
+                datas_originais[data_formatada] = data_obj
+        
+        # Ordenar as datas cronologicamente
+        datas_ordenadas = sorted(datas_originais.items(), key=lambda x: x[1])
+        
+        # Criar o mapeamento e a lista de datas únicas ordenadas
+        for i, (data_formatada, _) in enumerate(datas_ordenadas):
+            datas_formatadas[data_formatada] = i
+            datas_unicas.append(data_formatada)
         
         # Segundo passo: agrupar por meta/habilidade
         metas_habilidades = {}

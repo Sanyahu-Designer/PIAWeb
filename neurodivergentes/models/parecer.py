@@ -36,6 +36,20 @@ class ParecerAvaliativo(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    grafico_data_inicio = models.DateField('Data Inicial do Gráfico', null=True, blank=True)
+    grafico_data_fim = models.DateField('Data Final do Gráfico', null=True, blank=True)
+    grafico_frequencia = models.ImageField(
+        'Gráfico de Frequência', 
+        upload_to='neurodivergentes/pareceres/graficos/', 
+        blank=True, 
+        null=True
+    )
+    grafico_monitoramento = models.ImageField(
+        'Gráfico de Monitoramento', 
+        upload_to='neurodivergentes/pareceres/graficos/', 
+        blank=True, 
+        null=True
+    )
 
     class Meta:
         verbose_name = 'Parecer'

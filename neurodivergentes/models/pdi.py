@@ -7,6 +7,7 @@ from profissionais_app.models import Profissional
 
 class PDI(models.Model):
     STATUS_CHOICES = [
+        ('ausente', 'Ausente'),  # NOVO STATUS PRIMEIRA OPÇÃO
         ('iniciado', 'Iniciado'),
         ('em_andamento', 'Em Andamento'),
         ('concluido', 'Concluído'),
@@ -58,9 +59,6 @@ class PDI(models.Model):
                 raise ValidationError({
                     'status': 'Não é possível salvar como "Concluído". Sugiro usar "Iniciado" ou "Em Andamento".'
                 })
-            metas = self.metas_habilidades.all()
-            if not metas.exists():
-                raise ValidationError('É necessário adicionar pelo menos uma Meta/Habilidade antes de concluir o PDI.')
 
 class PlanoEducacional(models.Model):
     pdi = models.OneToOneField(

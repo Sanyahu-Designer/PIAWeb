@@ -87,6 +87,8 @@ class AdaptacaoCurricularIndividualizada(models.Model):
         ('1', '1.º trimestre'),
         ('2', '2.º trimestre'),
         ('3', '3.º trimestre'),
+        ('S1', '1.º Semestre'),
+        ('S2', '2.º Semestre'),
     ]
 
     # Informações Básicas
@@ -94,16 +96,16 @@ class AdaptacaoCurricularIndividualizada(models.Model):
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE)
     modalidade_ensino = models.CharField('Modalidade de Ensino', max_length=2, choices=MODALIDADE_CHOICES, default='EF')
     ano = models.CharField('Ano Escolar', max_length=2, choices=ANO_CHOICES, default='1F')
-    trimestre = models.CharField('Trimestre', max_length=1, choices=TRIMESTRE_CHOICES, default='1')
+    trimestre = models.CharField('Trimestre', max_length=2, choices=TRIMESTRE_CHOICES, default='1')
     profissional_responsavel = models.ForeignKey(Profissional, on_delete=models.CASCADE)
     data_cadastro = models.DateField('Data do Cadastro', auto_now_add=True)
 
     def __str__(self):
-        return f"ACI - {self.aluno} - {self.data_cadastro}"
+        return f"PEI - {self.aluno}"
 
     class Meta:
-        verbose_name = 'ACI'
-        verbose_name_plural = 'ACIs'
+        verbose_name = 'PEI'
+        verbose_name_plural = 'PEIs'
         ordering = ['-data_cadastro', 'aluno']
 
 class AdaptacaoHabilidade(models.Model):

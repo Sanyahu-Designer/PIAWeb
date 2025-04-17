@@ -110,6 +110,7 @@
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Profissional Responsável</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data do Parecer</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Anexos</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                         {% else %}
                           <!-- Cabeçalho para lista geral de pareceres -->
@@ -117,6 +118,7 @@
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade/Sexo</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total de Pareceres</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Último Parecer</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                         {% endif %}
                       </tr>
@@ -143,6 +145,7 @@
                                 </div>
                                 <div class="d-flex flex-column justify-content-center">
                                   <h6 class="mb-0 text-sm">{{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}</h6>
+                                  <p class="text-xs text-secondary mb-0">{{ obj.neurodivergente.escola.nome|default:"Sem escola" }}</p>
                                 </div>
                               </div>
                             </td>
@@ -165,6 +168,11 @@
                               {% else %}
                                 <i class="material-symbols-rounded text-secondary opacity-5" style="font-size: 16px;">attachment</i>
                               {% endif %}
+                            </td>
+                            <td class="align-middle text-center">
+                              <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.ativo %}#4CAF50{% else %}#F44336{% endif %}">
+                                {% if obj.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                              </span>
                             </td>
                             <td class="align-middle text-center">
                               <a href="{% url 'admin:neurodivergentes_pareceravaliativo_change' obj.id %}" class="btn btn-outline-primary btn-sm mb-0" title="Editar">
@@ -200,6 +208,7 @@
                                       {{ obj.neurodivergente.primeiro_nome }} {{ obj.neurodivergente.ultimo_nome }}
                                     </a>
                                   </h6>
+                                  <p class="text-xs text-secondary mb-0">{{ obj.neurodivergente.escola.nome|default:"Sem escola" }}</p>
                                 </div>
                               </div>
                             </td>
@@ -220,6 +229,11 @@
                                   {% endif %}
                                 </span>
                               {% endwith %}
+                            </td>
+                            <td class="align-middle text-center">
+                              <span class="badge badge-sm" style="background-color: {% if obj.neurodivergente.ativo %}#4CAF50{% else %}#F44336{% endif %}">
+                                {% if obj.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                              </span>
                             </td>
                             <td class="align-middle text-center">
                               <a href="{% url 'admin:neurodivergentes_pareceravaliativo_changelist' %}?neurodivergente__id__exact={{ obj.neurodivergente.id }}" class="btn btn-outline-primary btn-sm mb-0">

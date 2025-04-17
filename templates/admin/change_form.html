@@ -32,165 +32,37 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="card my-4">
-      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-        <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
-          <h6 class="text-white text-capitalize ps-3">
-            {% if add %}{% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}
-            {% else %}{% blocktranslate with name=opts.verbose_name %}Change {{ name }}{% endblocktranslate %}
-            {% endif %}
-          </h6>
-        </div>
-      </div>
-      <div class="card-body px-4 pb-2">
-        {% block object-tools %}
-        {% if change %}{% if not is_popup %}
-        <div class="object-tools mb-3">
-          {% block object-tools-items %}
-          <div class="d-flex justify-content-end">
-            {% change_form_object_tools %}
-          </div>
-          {% endblock %}
-        </div>
-        {% endif %}{% endif %}
-        {% endblock %}
-        
-        <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>
-          {% csrf_token %}
-          {% block form_top %}{% endblock %}
-          
-          {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
-          {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
-          
-          {% if errors %}
-          <div class="alert alert-danger text-white" role="alert">
-            {% if errors|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
-            <ul class="errorlist">
-              {% for error in adminform.form.non_field_errors %}
-              <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-          {% endif %}
-
-          {% block field_sets %}
-          {% for fieldset in adminform %}
-          <div class="fieldset mb-4">
-            <h5 class="fieldset-title mb-3">{{ fieldset.name|default:"Informações" }}</h5>
-            <div class="row">
-              {% for line in fieldset %}
-              {% for field in line %}
+  {% block field_sets %}
+    {% for fieldset in adminform %}
+      {% if fieldset.name != 'Informações Escolares' %}
+      <div class="fieldset mb-4">
+        <h5 class="fieldset-title mb-3">{{ fieldset.name|default:"Informações" }}</h5>
+        <div class="row">
+          {% for line in fieldset %}
+            {% for field in line %}
               <div class="col-md-{% if field.field.widget.attrs.cols %}{{ field.field.widget.attrs.cols }}{% else %}6{% endif %} mb-3">
                 <div class="form-group">
                   <div class="{% if field.field.errors %}has-error{% endif %}">
                     {{ field.label_tag }}
                     {{ field.field }}
                     {% if field.field.help_text %}
-                    <div class="form-text text-muted">{{ field.field.help_text|safe }}</div>
+                      <div class="form-text text-muted">{{ field.field.help_text|safe }}</div>
                     {% endif %}
                     {% if field.field.errors %}
-                    <div class="text-danger">
-                      {% for error in field.field.errors %}
-                      {{ error }}{% if not forloop.last %}<br>{% endif %}
-                      {% endfor %}
-                    </div>
+                      <div class="text-danger">
+                        {% for error in field.field.errors %}
+                          {{ error }}{% if not forloop.last %}<br>{% endif %}
+                        {% endfor %}
+                      </div>
                     {% endif %}
                   </div>
                 </div>
               </div>
-              {% endfor %}
-              {% endfor %}
-            </div>
-          </div>
-          {% endfor %}
-          {% endblock %}
-
-          {% block inline_field_sets %}
-          {% for inline_admin_formset in inline_admin_formsets %}
-          <div class="inline-group mb-4">
-            <h5 class="mb-3">{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h5>
-            {{ inline_admin_formset.formset.management_form }}
-            {{ inline_admin_formset.formset.non_form_errors }}
-            
-            {% for inline_admin_form in inline_admin_formset %}
-            <div class="inline-related {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}" id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
-              <div class="card mb-3">
-                <div class="card-body">
-                  {% if inline_admin_form.form.non_field_errors %}
-                  <div class="alert alert-danger text-white">
-                    {{ inline_admin_form.form.non_field_errors }}
-                  </div>
-                  {% endif %}
-                  
-                  {% for fieldset in inline_admin_form %}
-                  <div class="row">
-                    {% for line in fieldset %}
-                    {% for field in line %}
-                    <div class="col-md-{% if field.field.widget.attrs.cols %}{{ field.field.widget.attrs.cols }}{% else %}6{% endif %} mb-3">
-                      <div class="form-group">
-                        <div class="{% if field.field.errors %}has-error{% endif %}">
-                          {{ field.label_tag }}
-                          {{ field.field }}
-                          {% if field.field.help_text %}
-                          <div class="form-text text-muted">{{ field.field.help_text|safe }}</div>
-                          {% endif %}
-                          {% if field.field.errors %}
-                          <div class="text-danger">
-                            {% for error in field.field.errors %}
-                            {{ error }}{% if not forloop.last %}<br>{% endif %}
-                            {% endfor %}
-                          </div>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                    {% endfor %}
-                    {% endfor %}
-                  </div>
-                  {% endfor %}
-                  
-                  {% if inline_admin_form.has_auto_field or inline_admin_form.needs_explicit_pk_field %}
-                  {{ inline_admin_form.pk_field.field }}
-                  {% endif %}
-                  {{ inline_admin_form.fk_field.field }}
-                  
-                  {% if inline_admin_form.original %}
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="{{ inline_admin_formset.formset.prefix }}-{{ forloop.counter0 }}-DELETE" id="{{ inline_admin_formset.formset.prefix }}-{{ forloop.counter0 }}-DELETE">
-                    <label class="form-check-label" for="{{ inline_admin_formset.formset.prefix }}-{{ forloop.counter0 }}-DELETE">
-                      {% translate "Delete" %}
-                    </label>
-                  </div>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
             {% endfor %}
-          </div>
           {% endfor %}
-          {% endblock %}
-
-          {% block submit_buttons_bottom %}
-          <div class="submit-row mt-4">
-            <div class="d-flex justify-content-end">
-              {% if show_save_and_continue %}
-              <input type="submit" value="{% translate 'Save and continue editing' %}" class="btn btn-info me-2" name="_continue">
-              {% endif %}
-              {% if show_save_and_add_another %}
-              <input type="submit" value="{% translate 'Save and add another' %}" class="btn btn-success me-2" name="_addanother">
-              {% endif %}
-              <input type="submit" value="{% translate 'Save' %}" class="btn btn-primary" name="_save">
-              {% if show_delete_link and original %}
-              <a href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}" class="btn btn-danger ms-2">{% translate "Delete" %}</a>
-              {% endif %}
-            </div>
-          </div>
-          {% endblock %}
-        </form>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
+      {% endif %}
+    {% endfor %}
+  {% endblock %}
 {% endblock %}
