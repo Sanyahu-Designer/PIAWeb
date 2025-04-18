@@ -4,7 +4,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.models import User, Group
-from .views import CustomLoginView, dashboard_gerente, genero_por_neurodivergencia, ausencias_por_aluno, alunos_por_profissional
+from .views import CustomLoginView, dashboard_gerente, genero_por_neurodivergencia, ausencias_por_aluno, alunos_por_profissional, distribuicao_por_neurodivergencia, especializacao_profissionais, alunos_em_risco
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
@@ -37,6 +37,9 @@ urlpatterns = [
     path('api/genero-por-neurodivergencia/', genero_por_neurodivergencia, name='genero_por_neurodivergencia'),
     path('api/ausencias-por-aluno/', ausencias_por_aluno, name='ausencias_por_aluno'),
     path('api/alunos-por-profissional/', alunos_por_profissional, name='alunos_por_profissional'),
+    path('api/distribuicao-por-neurodivergencia/', distribuicao_por_neurodivergencia, name='distribuicao_por_neurodivergencia'),
+    path('api/especializacao-profissionais/', especializacao_profissionais, name='especializacao_profissionais'),
+    path('api/alunos-em-risco/', alunos_em_risco, name='alunos_em_risco'),
     path('dashboard/admin/metashabilidades/metahabilidade/', staff_member_required(lambda request: TemplateResponse(request, 'admin/metashabilidades/metahabilidade/change_list_material_dashboard.html', {'title': 'Metas/Habilidades'})), name='metahabilidade_dashboard'),
     path('dashboard/admin/auth/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index.html', {
         'title': 'Autenticação e Autorização',

@@ -125,38 +125,3 @@ input[type="file"] {
         min-height: 80px;
     }
 }
-
-.meta-habilidade-inline .move-buttons {
-    display: inline-block;
-    margin-left: 10px;
-}
-
-.meta-habilidade-inline .move-buttons button {
-    background: none;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 2px 8px;
-    margin: 0 2px;
-    cursor: pointer;
-}
-
-.meta-habilidade-inline .move-buttons button:hover {
-    background-color: #f0f0f0;
-}
-
-.meta-habilidade-inline td {
-    padding: 8px;
-}
-
-.meta-habilidade-inline input[type="number"] {
-    width: 80px;
-}
-
-.meta-habilidade-inline textarea {
-    width: 100%;
-    min-height: 60px;
-}
-
-.meta-habilidade-inline .ordem {
-    display: none;
-}

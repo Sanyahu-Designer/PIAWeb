@@ -29,14 +29,14 @@
 </div>
 
 <script type="text/javascript">
-  // Este script garante que os selects de vínculo sejam exibidos corretamente
+  // Este script garante que os selects sejam exibidos corretamente
   document.addEventListener('DOMContentLoaded', function() {
-    // Função para configurar os selects de vínculo
-    function setupVinculoSelects() {
-      // Seleciona todos os selects de vínculo
-      const vinculoSelects = document.querySelectorAll('select[name*="vinculo"]');
+    // Função para configurar os selects
+    function setupSelects() {
+      // Seleciona todos os selects
+      const selects = document.querySelectorAll('select[name*="condicao"]');
       
-      vinculoSelects.forEach(function(select) {
+      selects.forEach(function(select) {
         // Adiciona classes para estilização consistente
         select.classList.add('form-control');
         
@@ -55,16 +55,56 @@
         select.style.webkitAppearance = 'auto';
         select.style.mozAppearance = 'auto';
       });
+      
+      // Configura os campos de data
+      const dateInputs = document.querySelectorAll('input[name*="data_identificacao"]');
+      dateInputs.forEach(function(input) {
+        input.classList.add('form-control');
+        input.style.border = '1px solid #d2d6da';
+        input.style.borderRadius = '0.5rem';
+        input.style.minHeight = '38px';
+        input.style.padding = '0.25rem 0.5rem';
+        input.style.width = '100%';
+      });
+      
+      // Configura os campos de texto
+      const textareas = document.querySelectorAll('textarea[name*="observacoes"]');
+      textareas.forEach(function(textarea) {
+        textarea.classList.add('form-control');
+        textarea.style.border = '1px solid #d2d6da';
+        textarea.style.borderRadius = '0.5rem';
+        textarea.style.padding = '0.25rem 0.5rem';
+        textarea.style.width = '100%';
+        textarea.rows = 3;
+      });
     }
     
     // Configura os selects iniciais
-    setupVinculoSelects();
+    setupSelects();
     
     // Configura os selects quando novos formulários são adicionados
     const addButton = document.querySelector('.add-row a');
     if (addButton) {
       addButton.addEventListener('click', function() {
-        setTimeout(setupVinculoSelects, 100);
+        setTimeout(setupSelects, 100);
+      });
+    }
+    
+    // Observa mudanças na DOM para lidar com elementos adicionados dinamicamente
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes.length) {
+          setTimeout(setupSelects, 100);
+        }
+      });
+    });
+    
+    // Observa o container do inline formset
+    const inlineContainer = document.querySelector('.inline-group');
+    if (inlineContainer) {
+      observer.observe(inlineContainer, {
+        childList: true,
+        subtree: true
       });
     }
   });

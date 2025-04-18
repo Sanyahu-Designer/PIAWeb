@@ -122,21 +122,30 @@ def dashboard_gerente(request):
             # PDIs ativos (não concluídos, não cancelados)
             total_pdis_ativos = PDI.objects.exclude(status__in=['concluido', 'cancelado']).count()
             
-            # PDIs que vencem nos próximos 30 dias
-            # Verificamos se o modelo tem plano_educacional relacionado
-            try:
-                pdis_vencendo_query = PDI.objects.filter(
-                    plano_educacional__data_fim__range=[hoje, hoje + timedelta(days=30)],
-                    status__in=['iniciado', 'em_andamento']
-                ).select_related('neurodivergente', 'plano_educacional')
+            # Buscar PDIs ativos (apenas iniciados ou em andamento)
+            pdis_vencendo_query = PDI.objects.filter(
+                status__in=['iniciado', 'em_andamento'],
+                neurodivergente__ativo=True  # Apenas alunos ativos
+            ).select_related('neurodivergente', 'neurodivergente__escola', 'pedagogo_responsavel')
+            
+            # Adicionar informação de dias restantes para cada PDI
+            pdis_vencendo_lista = []
+            for pdi in pdis_vencendo_query[:10]:  # Limitamos a 10 para a lista
+                # Calcular dias restantes corretamente (data do PDI menos hoje)
+                pdi.dias_restantes = (pdi.data_criacao - hoje).days
                 
-                pdis_vencendo = pdis_vencendo_query.count()
-                pdis_vencendo_lista = list(pdis_vencendo_query[:5])  # Limitamos a 5 para a lista
-            except:
-                # Se não tiver o relacionamento, estimamos
-                pdis_vencendo = int(total_pdis_ativos * 0.2)  # Estimativa de 20% vencendo
-        except:
-            pass
+                # Adicionar informações do aluno
+                aluno = pdi.neurodivergente
+                aluno.ultimo_atendimento = pdi.data_criacao
+                
+                # Guardar o PDI na lista
+                pdis_vencendo_lista.append(pdi)
+            
+            pdis_vencendo = pdis_vencendo_query.count()
+        except Exception as e:
+            print(f"Erro ao buscar PDIs próximos do vencimento: {e}")
+            # Se não tiver o relacionamento, estimamos
+            pdis_vencendo = int(total_pdis_ativos * 0.2)  # Estimativa de 20% vencendo
     
     # Estatísticas de Profissionais
     total_profissionais = Profissional.objects.count()
@@ -165,32 +174,60 @@ def dashboard_gerente(request):
     # Escolas com maior demanda (ordenadas pelo número de alunos)
     try:
         escolas_maior_demanda = Escola.objects.annotate(
-            total_alunos=Count('neurodivergente')
+            total_alunos=Count('alunos')
         ).order_by('-total_alunos')[:5]
     except:
         # Se não conseguir fazer a consulta com anotação
         escolas_maior_demanda = Escola.objects.all()[:5]
     
-    # Alunos sem atendimento (sem PDI ativo)
+    # Alunos sem atendimento recente (último PDI concluído há mais de 15 dias)
     alunos_sem_atendimento = []
     total_sem_atendimento = 0
     
     if PDI:
         try:
-            # Alunos que não têm PDI ou têm PDI cancelado/concluído
-            alunos_ids_com_pdi_ativo = PDI.objects.exclude(
-                status__in=['concluido', 'cancelado']
-            ).values_list('neurodivergente_id', flat=True)
+            # Buscar alunos com PDI concluído
+            alunos_com_pdi_concluido = {}
             
-            alunos_sem_atendimento_query = Neurodivergente.objects.exclude(
-                id__in=alunos_ids_com_pdi_ativo
-            ).order_by('-created_at')[:5]
+            # Buscar todos os PDIs concluídos de alunos ativos
+            pdis_concluidos = PDI.objects.filter(
+                status='concluido',
+                neurodivergente__ativo=True  # Apenas alunos ativos
+            ).select_related('neurodivergente', 'neurodivergente__escola').order_by('neurodivergente_id', '-data_criacao')
             
-            alunos_sem_atendimento = list(alunos_sem_atendimento_query)
-            total_sem_atendimento = Neurodivergente.objects.exclude(
-                id__in=alunos_ids_com_pdi_ativo
-            ).count()
-        except:
+            # Para cada aluno, pegar o PDI concluído mais recente
+            for pdi in pdis_concluidos:
+                aluno_id = pdi.neurodivergente_id
+                if aluno_id not in alunos_com_pdi_concluido:
+                    # Calcular dias desde o último atendimento
+                    dias_sem_atendimento = (hoje - pdi.data_criacao).days
+                    
+                    # Adicionar informações do aluno
+                    aluno = pdi.neurodivergente
+                    aluno.ultimo_atendimento = pdi.data_criacao
+                    aluno.dias_sem_atendimento = dias_sem_atendimento
+                    
+                    # Guardar o aluno no dicionário
+                    alunos_com_pdi_concluido[aluno_id] = aluno
+            
+            # Filtrar alunos sem atendimento há mais de 15 dias
+            alunos_sem_atendimento = [
+                aluno for aluno_id, aluno in alunos_com_pdi_concluido.items()
+                if aluno.dias_sem_atendimento > 15
+            ]
+            
+            # Ordenar por dias sem atendimento (decrescente)
+            alunos_sem_atendimento.sort(key=lambda x: x.dias_sem_atendimento, reverse=True)
+            
+            # Limitar a 10 alunos
+            alunos_sem_atendimento = alunos_sem_atendimento[:10]
+            total_sem_atendimento = len([
+                aluno_id for aluno_id, aluno in alunos_com_pdi_concluido.items()
+                if aluno.dias_sem_atendimento > 15
+            ])
+            
+        except Exception as e:
+            print(f"Erro ao buscar alunos sem atendimento recente: {e}")
             # Se não conseguir fazer a consulta
             total_sem_atendimento = int(total_alunos * 0.3)  # Estimativa de 30% sem atendimento
     
@@ -349,7 +386,11 @@ def ausencias_por_aluno(request):
         ).values('mes').annotate(
             total_atendimentos=Count('id'),
             ausencias=Count(Case(When(status='ausente', then=1), output_field=IntegerField())),
-            presencas=Count(Case(When(status__in=['iniciado', 'em_andamento', 'concluido'], then=1), output_field=IntegerField())),
+            presencas=Count(Case(When(status='concluido', then=1), output_field=IntegerField())),
+            em_andamento=Count(Case(When(status='em_andamento', then=1), output_field=IntegerField())),
+            iniciado=Count(Case(When(status='iniciado', then=1), output_field=IntegerField())),
+            suspenso=Count(Case(When(status='suspenso', then=1), output_field=IntegerField())),
+            cancelado=Count(Case(When(status='cancelado', then=1), output_field=IntegerField())),
         ).order_by('mes')
         
         # Nomes dos meses em português
@@ -363,18 +404,33 @@ def ausencias_por_aluno(request):
         labels = []
         ausencias_data = []
         presencas_data = []
+        em_andamento_data = []
+        iniciado_data = []
+        suspenso_data = []
+        cancelado_data = []
         
         for item in dados_ausencia:
-            mes_numero = item['mes']
-            mes_nome = meses.get(mes_numero, f'Mês {mes_numero}')
-            labels.append(mes_nome)
-            ausencias_data.append(item['ausencias'])
-            presencas_data.append(item['presencas'])
+            # Verificar se há pelo menos um dado relevante para este mês
+            if (item['ausencias'] > 0 or item['presencas'] > 0 or item['em_andamento'] > 0 or 
+                item['iniciado'] > 0 or item['suspenso'] > 0 or item['cancelado'] > 0):
+                mes_numero = item['mes']
+                mes_nome = meses.get(mes_numero, f'Mês {mes_numero}')
+                labels.append(mes_nome)
+                ausencias_data.append(item['ausencias'])
+                presencas_data.append(item['presencas'])
+                em_andamento_data.append(item['em_andamento'])
+                iniciado_data.append(item['iniciado'])
+                suspenso_data.append(item['suspenso'])
+                cancelado_data.append(item['cancelado'])
         
         dados = {
             'labels': labels,
             'ausencias': ausencias_data,
-            'presencas': presencas_data
+            'presencas': presencas_data,
+            'em_andamento': em_andamento_data,
+            'iniciado': iniciado_data,
+            'suspenso': suspenso_data,
+            'cancelado': cancelado_data
         }
         
         return JsonResponse(dados)
@@ -568,3 +624,416 @@ def genero_por_neurodivergencia(request):
                 }
             ]
         })
+
+@login_required
+def distribuicao_por_neurodivergencia(request):
+    """
+    View para fornecer dados de distribuição total por neurodivergência para o gráfico do dashboard
+    Retorna dados em formato JSON compatível com Chart.js
+    """
+    try:
+        # Importar os modelos necessários
+        try:
+            from neurodivergentes.models.neurodivergencias import Neurodivergencia, DiagnosticoNeurodivergente, CondicaoNeurodivergente
+        except ImportError:
+            from neurodivergentes.models import Neurodivergencia, DiagnosticoNeurodivergente, CondicaoNeurodivergente
+        
+        # Lista padrão de neurodivergências mais comuns
+        neurodivergencias_padrao = ['TEA', 'TDAH', 'Dislexia', 'Discalculia', 'TOD']
+        
+        # Buscar as condições (neurodivergências) mais comuns do banco de dados
+        # Limitamos a 10 para não sobrecarregar o gráfico
+        top_condicoes = DiagnosticoNeurodivergente.objects.values('condicao__nome').annotate(
+            total=Count('id')
+        ).order_by('-total')[:10]
+        
+        # Extrair os nomes das condições mais comuns
+        neurodivergencias = [item['condicao__nome'] for item in top_condicoes if item['condicao__nome']]
+        
+        # Se não houver condições no banco ou se a lista estiver vazia, usar a lista padrão
+        if not neurodivergencias:
+            neurodivergencias = neurodivergencias_padrao
+        
+        # Dicionário para armazenar os dados por neurodivergência
+        dados_por_neurodivergencia = {neurodiv: 0 for neurodiv in neurodivergencias}
+        
+        # Obter todos os diagnósticos com suas relações
+        diagnosticos = DiagnosticoNeurodivergente.objects.select_related(
+            'condicao'
+        ).all()
+        
+        # Contar diagnósticos por neurodivergência
+        for diagnostico in diagnosticos:
+            try:
+                # Obter o nome da condição (neurodivergência)
+                if hasattr(diagnostico, 'condicao') and hasattr(diagnostico.condicao, 'nome'):
+                    nome_condicao = diagnostico.condicao.nome
+                    
+                    # Verificar se a condição está na nossa lista de neurodivergências
+                    if nome_condicao not in neurodivergencias:
+                        nome_condicao = "Outros"
+                        # Adicionar "Outros" à lista se ainda não estiver lá
+                        if "Outros" not in neurodivergencias:
+                            neurodivergencias.append("Outros")
+                            dados_por_neurodivergencia["Outros"] = 0
+                else:
+                    # Se não conseguir determinar a condição, pular este diagnóstico
+                    continue
+                
+                # Incrementar o contador apropriado
+                if nome_condicao in dados_por_neurodivergencia:
+                    dados_por_neurodivergencia[nome_condicao] += 1
+            except Exception as e:
+                # Se ocorrer algum erro, apenas continuamos para o próximo
+                print(f"Erro ao processar diagnóstico: {e}")
+                continue
+        
+        # Verificar se há dados na categoria "Outros"
+        if "Outros" in neurodivergencias and dados_por_neurodivergencia.get("Outros", 0) == 0:
+            # Se não houver dados em "Outros", remover da lista
+            neurodivergencias.remove("Outros")
+            
+        # Converter o dicionário em lista para o formato esperado pelo Chart.js
+        dados_total = [dados_por_neurodivergencia.get(neurodiv, 0) for neurodiv in neurodivergencias]
+        
+        # Preparar o formato de dados para o Chart.js
+        data = {
+            'labels': neurodivergencias,
+            'datasets': [
+                {
+                    'label': 'Alunos',
+                    'data': dados_total,
+                    'backgroundColor': [
+                        'rgba(233, 30, 99, 0.7)',
+                        'rgba(26, 115, 232, 0.7)',
+                        'rgba(76, 175, 80, 0.7)',
+                        'rgba(251, 140, 0, 0.7)',
+                        'rgba(244, 67, 53, 0.7)',
+                        'rgba(123, 128, 154, 0.7)'
+                    ],
+                    'borderWidth': 0,
+                    'borderRadius': 4
+                }
+            ]
+        }
+        
+        return JsonResponse(data)
+    except Exception as e:
+        # Em caso de erro, retornar dados vazios e logar o erro
+        print(f"Erro ao gerar dados do gráfico de distribuição por neurodivergência: {e}")
+        return JsonResponse({
+            'labels': ['TEA', 'TDAH', 'Dislexia', 'Discalculia', 'TOD', 'Outros'],
+            'datasets': [
+                {
+                    'label': 'Alunos',
+                    'data': [0, 0, 0, 0, 0, 0],
+                    'backgroundColor': [
+                        'rgba(233, 30, 99, 0.7)',
+                        'rgba(26, 115, 232, 0.7)',
+                        'rgba(76, 175, 80, 0.7)',
+                        'rgba(251, 140, 0, 0.7)',
+                        'rgba(244, 67, 53, 0.7)',
+                        'rgba(123, 128, 154, 0.7)'
+                    ],
+                    'borderWidth': 0,
+                    'borderRadius': 4
+                }
+            ]
+        })
+
+@login_required
+def especializacao_profissionais(request):
+    """
+    Retorna dados para o gráfico de especialização dos profissionais por tipo de neurodivergência.
+    """
+    try:
+        # Importar os modelos necessários
+        try:
+            from neurodivergentes.models.neurodivergencias import Neurodivergencia, DiagnosticoNeurodivergente, CondicaoNeurodivergente
+        except ImportError:
+            from neurodivergentes.models import Neurodivergencia, DiagnosticoNeurodivergente, CondicaoNeurodivergente
+        from neurodivergentes.models import PDI, Neurodivergente
+        from profissionais_app.models import Profissional
+        from django.db.models import Count
+        
+        # Obter os 10 profissionais com mais alunos
+        top_profissionais = Profissional.objects.annotate(
+            total_alunos=Count('pdis_responsavel__neurodivergente', distinct=True)
+        ).filter(total_alunos__gt=0).order_by('-total_alunos')[:10]
+        
+        # Buscar as condições (neurodivergências) mais comuns do banco de dados
+        top_condicoes = DiagnosticoNeurodivergente.objects.values('condicao__nome').annotate(
+            total=Count('id')
+        ).order_by('-total')[:10]
+        
+        # Extrair os nomes das condições mais comuns
+        neurodivergencias = [item['condicao__nome'] for item in top_condicoes if item['condicao__nome']]
+        
+        # Se não houver condições no banco ou se a lista estiver vazia, usar uma lista padrão
+        if not neurodivergencias:
+            neurodivergencias = ['TEA', 'TDAH', 'Dislexia', 'Discalculia', 'TOD']
+        
+        # Preparar dados para o gráfico
+        datasets = []
+        labels = neurodivergencias.copy()
+        
+        # Obter todos os diagnósticos com suas relações
+        all_diagnosticos = DiagnosticoNeurodivergente.objects.select_related('condicao').all()
+        
+        # Para cada profissional, contar alunos por tipo de neurodivergência
+        for prof in top_profissionais:
+            # Obter todos os alunos atendidos por este profissional
+            alunos_ids = PDI.objects.filter(
+                pedagogo_responsavel=prof
+            ).values_list('neurodivergente', flat=True).distinct()
+            
+            # Inicializar contagem para cada neurodivergência
+            contagem_por_neurodivergencia = {neurodiv: 0 for neurodiv in neurodivergencias}
+            
+            # Para rastrear quais alunos já foram contados para cada neurodivergência
+            alunos_contados = {neurodiv: set() for neurodiv in neurodivergencias}
+            
+            # Para cada aluno atendido por este profissional
+            for aluno_id in alunos_ids:
+                # Obter diagnósticos deste aluno
+                for diagnostico in all_diagnosticos:
+                    try:
+                        # Verificar se o diagnóstico pertence a este aluno
+                        aluno_do_diagnostico = False
+                        if hasattr(diagnostico, 'neurodivergente') and diagnostico.neurodivergente and diagnostico.neurodivergente.id == aluno_id:
+                            aluno_do_diagnostico = True
+                        elif hasattr(diagnostico, 'neurodivergencia') and diagnostico.neurodivergencia and diagnostico.neurodivergencia.id == aluno_id:
+                            aluno_do_diagnostico = True
+                        elif hasattr(diagnostico, 'aluno') and diagnostico.aluno and diagnostico.aluno.id == aluno_id:
+                            aluno_do_diagnostico = True
+                        
+                        if aluno_do_diagnostico and hasattr(diagnostico, 'condicao') and hasattr(diagnostico.condicao, 'nome'):
+                            nome_condicao = diagnostico.condicao.nome
+                            
+                            # Verificar se a condição está na nossa lista de neurodivergências
+                            if nome_condicao in neurodivergencias:
+                                # Verificar se este aluno já foi contado para esta neurodivergência
+                                if aluno_id not in alunos_contados[nome_condicao]:
+                                    contagem_por_neurodivergencia[nome_condicao] += 1
+                                    alunos_contados[nome_condicao].add(aluno_id)
+                    except Exception as e:
+                        print(f"Erro ao processar diagnóstico para aluno {aluno_id}: {e}")
+                        continue
+            
+            # Obter nome do profissional
+            try:
+                nome_completo = prof.user.get_full_name()
+                partes_nome = nome_completo.split()
+                primeiro_nome = partes_nome[0] if partes_nome else f"Prof. {prof.id}"
+            except:
+                primeiro_nome = f"Prof. {prof.id}"
+            
+            # Adicionar dataset para este profissional (mesmo que não tenha alunos com diagnóstico)
+            datasets.append({
+                'label': primeiro_nome,
+                'data': [contagem_por_neurodivergencia[neurodiv] for neurodiv in neurodivergencias],
+                'fill': True,
+                'backgroundColor': 'rgba(0, 0, 0, 0.2)',  # Será substituído pelo frontend
+                'borderColor': 'rgba(0, 0, 0, 1)',        # Será substituído pelo frontend
+                'pointBackgroundColor': 'rgba(0, 0, 0, 1)', # Será substituído pelo frontend
+                'pointBorderColor': '#fff',
+                'pointHoverBackgroundColor': '#fff',
+                'pointHoverBorderColor': 'rgba(0, 0, 0, 1)' # Será substituído pelo frontend
+            })
+        
+        # Adicionar log para depuração
+        print(f"Total de profissionais encontrados: {len(top_profissionais)}")
+        print(f"Total de datasets gerados: {len(datasets)}")
+        print(f"Neurodivergências encontradas: {neurodivergencias}")
+        
+        return JsonResponse({
+            'labels': labels,
+            'datasets': datasets
+        })
+    except Exception as e:
+        print(f"Erro ao buscar dados de especialização dos profissionais: {e}")
+        return JsonResponse({
+            'labels': ['TEA', 'TDAH', 'Dislexia', 'Discalculia', 'TOD'],
+            'datasets': []
+        })
+
+@login_required
+def alunos_em_risco(request):
+    """
+    Retorna dados de alunos que estão em situação de risco com base em critérios como:
+    - Ausências consecutivas
+    - Falta de progresso nos objetivos do PDI
+    - Tempo sem atendimento
+    """
+    try:
+        from neurodivergentes.models import PDI, Neurodivergente
+        from django.db.models import Count, F, Q, Case, When, IntegerField, Value
+        from django.utils import timezone
+        import datetime
+        
+        # Definir o período de referência (últimos 90 dias)
+        data_referencia = timezone.now() - datetime.timedelta(days=90)
+        data_sem_atendimento = timezone.now() - datetime.timedelta(days=30)
+        data_desatualizado = timezone.now() - datetime.timedelta(days=60)
+        
+        # Lista para armazenar os alunos em risco
+        alunos_risco = []
+        
+        # 1. Alunos com ausências consecutivas (3 ou mais)
+        alunos_ausencias = PDI.objects.filter(
+            status='falta',
+            data_prevista__gte=data_referencia
+        ).values('neurodivergente').annotate(
+            total_faltas=Count('id')
+        ).filter(total_faltas__gte=3)
+        
+        for aluno_data in alunos_ausencias:
+            try:
+                aluno = Neurodivergente.objects.get(id=aluno_data['neurodivergente'])
+                alunos_risco.append({
+                    'id': aluno.id,
+                    'nome': aluno.nome_completo,
+                    'tipo_risco': 'Ausências Consecutivas',
+                    'detalhe': f"{aluno_data['total_faltas']} faltas nos últimos 90 dias",
+                    'severidade': 'alta' if aluno_data['total_faltas'] >= 5 else 'média'
+                })
+            except Neurodivergente.DoesNotExist:
+                continue
+        
+        # 2. Alunos sem progresso no PDI (nenhum objetivo concluído nos últimos 90 dias)
+        alunos_sem_progresso = PDI.objects.filter(
+            data_prevista__gte=data_referencia,
+            objetivos_concluidos=0
+        ).values('neurodivergente').distinct()
+        
+        for aluno_data in alunos_sem_progresso:
+            try:
+                aluno = Neurodivergente.objects.get(id=aluno_data['neurodivergente'])
+                # Verificar se este aluno já está na lista por ausências
+                if not any(item['id'] == aluno.id and item['tipo_risco'] == 'Sem Progresso no PDI' for item in alunos_risco):
+                    alunos_risco.append({
+                        'id': aluno.id,
+                        'nome': aluno.nome_completo,
+                        'tipo_risco': 'Sem Progresso no PDI',
+                        'detalhe': 'Nenhum objetivo concluído nos últimos 90 dias',
+                        'severidade': 'média'
+                    })
+            except Neurodivergente.DoesNotExist:
+                continue
+        
+        # 3. Alunos sem atendimento recente (mais de 30 dias)
+        from django.db.models import Max, Subquery, OuterRef
+        
+        ultimos_atendimentos = PDI.objects.filter(
+            neurodivergente=OuterRef('pk'),
+            status__in=['concluido', 'em_andamento']
+        ).values('neurodivergente').annotate(
+            ultima_data=Max('data_prevista')
+        ).values('ultima_data')
+        
+        # Alunos cujo último atendimento foi há mais de 30 dias
+        alunos_sem_atendimento = Neurodivergente.objects.filter(
+            Q(pdis__isnull=True) | Q(
+                Subquery(ultimos_atendimentos[:1]) < data_sem_atendimento
+            )
+        ).distinct()
+        
+        for aluno in alunos_sem_atendimento:
+            # Verificar se este aluno já está na lista por outro motivo
+            if not any(item['id'] == aluno.id and item['tipo_risco'] == 'Sem Atendimento Recente' for item in alunos_risco):
+                # Calcular dias desde o último atendimento
+                try:
+                    ultimo_pdi = PDI.objects.filter(
+                        neurodivergente=aluno,
+                        status__in=['concluido', 'em_andamento']
+                    ).order_by('-data_prevista').first()
+                    
+                    if ultimo_pdi:
+                        dias_sem_atendimento = (timezone.now().date() - ultimo_pdi.data_prevista).days
+                        detalhe = f"{dias_sem_atendimento} dias sem atendimento"
+                    else:
+                        detalhe = "Nunca recebeu atendimento"
+                except:
+                    detalhe = "Sem informação de último atendimento"
+                
+                alunos_risco.append({
+                    'id': aluno.id,
+                    'nome': aluno.nome_completo,
+                    'tipo_risco': 'Sem Atendimento Recente',
+                    'detalhe': detalhe,
+                    'severidade': 'alta' if 'Nunca' in detalhe else 'média'
+                })
+        
+        # 4. Alunos com objetivos não alcançados (PDIs com status 'concluído' mas objetivos não concluídos)
+        alunos_objetivos_nao_alcancados = PDI.objects.filter(
+            status='concluido',
+            objetivos_concluidos__lt=F('objetivos_totais'),
+            data_prevista__gte=data_referencia
+        ).values('neurodivergente').distinct()
+        
+        for aluno_data in alunos_objetivos_nao_alcancados:
+            try:
+                aluno = Neurodivergente.objects.get(id=aluno_data['neurodivergente'])
+                # Verificar se este aluno já está na lista por este motivo
+                if not any(item['id'] == aluno.id and item['tipo_risco'] == 'Objetivos Não Alcançados' for item in alunos_risco):
+                    alunos_risco.append({
+                        'id': aluno.id,
+                        'nome': aluno.nome_completo,
+                        'tipo_risco': 'Objetivos Não Alcançados',
+                        'detalhe': 'PDIs concluídos com objetivos incompletos',
+                        'severidade': 'baixa'
+                    })
+            except Neurodivergente.DoesNotExist:
+                continue
+        
+        # 5. PDIs desatualizados (sem atualização há mais de 60 dias)
+        alunos_pdi_desatualizado = PDI.objects.filter(
+            updated_at__lt=data_desatualizado,
+            status__in=['em_andamento', 'agendado']
+        ).values('neurodivergente').distinct()
+        
+        for aluno_data in alunos_pdi_desatualizado:
+            try:
+                aluno = Neurodivergente.objects.get(id=aluno_data['neurodivergente'])
+                # Verificar se este aluno já está na lista por este motivo
+                if not any(item['id'] == aluno.id and item['tipo_risco'] == 'PDI Desatualizado' for item in alunos_risco):
+                    alunos_risco.append({
+                        'id': aluno.id,
+                        'nome': aluno.nome_completo,
+                        'tipo_risco': 'PDI Desatualizado',
+                        'detalhe': 'PDI sem atualização há mais de 60 dias',
+                        'severidade': 'média'
+                    })
+            except Neurodivergente.DoesNotExist:
+                continue
+        
+        # Ordenar por severidade (alta, média, baixa)
+        def ordem_severidade(item):
+            if item['severidade'] == 'alta':
+                return 0
+            elif item['severidade'] == 'média':
+                return 1
+            else:
+                return 2
+        
+        alunos_risco.sort(key=ordem_severidade)
+        
+        return JsonResponse({'alunos_risco': alunos_risco})
+    except Exception as e:
+        print(f"Erro ao buscar dados de alunos em risco: {e}")
+        return JsonResponse({'alunos_risco': []})
+        # Ordenar por severidade (alta, média, baixa)
+        def ordem_severidade(item):
+            if item['severidade'] == 'alta':
+                return 0
+            elif item['severidade'] == 'média':
+                return 1
+            else:
+                return 2
+        
+        alunos_risco.sort(key=ordem_severidade)
+        
+        return JsonResponse({'alunos_risco': alunos_risco})
+    except Exception as e:
+        print(f"Erro ao buscar dados de alunos em risco: {e}")
+        return JsonResponse({'alunos_risco': []})

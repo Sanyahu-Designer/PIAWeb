@@ -1,0 +1,206 @@
+{% load i18n admin_urls static %}
+
+<div class="fieldset-container mb-4">
+  <h5 class="text-dark mb-3">Metas/Habilidades</h5>
+  
+  <!-- Utilizamos o formset do Django para gerenciar as metas/habilidades -->
+  <div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group"
+       data-inline-type="tabular"
+       data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+    
+    {{ inline_admin_formset.formset.management_form }}
+    {{ inline_admin_formset.formset.non_form_errors }}
+    
+    <!-- Cabeçalho -->
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <div class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Meta/Habilidade</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Progresso (%)</div>
+      </div>
+      <div class="col-md-2">
+        <div class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Ações</div>
+      </div>
+    </div>
+    
+    <!-- Formulários -->
+    {% for inline_admin_form in inline_admin_formset %}
+      <div class="form-row {% cycle "row1" "row2" %} {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}"
+          id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}"
+          {% if forloop.last and inline_admin_formset.has_add_permission %}style="display: none;"{% endif %}>
+        
+        <div class="row mb-3 align-items-center">
+          <!-- Campo Meta/Habilidade -->
+          <div class="col-md-6">
+            {% if inline_admin_form.form.meta_habilidade.errors %}
+              <div class="text-danger">{{ inline_admin_form.form.meta_habilidade.errors }}</div>
+            {% endif %}
+            {{ inline_admin_form.form.meta_habilidade }}
+          </div>
+          
+          <!-- Campo Progresso -->
+          <div class="col-md-4">
+            {% if inline_admin_form.form.progresso.errors %}
+              <div class="text-danger">{{ inline_admin_form.form.progresso.errors }}</div>
+            {% endif %}
+            {{ inline_admin_form.form.progresso }}
+          </div>
+          
+          <!-- Ações (Excluir) -->
+          <div class="col-md-2">
+            {% if inline_admin_formset.formset.can_delete %}
+              <div class="delete">
+                {{ inline_admin_form.form.DELETE }}
+                <a href="#" onclick="var cb=document.getElementById('{{ inline_admin_form.form.DELETE.id_for_label }}'); cb.checked = !cb.checked; updateDeleteButtonStyle(this, cb); return false;" class="text-danger delete-button" style="cursor: pointer; text-decoration: none;">
+                  <span class="material-symbols-rounded opacity-10" style="font-size: 18px;">delete</span>
+                  <span class="align-middle">Excluir</span>
+                </a>
+              </div>
+            {% endif %}
+            
+            <!-- Campos ocultos necessários -->
+            {% if inline_admin_form.needs_explicit_pk_field %}
+              {{ inline_admin_form.pk_field.field }}
+            {% endif %}
+            {{ inline_admin_form.fk_field.field }}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    
+    <!-- Botão Adicionar -->
+    {% if inline_admin_formset.has_add_permission %}
+      <div class="add-row d-flex justify-content-end mt-2">
+        <a href="#" class="btn btn-outline-primary mb-0 add-meta-habilidade">
+          <span class="material-symbols-rounded align-middle opacity-10" style="font-size: 16px;">add</span>
+          {% translate "Adicionar Meta/Habilidade" %}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  /* Estilos para garantir que os campos fiquem lado a lado */
+  .field-meta_habilidade .select2-container,
+  .field-progresso .select2-container {
+    width: 100% !important;
+  }
+</style>
+
+<script>
+  django.jQuery(document).ready(function($) {
+    // Função para atualizar o estilo do botão de exclusão
+    window.updateDeleteButtonStyle = function(button, checkbox) {
+      var $row = $(button).closest('.form-row');
+      if (checkbox.checked) {
+        $row.css({
+          'opacity': '0.6',
+          'text-decoration': 'line-through'
+        });
+        $(button).html('<span class="material-symbols-rounded opacity-10" style="font-size: 18px;">restore</span> <span class="align-middle">Restaurar</span>');
+      } else {
+        $row.css({
+          'opacity': '1',
+          'text-decoration': 'none'
+        });
+        $(button).html('<span class="material-symbols-rounded opacity-10" style="font-size: 18px;">delete</span> <span class="align-middle">Excluir</span>');
+      }
+    };
+    
+    // Configurar o botão "Adicionar Meta/Habilidade"
+    $('.add-meta-habilidade').on('click', function(e) {
+      e.preventDefault();
+      
+      // Obter o prefixo do formset
+      var prefix = "{{ inline_admin_formset.formset.prefix }}";
+      
+      // Obter o total de formulários atual
+      var totalForms = $("#id_" + prefix + "-TOTAL_FORMS");
+      var nextIndex = parseInt(totalForms.val(), 10);
+      
+      // Clonar o template vazio
+      var template = $("#" + prefix + "-empty");
+      var row = template.clone(true);
+      
+      // Configurar o novo formulário
+      row.attr("id", prefix + "-" + nextIndex);
+      row.removeClass("empty-form").css("display", "");
+      
+      // Atualizar os índices nos elementos do formulário
+      row.find("*").each(function() {
+        var id_regex = new RegExp("(" + prefix + "-(\\d+|__prefix__))");
+        var replacement = prefix + "-" + nextIndex;
+        
+        if ($(this).attr("for")) {
+          $(this).attr("for", $(this).attr("for").replace(id_regex, replacement));
+        }
+        if (this.id) {
+          this.id = this.id.replace(id_regex, replacement);
+        }
+        if (this.name) {
+          this.name = this.name.replace(id_regex, replacement);
+        }
+        
+        // Atualizar onclick para botões de exclusão
+        if ($(this).hasClass('delete-button')) {
+          var onclick = $(this).attr('onclick');
+          if (onclick) {
+            onclick = onclick.replace(id_regex, replacement);
+            $(this).attr('onclick', onclick);
+          }
+        }
+      });
+      
+      // Inserir o novo formulário antes do template
+      row.insertBefore(template);
+      
+      // Atualizar o contador de formulários
+      totalForms.val(nextIndex + 1);
+      
+      // Inicializar Select2 nos novos campos
+      row.find('select[name*="meta_habilidade"], select[name*="progresso"]').each(function() {
+        try {
+          $(this).select2({
+            width: '100%',
+            minimumResultsForSearch: 0
+          });
+        } catch (e) {
+          console.error('Erro ao inicializar Select2:', e);
+        }
+      });
+      
+      // Configurar os botões de exclusão iniciais
+      $('.delete-button').each(function() {
+        var $checkbox = $('#' + $(this).closest('.delete').find('input[type="checkbox"]').attr('id'));
+        updateDeleteButtonStyle(this, $checkbox[0]);
+      });
+      
+      // Disparar evento para notificar que um novo formulário foi adicionado
+      row.get(0).dispatchEvent(new CustomEvent("formset:added", {
+        bubbles: true,
+        detail: {
+          formsetName: prefix
+        }
+      }));
+    });
+    
+    // Configurar os botões de exclusão iniciais
+    $('.delete-button').each(function() {
+      var $checkbox = $('#' + $(this).closest('.delete').find('input[type="checkbox"]').attr('id'));
+      updateDeleteButtonStyle(this, $checkbox[0]);
+    });
+    
+    // Inicializar Select2 nos campos de seleção
+    $('select[name*="meta_habilidade"]').select2({
+      width: '100%',
+      minimumResultsForSearch: 0
+    });
+    
+    $('select[name*="progresso"]').select2({
+      width: '100%',
+      minimumResultsForSearch: 0
+    });
+  });
+</script>

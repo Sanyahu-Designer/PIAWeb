@@ -118,7 +118,9 @@ class DiagnosticoNeurodivergente(models.Model):
             self.categoria = self.condicao.categoria
             
         # Verifica se a condição pertence à categoria apenas se ambos estiverem definidos
-        if self.condicao_id and self.categoria_id and self.condicao.categoria_id != self.categoria_id:
-            raise ValidationError({
-                'condicao': 'A condição selecionada não pertence à categoria escolhida.'
-            })
+        # e se a categoria não for None
+        if (self.condicao_id and self.categoria_id and 
+            self.condicao.categoria_id != self.categoria_id and
+            self.categoria is not None):
+            # Em vez de lançar um erro, ajustamos a categoria para corresponder à condição
+            self.categoria = self.condicao.categoria

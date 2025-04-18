@@ -129,21 +129,19 @@
                 {% if field.is_checkbox %}
                   <div class="form-check">
                     {{ field.field }}
-                    <label class="form-check-label" for="{{ field.field.id_for_label }}">
+                    <label for="{{ field.field.id_for_label }}" class="form-check-label">
                       {{ field.field.label }}
                     </label>
                   </div>
                 {% else %}
-                  <div class="input-group input-group-outline">
+                  {{ field.field.label_tag }}
+                  <div class="field-container">
+                    {{ field.field }}
                     {% if field.field.errors %}
-                      <div class="text-danger">
+                      <div class="error-message">
                         {{ field.field.errors }}
                       </div>
                     {% endif %}
-                    
-                    {{ field.field.label_tag }}
-                    {{ field.field }}
-                    
                     {% if field.field.help_text %}
                       <div class="help-text">
                         {{ field.field.help_text|safe }}
@@ -160,8 +158,29 @@
   {% endfor %}
 {% endblock %}
 
+{# Bloco de depuração para verificar os nomes dos modelos disponíveis #}
+<div class="fieldset-container mb-4">
+  <h5 class="text-dark mb-3">Depuração - Modelos Disponíveis</h5>
+  <div class="row">
+    <div class="col-12">
+      <ul>
+        {% for inline_admin_formset in inline_admin_formsets %}
+          <li>
+            <strong>Model Name:</strong> {{ inline_admin_formset.opts.model_name }} |
+            <strong>Verbose Name:</strong> {{ inline_admin_formset.opts.verbose_name }} |
+            <strong>Verbose Name Plural:</strong> {{ inline_admin_formset.opts.verbose_name_plural }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
 {% block inline_field_sets %}
   {% for inline_admin_formset in inline_admin_formsets %}
+    {% if inline_admin_formset.opts.verbose_name_plural == 'Metas/Habilidades' %}
+      {% include "admin/neurodivergentes/pdi/novo_card_meta_habilidades.html" with inline_admin_formset=inline_admin_formset %}
+    {% else %}
     <div class="fieldset-container mb-4">
       <h5 class="text-dark mb-3">{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h5>
       {{ inline_admin_formset.formset.management_form }}
@@ -239,11 +258,12 @@
         <div class="add-row d-flex justify-content-end mt-2">
           <a href="javascript:void(0);" class="btn btn-outline-primary mb-0">
             <span class="material-symbols-rounded align-middle opacity-10" style="font-size: 16px;">add</span>
-            {% translate "Adicionar Meta/Habilidade" %}
+            {% translate "Adicionar" %} {{ inline_admin_formset.opts.verbose_name|capfirst }}
           </a>
         </div>
       {% endif %}
     </div>
+    {% endif %}
   {% endfor %}
 {% endblock %}
 

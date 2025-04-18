@@ -179,6 +179,7 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path('get_habilidade_details/', self.admin_site.admin_view(self.get_habilidade_details), name='get_habilidade_details'),
+            path('buscar-habilidades/', self.admin_site.admin_view(self.buscar_habilidades), name='buscar_habilidades'),
         ]
         return custom_urls + urls
     
@@ -388,41 +389,83 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
             extra_context['disciplina_buttons'] = disciplina_buttons
         
         return super().change_view(request, object_id, form_url, extra_context)
+    
     def buscar_habilidades(self, request):
-        if not request.user.is_authenticated:
+        """Endpoint para buscar habilidades baseado no termo de busca."""
+        if not request.user.is_staff:
             raise PermissionDenied
             
         term = request.GET.get('term', '')
-        results = []
+        print(f'Termo de busca recebido: {term}')
         
-        if term:
-            habilidades = BNCCHabilidade.objects.filter(
-                models.Q(codigo__icontains=term) |
-                models.Q(descricao__icontains=term) |
-                models.Q(objeto_conhecimento__icontains=term)
-            ).select_related('disciplina')[:10]
+        try:
+            # Primeiro tenta buscar por ID
+            if term.isdigit():
+                habilidade = BNCCHabilidade.objects.select_related('disciplina').filter(id=term).first()
+                if habilidade:
+                    results = [{
+                        'id': habilidade.id,
+                        'codigo': habilidade.codigo,
+                        'disciplina': habilidade.disciplina.nome if habilidade.disciplina else '',
+                        'ano': habilidade.get_ano_display() if hasattr(habilidade, 'get_ano_display') else str(habilidade.ano),
+                        'trimestre': habilidade.get_trimestre_display() if hasattr(habilidade, 'get_trimestre_display') else str(habilidade.trimestre),
+                        'objeto_conhecimento': habilidade.objeto_conhecimento,
+                        'descricao': habilidade.descricao,
+                        'text': habilidade.codigo  # Campo obrigatório para o Select2
+                    }]
+                    return JsonResponse({'results': results})
             
-            for hab in habilidades:
-                results.append({
-                    'id': hab.id,
-                    'text': f'{hab.codigo} - {hab.disciplina.nome}',
-                    'codigo': hab.codigo,
-                    'disciplina': hab.disciplina.nome,
-                    'ano': hab.ano,
-                    'trimestre': hab.trimestre,
-                    'objeto_conhecimento': hab.objeto_conhecimento,
-                    'descricao': hab.descricao
-                })
-        
-        return JsonResponse({'results': results}, safe=False)
-        
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('buscar-habilidades/', self.buscar_habilidades, name='buscar_habilidades'),
-        ]
-        return custom_urls + urls
+            # Se não for ID ou não encontrar, busca por outros campos
+            habilidades = BNCCHabilidade.objects.select_related('disciplina').filter(
+                models.Q(codigo__icontains=term) |
+                models.Q(objeto_conhecimento__icontains=term) |
+                models.Q(descricao__icontains=term) |
+                models.Q(ano__icontains=term) |
+                models.Q(trimestre__icontains=term) |
+                models.Q(disciplina__nome__icontains=term)
+            ).order_by('disciplina__nome', 'ano', 'trimestre', 'codigo')[:20]  # Limita a 20 resultados
+            
+            print(f'Habilidades encontradas: {habilidades.count()}')
+            
+            results = [{
+                'id': h.id,
+                'codigo': h.codigo,
+                'disciplina': h.disciplina.nome if h.disciplina else '',
+                'ano': h.get_ano_display() if hasattr(h, 'get_ano_display') else str(h.ano),
+                'trimestre': h.get_trimestre_display() if hasattr(h, 'get_trimestre_display') else str(h.trimestre),
+                'objeto_conhecimento': h.objeto_conhecimento,
+                'descricao': h.descricao,
+                'text': h.codigo  # Campo obrigatório para o Select2
+            } for h in habilidades]
+            
+            return JsonResponse({'results': results})
+            
+        except Exception as e:
+            print(f'Erro ao buscar habilidades: {str(e)}')
+            return JsonResponse({'error': str(e)}, status=500)
 
+    def get_anos(self, request, disciplina_id):
+        anos = BNCCHabilidade.objects.filter(
+            disciplina_id=disciplina_id
+        ).values_list('ano', flat=True).distinct().order_by('ano')
+        anos_list = [{'id': ano, 'text': dict(BNCCHabilidade.ANOS_CHOICES)[ano]} for ano in anos]
+        return JsonResponse(anos_list, safe=False)
+
+    def get_trimestres(self, request, disciplina_id, ano):
+        trimestres = BNCCHabilidade.objects.filter(
+            disciplina_id=disciplina_id,
+            ano=ano
+        ).values_list('trimestre', flat=True).distinct().order_by('trimestre')
+        trimestres_list = [{'id': tri, 'text': dict(BNCCHabilidade.TRIMESTRE_CHOICES)[tri]} for tri in trimestres]
+        return JsonResponse(trimestres_list, safe=False)
+
+    def get_habilidades(self, request, disciplina_id, ano, trimestre):
+        habilidades = BNCCHabilidade.objects.filter(
+            disciplina_id=disciplina_id,
+            ano=ano,
+            trimestre=trimestre
+        ).values('id', 'codigo', 'objeto_conhecimento', 'descricao')
+        return JsonResponse(list(habilidades), safe=False)
 
     fieldsets = [
         ('Informações do Aluno', {
@@ -490,91 +533,3 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
             except Profissional.DoesNotExist:
                 pass
         super().save_model(request, obj, form, change)
-    
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('buscar-habilidades/',
-                 self.admin_site.admin_view(self.buscar_habilidades),
-                 name='buscar_habilidades'),
-        ]
-        return custom_urls + urls
-    
-    def buscar_habilidades(self, request):
-        """Endpoint para buscar habilidades baseado no termo de busca."""
-        if not request.user.is_staff:
-            raise PermissionDenied
-            
-        term = request.GET.get('term', '')
-        print(f'Termo de busca recebido: {term}')
-        
-        try:
-            # Primeiro tenta buscar por ID
-            if term.isdigit():
-                habilidade = BNCCHabilidade.objects.select_related('disciplina').filter(id=term).first()
-                if habilidade:
-                    results = [{
-                        'id': habilidade.id,
-                        'codigo': habilidade.codigo,
-                        'disciplina': habilidade.disciplina.nome if habilidade.disciplina else '',
-                        'ano': habilidade.get_ano_display() if hasattr(habilidade, 'get_ano_display') else str(habilidade.ano),
-                        'trimestre': habilidade.get_trimestre_display() if hasattr(habilidade, 'get_trimestre_display') else str(habilidade.trimestre),
-                        'objeto_conhecimento': habilidade.objeto_conhecimento,
-                        'descricao': habilidade.descricao,
-                        'text': habilidade.codigo  # Campo obrigatório para o Select2
-                    }]
-                    return JsonResponse({'results': results})
-            
-            # Se não for ID ou não encontrar, busca por outros campos
-            habilidades = BNCCHabilidade.objects.select_related('disciplina').filter(
-                models.Q(codigo__icontains=term) |
-                models.Q(objeto_conhecimento__icontains=term) |
-                models.Q(descricao__icontains=term) |
-                models.Q(ano__icontains=term) |
-                models.Q(trimestre__icontains=term) |
-                models.Q(disciplina__nome__icontains=term)
-            ).order_by('disciplina__nome', 'ano', 'trimestre', 'codigo')[:20]  # Limita a 20 resultados
-            
-            print(f'Habilidades encontradas: {habilidades.count()}')
-            
-            results = [{
-                'id': h.id,
-                'codigo': h.codigo,
-                'disciplina': h.disciplina.nome if h.disciplina else '',
-                'ano': h.get_ano_display() if hasattr(h, 'get_ano_display') else str(h.ano),
-                'trimestre': h.get_trimestre_display() if hasattr(h, 'get_trimestre_display') else str(h.trimestre),
-                'objeto_conhecimento': h.objeto_conhecimento,
-                'descricao': h.descricao,
-                'text': h.codigo  # Campo obrigatório para o Select2
-            } for h in habilidades]
-            
-            return JsonResponse({'results': results})
-            
-        except Exception as e:
-            print(f'Erro ao buscar habilidades: {str(e)}')
-            return JsonResponse({'error': str(e)}, status=500)
-            print(f'Erro ao buscar habilidades: {str(e)}')
-            return JsonResponse({'error': str(e)}, status=500)
-
-    def get_anos(self, request, disciplina_id):
-        anos = BNCCHabilidade.objects.filter(
-            disciplina_id=disciplina_id
-        ).values_list('ano', flat=True).distinct().order_by('ano')
-        anos_list = [{'id': ano, 'text': dict(BNCCHabilidade.ANOS_CHOICES)[ano]} for ano in anos]
-        return JsonResponse(anos_list, safe=False)
-
-    def get_trimestres(self, request, disciplina_id, ano):
-        trimestres = BNCCHabilidade.objects.filter(
-            disciplina_id=disciplina_id,
-            ano=ano
-        ).values_list('trimestre', flat=True).distinct().order_by('trimestre')
-        trimestres_list = [{'id': tri, 'text': dict(BNCCHabilidade.TRIMESTRE_CHOICES)[tri]} for tri in trimestres]
-        return JsonResponse(trimestres_list, safe=False)
-
-    def get_habilidades(self, request, disciplina_id, ano, trimestre):
-        habilidades = BNCCHabilidade.objects.filter(
-            disciplina_id=disciplina_id,
-            ano=ano,
-            trimestre=trimestre
-        ).values('id', 'codigo', 'objeto_conhecimento', 'descricao')
-        return JsonResponse(list(habilidades), safe=False)

@@ -34,8 +34,10 @@ from django.shortcuts import get_object_or_404
 
 class GrupoFamiliarInline(admin.StackedInline):
     model = GrupoFamiliar
-    extra = 0
+    extra = 1  # Permite adicionar pelo menos um novo membro por padrão
     template = 'admin/neurodivergentes/edit_inline/stacked_grupo_familiar.html'
+    can_delete = True
+    show_change_link = False
     
     formfield_overrides = {
         models.DateField: {
@@ -73,7 +75,34 @@ class GrupoFamiliarInline(admin.StackedInline):
                 if form.instance and form.instance.data_nascimento:
                     form.initial['data_nascimento'] = form.instance.data_nascimento.strftime('%Y-%m-%d')
                 return form
+                
+            def save_new(self, form, commit=True):
+                """
+                Sobrescreve o método save_new para garantir que novos membros
+                sejam corretamente salvos no banco de dados.
+                """
+                obj = super().save_new(form, commit=False)
+                if commit:
+                    obj.save()
+                return obj
+        
         return CustomFormset
+    
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        """
+        Sobrescreve o método formfield_for_choice_field para garantir que
+        o campo Vínculo/Parentesco tenha as opções corretas.
+        """
+        if db_field.name == 'vinculo':
+            kwargs['widget'] = forms.Select(attrs={'class': 'form-control'})
+            kwargs['choices'] = GrupoFamiliar.VINCULO_CHOICES
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
+
+    class Media:
+        css = {
+            'all': ('admin/css/grupo_familiar.css',)
+        }
+        js = ('admin/js/grupo_familiar.js',)
 
 @admin.register(Neurodivergente)
 class NeurodivergenteAdmin(admin.ModelAdmin):
@@ -282,16 +311,19 @@ class DiagnosticoInline(admin.StackedInline):
     can_delete = True
     verbose_name = 'Diagnóstico'
     verbose_name_plural = 'Diagnósticos'
-    template = 'admin/neurodivergentes/diagnostico_stacked_custom.html'
+    template = 'admin/neurodivergentes/edit_inline/stacked_diagnostico.html'
+    
     formfield_overrides = {
         models.DateField: {'widget': forms.DateInput(attrs={
-            'class': 'vDateField form-control datetimepicker', 
-            'type': 'date',
-            'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;'
+            'class': 'vDateField form-control', 
+            'type': 'date'
         })},
-        models.ForeignKey: {'widget': forms.Select(attrs={
-            'class': 'form-control select2',
-            'style': 'border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;'
+        models.TextField: {'widget': forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3
+        })},
+        models.CharField: {'widget': forms.TextInput(attrs={
+            'class': 'form-control'
         })}
     }
     
@@ -300,7 +332,6 @@ class DiagnosticoInline(admin.StackedInline):
         ('condicao',),
         ('observacoes',)
     )
-    classes = ('diagnosticos-container', 'card', 'card-body', 'blur', 'shadow-blur')
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'condicao':
@@ -308,23 +339,48 @@ class DiagnosticoInline(admin.StackedInline):
             condicoes = CondicaoNeurodivergente.objects.all().order_by('categoria__nome', 'nome')
             kwargs['queryset'] = condicoes
             kwargs['widget'] = forms.Select(attrs={
-                'style': 'min-width: 300px; border: 1px solid #d2d6da; border-radius: 0.5rem; padding: 0.5rem;', 
-                'class': 'condicao-select form-control'
+                'class': 'form-control'
             })
+            # Remove a validação de categoria para permitir a seleção de qualquer condição
+            kwargs['to_field_name'] = 'id'
+        elif db_field.name == 'categoria':
+            # Torna o campo categoria não obrigatório para evitar problemas de validação
+            kwargs['required'] = False
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     class Media:
         css = {
-            'all': (
-                'admin/css/base.css',
-                'neurodivergentes/css/neurodivergentes_forms.css',
-            )
+            'all': ('admin/css/diagnostico.css',)
         }
-        js = ('admin/js/neurodivergentes_admin.js',)
+        js = ('admin/js/diagnostico.js',)
     
     def get_formset(self, request, obj=None, **kwargs):
-        return super().get_formset(request, obj, **kwargs)
-
+        formset = super().get_formset(request, obj, **kwargs)
+        
+        class CustomFormset(formset):
+            def _construct_form(self, *args, **kwargs):
+                form = super()._construct_form(*args, **kwargs)
+                if form.instance and form.instance.data_identificacao:
+                    form.initial['data_identificacao'] = form.instance.data_identificacao.strftime('%Y-%m-%d')
+                return form
+                
+            def save_new(self, form, commit=True):
+                """
+                Sobrescreve o método save_new para garantir que novos diagnósticos
+                sejam corretamente salvos no banco de dados.
+                """
+                obj = super().save_new(form, commit=False)
+                
+                # Garante que a categoria seja definida com base na condição
+                if obj.condicao_id and not obj.categoria_id:
+                    obj.categoria = obj.condicao.categoria
+                
+                if commit:
+                    obj.save()
+                return obj
+        
+        return CustomFormset
+    
 class AdaptacaoCurricularInline(admin.StackedInline):
     model = AdaptacaoCurricular
     form = AdaptacaoCurricularForm
@@ -414,11 +470,12 @@ class MetaHabilidadeAdmin(admin.ModelAdmin):
 class PDIMetaHabilidadeInline(admin.TabularInline):
     model = PDIMetaHabilidade
     extra = 1
+    min_num = 0
     can_delete = True
     fields = ('meta_habilidade', 'progresso')
-
-
-
+    template = 'admin/neurodivergentes/edit_inline/tabular_meta_habilidade.html'
+    classes = []  # Removendo qualquer classe CSS personalizada que possa estar interferindo
+    
 @admin.register(PDI)
 class PDIAdmin(admin.ModelAdmin):
     form = PDIForm
@@ -632,8 +689,8 @@ class PDIAdmin(admin.ModelAdmin):
         }
 
         js = (
-            'admin/js/pdi_admin.js',
-            'admin/js/pdi_popup.js',
+            # 'admin/js/pdi_admin.js',  # Desativado para resolver o problema com o card Metas/Habilidades
+            # 'admin/js/pdi_popup.js',  # Temporariamente desativado para testar
         )
 
 @admin.register(Monitoramento)
@@ -984,7 +1041,6 @@ class RegistroEvolucaoAdmin(admin.ModelAdmin):
             url
         )
     get_edit_button.short_description = 'Editar'
-
     
     class Media:
         css = {
@@ -1364,12 +1420,6 @@ class AnamneseAdmin(admin.ModelAdmin):
 #    )       'fields': ('objetivos', 'estrategias', 'recursos')
 #        }),
 #    )   }),
-#    )       'fields': ('objetivos', 'estrategias', 'recursos')
-#        }),
-#    )   }),
-#        ('Detalhes do Plano', {
-#            'fields': ('objetivos', 'estrategias', 'recursos')
-#        }),
 #    )       'fields': ('objetivos', 'estrategias', 'recursos')
 #        }),
 #    )   }),
