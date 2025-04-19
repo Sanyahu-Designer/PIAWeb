@@ -5,6 +5,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.models import User, Group
 from .views import CustomLoginView, dashboard_gerente, genero_por_neurodivergencia, ausencias_por_aluno, alunos_por_profissional, distribuicao_por_neurodivergencia, especializacao_profissionais, alunos_em_risco
+from .views_perfil import perfil_usuario
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
@@ -89,6 +90,9 @@ urlpatterns = [
             'query': request.GET.get('q', '')
         }
     })), name='grupos_dashboard'),
+    
+    # URL para a página de perfil do usuário
+    path('dashboard/perfil/', perfil_usuario, name='auth_user_perfil'),
     
     # Outras URLs
     path('', CustomLoginView.as_view(

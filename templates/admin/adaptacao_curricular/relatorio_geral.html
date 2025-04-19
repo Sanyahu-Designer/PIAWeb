@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Geral - PEI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Regular.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Bold.ttf" %}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Italic.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: italic;
+        }
+        
+        body {
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #344767;
+            line-height: 1.5;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            background: linear-gradient(to right, #6c757d, #8d99ae);
+            color: white;
+            padding: 1.2em 2em;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+        
+        .info-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .info-card-header {
+            background: linear-gradient(to right, #6c757d, #8d99ae);
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+        
+        .info-card-body {
+            padding: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .info-col {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1em;
+        }
+        
+        .pei-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .pei-header {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            font-weight: bold;
+            color: #344767;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pei-header-info {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        
+        .pei-body {
+            padding: 15px;
+        }
+        
+        .disciplina-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .disciplina-nome {
+            font-weight: bold;
+            color: #344767;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .habilidade-item {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .habilidade-codigo {
+            font-weight: bold;
+            color: #344767;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .objeto-conhecimento {
+            font-style: italic;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .habilidade-descricao {
+            margin-bottom: 8px;
+            color: #344767;
+        }
+        
+        .adaptacao-descritivo {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px dashed #dee2e6;
+        }
+        
+        .adaptacao-titulo {
+            font-weight: bold;
+            color: #344767;
+            margin-top: 8px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .print-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #e91e63;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .print-button:hover {
+            background-color: #d81557;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .print-icon {
+            font-size: 24px;
+        }
+        
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            
+            .container {
+                width: 100%;
+                max-width: none;
+                padding: 10px;
+            }
+            
+            .header, .info-card, .pei-card, .footer {
+                box-shadow: none;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .pei-card {
+                page-break-before: always;
+                break-before: always;
+            }
+            
+            .pei-card:first-of-type {
+                page-break-before: avoid;
+                break-before: avoid;
+            }
+            
+            .disciplina-item {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .print-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PLANO EDUCACIONAL INDIVIDUALIZADO (PEI)</h1>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-header">Informações do Aluno/Paciente</div>
+            <div class="info-card-body">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Nome:</div>
+                        <div class="info-value">{{ aluno.primeiro_nome }} {{ aluno.ultimo_nome }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Idade:</div>
+                        <div class="info-value">{{ aluno.idade }} anos</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Gênero:</div>
+                        <div class="info-value">{% if aluno.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-header">Informações do Relatório</div>
+            <div class="info-card-body">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Período:</div>
+                        <div class="info-value">{{ data_inicial|date:"d/m/Y" }} a {{ data_final|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Total de PEIs:</div>
+                        <div class="info-value">{{ adaptacoes_por_pei|length }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Data de Geração:</div>
+                        <div class="info-value">{{ data_geracao|date:"d/m/Y" }} às {{ data_geracao|time:"H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if adaptacoes_por_pei %}
+            {% for pei_id, pei_data in adaptacoes_por_pei.items %}
+                <div class="pei-card">
+                    <div class="pei-header">
+                        <div>PEI - {{ pei_data.adaptacao.get_modalidade_ensino_display }} - {{ pei_data.adaptacao.get_ano_display }}</div>
+                        <div class="pei-header-info">
+                            {{ pei_data.adaptacao.data_cadastro|date:"d/m/Y" }} | {{ pei_data.adaptacao.escola.nome }}
+                        </div>
+                    </div>
+                    <div class="pei-body">
+                        {% if pei_data.disciplinas %}
+                            {% for disciplina_id, disciplina_data in pei_data.disciplinas.items %}
+                                <div class="disciplina-item">
+                                    <div class="disciplina-nome">{{ disciplina_data.disciplina.nome }}</div>
+                                    
+                                    {% for adaptacao_habilidade in disciplina_data.habilidades %}
+                                        <div class="habilidade-item">
+                                            <div class="habilidade-codigo">Código BNCC: {{ adaptacao_habilidade.habilidade.codigo }}</div>
+                                            <div class="objeto-conhecimento">Objeto do Conhecimento: {{ adaptacao_habilidade.habilidade.objeto_conhecimento }}</div>
+                                            <div class="habilidade-descricao">{{ adaptacao_habilidade.habilidade.descricao }}</div>
+                                            <div class="adaptacao-titulo">Adaptação Curricular:</div>
+                                            <div class="adaptacao-descritivo">{{ adaptacao_habilidade.descritivo_adaptacao|linebreaks }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="no-data">Nenhuma adaptação curricular cadastrada para este PEI.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="info-card">
+                <div class="info-card-body">
+                    <div class="no-data">Nenhum PEI encontrado no período selecionado.</div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>Relatório gerado em {{ data_geracao|date:"d/m/Y" }} às {{ data_geracao|time:"H:i" }}</p>
+            <p>Sistema PIA - Plano Individual de Aprendizagem</p>
+        </div>
+        
+        <button class="print-button" onclick="window.print()">
+            <i class="fas fa-print print-icon"></i>
+        </button>
+    </div>
+</body>
+</html>

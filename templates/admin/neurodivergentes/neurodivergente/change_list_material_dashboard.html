@@ -154,6 +154,9 @@
                               <a href="{% url 'admin:neurodivergentes_neurodivergente_change' obj.pk %}" class="btn btn-outline-primary btn-sm mb-0 me-2" data-toggle="tooltip" data-original-title="Edit user">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
                               </a>
+                              <a href="{% url 'neurodivergentes:imprimir_aluno' obj.pk %}" class="btn btn-outline-primary btn-sm mb-0 me-2" data-toggle="tooltip" data-original-title="Print aluno" target="_blank">
+                                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
+                              </a>
                               <a href="{% url 'admin:neurodivergentes_neurodivergente_delete' obj.pk %}" class="btn btn-outline-danger btn-sm mb-0" data-toggle="tooltip" data-original-title="Delete user">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
                               </a>

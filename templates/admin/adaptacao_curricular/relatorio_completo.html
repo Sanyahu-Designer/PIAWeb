@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEI</title>
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Regular.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Bold.ttf" %}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{% static "fonts/Roboto-Italic.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: italic;
+        }
+        
+        @page {
+            margin: 1cm;
+            size: A4;
+        }
+        
+        body {
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #344767;
+            line-height: 1.5;
+            counter-reset: page;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            background: linear-gradient(to right, #6c757d, #8d99ae);
+            color: white;
+            padding: 1.2em 2em;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+        
+        .info-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .info-card-header {
+            background: linear-gradient(to right, #6c757d, #8d99ae);
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+        
+        .info-card-body {
+            padding: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .info-col {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1em;
+        }
+        
+        .disciplina-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .disciplina-header {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            font-weight: bold;
+            color: #344767;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .disciplina-body {
+            padding: 15px;
+        }
+        
+        .habilidade-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .habilidade-codigo {
+            font-weight: bold;
+            color: #344767;
+            margin-bottom: 5px;
+        }
+        
+        .habilidade-descricao {
+            margin-bottom: 10px;
+            font-style: italic;
+            color: #6c757d;
+        }
+        
+        .adaptacao-titulo {
+            font-weight: bold;
+            color: #344767;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .adaptacao-descritivo {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #6c757d;
+            padding-top: 15px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-before: avoid;
+            break-before: avoid;
+        }
+        
+        .assinatura {
+            margin-top: 50px;
+            text-align: center;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .assinatura-linha {
+            width: 250px;
+            border-top: 1px solid #000;
+            margin: 10px auto;
+        }
+        
+        .assinatura-texto {
+            font-size: 0.9em;
+        }
+        
+        .assinatura-container {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        @media print {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            body {
+                font-size: 12px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 1em 1.5em;
+            }
+            
+            .info-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            .disciplina-card {
+                page-break-before: auto;
+                page-break-after: auto;
+            }
+            
+            .habilidade-item:last-child {
+                margin-bottom: 0;
+            }
+            
+            .assinatura {
+                page-break-before: auto;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PLANO EDUCACIONAL INDIVIDUALIZADO (PEI)</h1>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-header">Informações do Aluno/Paciente</div>
+            <div class="info-card-body">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Nome:</div>
+                        <div class="info-value">{{ adaptacao.aluno.primeiro_nome }} {{ adaptacao.aluno.ultimo_nome }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Idade:</div>
+                        <div class="info-value">{{ adaptacao.aluno.idade }} anos</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Gênero:</div>
+                        <div class="info-value">{% if adaptacao.aluno.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-header">Informações do PEI</div>
+            <div class="info-card-body">
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Escola:</div>
+                        <div class="info-value">{{ adaptacao.escola.nome }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Modalidade de Ensino:</div>
+                        <div class="info-value">{{ adaptacao.get_modalidade_ensino_display }}</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Ano Escolar:</div>
+                        <div class="info-value">{{ adaptacao.get_ano_display }}</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Trimestre/Período:</div>
+                        <div class="info-value">{{ adaptacao.get_trimestre_display }}</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-col">
+                        <div class="info-label">Profissional Responsável:</div>
+                        <div class="info-value">{{ adaptacao.profissional_responsavel.user.get_full_name }} ({{ adaptacao.profissional_responsavel.get_profissao_display }})</div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-label">Data de Cadastro:</div>
+                        <div class="info-value">{{ adaptacao.data_cadastro|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if adaptacoes_por_disciplina %}
+            {% for disciplina, adaptacoes in adaptacoes_por_disciplina.items %}
+                <div class="disciplina-card">
+                    <div class="disciplina-header">{{ disciplina.nome }} 
+                        {% if adaptacoes.0.habilidade.codigo %}
+                        <span style="float: right; font-size: 0.9em; color: #6c757d;">Código BNCC: {{ adaptacoes.0.habilidade.codigo }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="disciplina-body">
+                        {% for adaptacao_habilidade in adaptacoes %}
+                            <div class="habilidade-item">
+                                <div class="adaptacao-titulo">Objeto do Conhecimento:</div>
+                                <div class="adaptacao-descritivo" style="margin-bottom: 10px;">{{ adaptacao_habilidade.habilidade.objeto_conhecimento }}</div>
+                                <div class="adaptacao-titulo">Habilidade:</div>
+                                <div class="adaptacao-descritivo" style="margin-bottom: 10px;">{{ adaptacao_habilidade.habilidade.descricao }}</div>
+                                <div class="adaptacao-titulo">Adaptação Curricular:</div>
+                                <div class="adaptacao-descritivo">{{ adaptacao_habilidade.descritivo_adaptacao|linebreaks }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="info-card">
+                <div class="info-card-body">
+                    <p style="text-align: center; color: #6c757d;">Nenhuma adaptação curricular cadastrada para este PEI.</p>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="assinatura-container" style="page-break-inside: avoid; break-inside: avoid;">
+            <div class="assinatura">
+                <div class="assinatura-linha"></div>
+                <div class="assinatura-texto">{{ adaptacao.profissional_responsavel.user.get_full_name }}</div>
+                <div class="assinatura-texto">{{ adaptacao.profissional_responsavel.get_profissao_display }}</div>
+                {% if adaptacao.profissional_responsavel.registro_profissional %}
+                <div class="assinatura-texto">{{ adaptacao.profissional_responsavel.registro_profissional }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="footer">
+                <p>Documento gerado em {{ data_geracao|date:"d/m/Y" }} às {{ data_geracao|time:"H:i" }}</p>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

@@ -22,7 +22,9 @@ from .views import (
     imprimir_parecer,
     gerar_relatorio_parecer_pdf,
     gerar_relatorio_parecer_geral_pdf,
-    imprimir_anamnese
+    imprimir_anamnese,
+    imprimir_aluno,
+    imprimir_neurodivergencia
 )
 from .admin_views import ParecerGraficosView
 from .graficos_parecer import dados_graficos_parecer
@@ -63,6 +65,8 @@ urlpatterns = [
     path('pei/<int:pei_id>/imprimir/', imprimir_pei, name='imprimir_pei'),
     path('relatorio-pei/<int:neurodivergente_id>/', gerar_relatorio_pei_pdf, name='gerar_relatorio_pei_pdf'),
     path('anamnese/<int:anamnese_id>/imprimir/', imprimir_anamnese, name='imprimir_anamnese'),
+    path('aluno/<int:aluno_id>/imprimir/', imprimir_aluno, name='imprimir_aluno'),
+    path('neurodivergencia/<int:neurodivergencia_id>/imprimir/', imprimir_neurodivergencia, name='imprimir_neurodivergencia'),
 ]
 
 # Adicione esta linha para servir arquivos de mídia durante o desenvolvimento

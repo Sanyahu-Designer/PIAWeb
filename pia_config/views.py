@@ -2,10 +2,10 @@ from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Count, Q
+from django.db.models import Count, Q, F
 from django.utils import timezone
 from django.http import JsonResponse
-from datetime import timedelta
+from datetime import datetime, timedelta
 from neurodivergentes.models import Neurodivergente
 from profissionais_app.models import Profissional
 from escola.models import Escola
@@ -277,11 +277,11 @@ def dashboard_gerente(request):
                 mes_atual += 12
                 ano_atual -= 1
                 
-            inicio_mes = timezone.datetime(ano_atual, mes_atual, 1)
+            inicio_mes = datetime(ano_atual, mes_atual, 1)
             if mes_atual == 12:
-                fim_mes = timezone.datetime(ano_atual + 1, 1, 1) - timedelta(days=1)
+                fim_mes = datetime(ano_atual + 1, 1, 1) - timedelta(days=1)
             else:
-                fim_mes = timezone.datetime(ano_atual, mes_atual + 1, 1) - timedelta(days=1)
+                fim_mes = datetime(ano_atual, mes_atual + 1, 1) - timedelta(days=1)
                 
             try:
                 # Tenta contar os alunos criados neste mês
@@ -871,18 +871,25 @@ def alunos_em_risco(request):
         from django.utils import timezone
         import datetime
         
+        print("\n\n==== INÍCIO DA FUNÇÃO ALUNOS EM RISCO ====")
+        
         # Definir o período de referência (últimos 90 dias)
         data_referencia = timezone.now() - datetime.timedelta(days=90)
-        data_sem_atendimento = timezone.now() - datetime.timedelta(days=30)
+        data_sem_atendimento = timezone.now().date() - datetime.timedelta(days=30)
         data_desatualizado = timezone.now() - datetime.timedelta(days=60)
+        
+        print(f"Data atual: {timezone.now().date()}")
+        print(f"Data referência (90 dias atrás): {data_referencia.date()}")
+        print(f"Data sem atendimento (30 dias atrás): {data_sem_atendimento}")
+        print(f"Data desatualizado (60 dias atrás): {data_desatualizado.date()}")
         
         # Lista para armazenar os alunos em risco
         alunos_risco = []
         
         # 1. Alunos com ausências consecutivas (3 ou mais)
         alunos_ausencias = PDI.objects.filter(
-            status='falta',
-            data_prevista__gte=data_referencia
+            status='ausente',
+            data_criacao__gte=data_referencia
         ).values('neurodivergente').annotate(
             total_faltas=Count('id')
         ).filter(total_faltas__gte=3)
@@ -893,103 +900,143 @@ def alunos_em_risco(request):
                 alunos_risco.append({
                     'id': aluno.id,
                     'nome': aluno.nome_completo,
+                    'escola': aluno.escola.nome if aluno.escola else "Não informada",
                     'tipo_risco': 'Ausências Consecutivas',
-                    'detalhe': f"{aluno_data['total_faltas']} faltas nos últimos 90 dias",
-                    'severidade': 'alta' if aluno_data['total_faltas'] >= 5 else 'média'
+                    'detalhe': f'{aluno_data["total_faltas"]} faltas nos últimos 90 dias',
+                    'severidade': 'alta'
                 })
-            except Neurodivergente.DoesNotExist:
-                continue
-        
-        # 2. Alunos sem progresso no PDI (nenhum objetivo concluído nos últimos 90 dias)
-        alunos_sem_progresso = PDI.objects.filter(
-            data_prevista__gte=data_referencia,
-            objetivos_concluidos=0
-        ).values('neurodivergente').distinct()
-        
-        for aluno_data in alunos_sem_progresso:
-            try:
-                aluno = Neurodivergente.objects.get(id=aluno_data['neurodivergente'])
-                # Verificar se este aluno já está na lista por ausências
-                if not any(item['id'] == aluno.id and item['tipo_risco'] == 'Sem Progresso no PDI' for item in alunos_risco):
-                    alunos_risco.append({
-                        'id': aluno.id,
-                        'nome': aluno.nome_completo,
-                        'tipo_risco': 'Sem Progresso no PDI',
-                        'detalhe': 'Nenhum objetivo concluído nos últimos 90 dias',
-                        'severidade': 'média'
-                    })
             except Neurodivergente.DoesNotExist:
                 continue
         
         # 3. Alunos sem atendimento recente (mais de 30 dias)
-        from django.db.models import Max, Subquery, OuterRef
+        print("\n=== Verificando alunos sem atendimento recente ===")
         
-        ultimos_atendimentos = PDI.objects.filter(
-            neurodivergente=OuterRef('pk'),
-            status__in=['concluido', 'em_andamento']
-        ).values('neurodivergente').annotate(
-            ultima_data=Max('data_prevista')
-        ).values('ultima_data')
+        # Listar todos os alunos para depuração
+        todos_alunos = Neurodivergente.objects.all()
+        print(f"Total de alunos no sistema: {todos_alunos.count()}")
+        for a in todos_alunos:
+            print(f"ID: {a.id}, Nome: {a.nome_completo}")
         
-        # Alunos cujo último atendimento foi há mais de 30 dias
-        alunos_sem_atendimento = Neurodivergente.objects.filter(
-            Q(pdis__isnull=True) | Q(
-                Subquery(ultimos_atendimentos[:1]) < data_sem_atendimento
-            )
-        ).distinct()
-        
-        for aluno in alunos_sem_atendimento:
-            # Verificar se este aluno já está na lista por outro motivo
-            if not any(item['id'] == aluno.id and item['tipo_risco'] == 'Sem Atendimento Recente' for item in alunos_risco):
-                # Calcular dias desde o último atendimento
-                try:
-                    ultimo_pdi = PDI.objects.filter(
-                        neurodivergente=aluno,
-                        status__in=['concluido', 'em_andamento']
-                    ).order_by('-data_prevista').first()
-                    
-                    if ultimo_pdi:
-                        dias_sem_atendimento = (timezone.now().date() - ultimo_pdi.data_prevista).days
-                        detalhe = f"{dias_sem_atendimento} dias sem atendimento"
-                    else:
-                        detalhe = "Nunca recebeu atendimento"
-                except:
-                    detalhe = "Sem informação de último atendimento"
-                
-                alunos_risco.append({
-                    'id': aluno.id,
-                    'nome': aluno.nome_completo,
-                    'tipo_risco': 'Sem Atendimento Recente',
-                    'detalhe': detalhe,
-                    'severidade': 'alta' if 'Nunca' in detalhe else 'média'
-                })
-        
-        # 4. Alunos com objetivos não alcançados (PDIs com status 'concluído' mas objetivos não concluídos)
-        alunos_objetivos_nao_alcancados = PDI.objects.filter(
-            status='concluido',
-            objetivos_concluidos__lt=F('objetivos_totais'),
-            data_prevista__gte=data_referencia
-        ).values('neurodivergente').distinct()
-        
-        for aluno_data in alunos_objetivos_nao_alcancados:
+        for aluno in Neurodivergente.objects.all():
+            # Adicionar log para rastrear o processamento de cada aluno
+            print(f"\nVerificando aluno: {aluno.id} - {aluno.nome_completo}")
+            
+            # Verificar especificamente o João
+            if "João" in aluno.nome_completo:
+                print(f"*** ENCONTRADO JOÃO: ID {aluno.id} ***")
+                print(f"*** Detalhes do João: {aluno.__dict__} ***")
+            
+            # Calcular dias desde o último atendimento
             try:
-                aluno = Neurodivergente.objects.get(id=aluno_data['neurodivergente'])
-                # Verificar se este aluno já está na lista por este motivo
-                if not any(item['id'] == aluno.id and item['tipo_risco'] == 'Objetivos Não Alcançados' for item in alunos_risco):
-                    alunos_risco.append({
-                        'id': aluno.id,
-                        'nome': aluno.nome_completo,
-                        'tipo_risco': 'Objetivos Não Alcançados',
-                        'detalhe': 'PDIs concluídos com objetivos incompletos',
-                        'severidade': 'baixa'
-                    })
-            except Neurodivergente.DoesNotExist:
+                # Listar todos os PDIs do aluno para depuração
+                todos_pdis = PDI.objects.filter(neurodivergente=aluno).order_by('-data_criacao')
+                print(f"  - Total de PDIs para {aluno.nome_completo}: {todos_pdis.count()}")
+                for pdi in todos_pdis:
+                    print(f"    PDI ID: {pdi.id}, Data: {pdi.data_criacao}, Status: {pdi.status}")
+                
+                ultimo_pdi = PDI.objects.filter(
+                    neurodivergente=aluno
+                ).order_by('-data_criacao').first()
+                
+                if ultimo_pdi:
+                    dias_sem_atendimento = (timezone.now().date() - ultimo_pdi.data_criacao).days
+                    print(f"  - Último PDI: {ultimo_pdi.id}, data: {ultimo_pdi.data_criacao}, dias sem atendimento: {dias_sem_atendimento}")
+                    
+                    if dias_sem_atendimento > 30:  # Apenas adiciona se for mais de 30 dias
+                        # Verificar se este aluno já está na lista por este motivo específico
+                        ja_na_lista = any(item['id'] == aluno.id and item['tipo_risco'] == 'Sem Atendimento Recente' for item in alunos_risco)
+                        print(f"  - Já na lista por Sem Atendimento Recente? {ja_na_lista}")
+                        
+                        if not ja_na_lista:
+                            print(f"  - ADICIONANDO aluno {aluno.nome_completo} à lista de risco (Sem Atendimento Recente)")
+                            detalhe = f"{dias_sem_atendimento} dias sem atendimento"
+                            alunos_risco.append({
+                                'id': aluno.id,
+                                'nome': aluno.nome_completo,
+                                'escola': aluno.escola.nome if aluno.escola else "Não informada",
+                                'tipo_risco': 'Sem Atendimento Recente',
+                                'detalhe': detalhe,
+                                'severidade': 'média'
+                            })
+                        else:
+                            print(f"  - Aluno {aluno.nome_completo} já está na lista por Sem Atendimento Recente")
+                    else:
+                        print(f"  - Aluno {aluno.nome_completo} tem menos de 30 dias sem atendimento ({dias_sem_atendimento} dias)")
+                else:
+                    print(f"  - Aluno {aluno.nome_completo} não tem PDI registrado")
+                    # Verificar se este aluno já está na lista por este motivo específico
+                    ja_na_lista = any(item['id'] == aluno.id and item['tipo_risco'] == 'Sem Atendimento Recente' for item in alunos_risco)
+                    print(f"  - Já na lista por Sem Atendimento Recente? {ja_na_lista}")
+                    
+                    if not ja_na_lista:
+                        print(f"  - ADICIONANDO aluno {aluno.nome_completo} à lista de risco (Nunca recebeu atendimento)")
+                        alunos_risco.append({
+                            'id': aluno.id,
+                            'nome': aluno.nome_completo,
+                            'escola': aluno.escola.nome if aluno.escola else "Não informada",
+                            'tipo_risco': 'Sem Atendimento Recente',
+                            'detalhe': "Nunca recebeu atendimento",
+                            'severidade': 'alta'
+                        })
+                    else:
+                        print(f"  - Aluno {aluno.nome_completo} já está na lista por Sem Atendimento Recente")
+            except Exception as e:
+                print(f"Erro ao verificar atendimento para aluno {aluno.id} - {aluno.nome_completo}: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
         
+        # 4. Alunos com objetivos não alcançados (PDIs com progresso médio abaixo de 50%)
+        from django.db.models import Avg
+        
+        print("\n=== Verificando alunos com objetivos não alcançados ===")
+        
+        # Buscar todos os alunos que têm pelo menos um PDI concluído com progresso abaixo de 50%
+        for aluno in Neurodivergente.objects.all():
+            print(f"\nVerificando objetivos não alcançados para aluno: {aluno.id} - {aluno.nome_completo}")
+            
+            # Buscar PDIs concluídos do aluno dentro do período de referência
+            pdis_concluidos = PDI.objects.filter(
+                neurodivergente=aluno,
+                status='concluido',
+                data_criacao__gte=data_referencia
+            )
+            
+            print(f"  - Total de PDIs concluídos para {aluno.nome_completo}: {pdis_concluidos.count()}")
+            
+            for pdi in pdis_concluidos:
+                # Calcular o progresso médio para este PDI específico
+                progresso_medio = pdi.metas_habilidades.aggregate(Avg('progresso'))['progresso__avg']
+                progresso = int(progresso_medio) if progresso_medio is not None else 0
+                print(f"    PDI ID: {pdi.id}, Data: {pdi.data_criacao}, Progresso médio: {progresso}%")
+                
+                # Verificar se o progresso está abaixo de 50%
+                if progresso < 50:
+                    print(f"    - PDI com progresso abaixo de 50%")
+                    
+                    # Verificar se este aluno já está na lista por este motivo específico
+                    ja_na_lista = any(item['id'] == aluno.id and item['tipo_risco'] == 'Objetivos Não Alcançados' for item in alunos_risco)
+                    print(f"    - Já na lista por Objetivos Não Alcançados? {ja_na_lista}")
+                    
+                    if not ja_na_lista:
+                        print(f"    - ADICIONANDO aluno {aluno.nome_completo} à lista de risco (Objetivos Não Alcançados)")
+                        alunos_risco.append({
+                            'id': aluno.id,
+                            'nome': aluno.nome_completo,
+                            'escola': aluno.escola.nome if aluno.escola else "Não informada",
+                            'tipo_risco': 'Objetivos Não Alcançados',
+                            'detalhe': 'PDI concluído com progresso abaixo de 50%',
+                            'severidade': 'média'  # Alterado de 'baixa' para 'média'
+                        })
+                        # Uma vez que encontramos um PDI com baixo progresso, não precisamos verificar os outros
+                        break
+                    else:
+                        print(f"    - Aluno {aluno.nome_completo} já está na lista por Objetivos Não Alcançados")
+                        break
         # 5. PDIs desatualizados (sem atualização há mais de 60 dias)
         alunos_pdi_desatualizado = PDI.objects.filter(
             updated_at__lt=data_desatualizado,
-            status__in=['em_andamento', 'agendado']
+            status__in=['em_andamento', 'iniciado']
         ).values('neurodivergente').distinct()
         
         for aluno_data in alunos_pdi_desatualizado:
@@ -1000,6 +1047,7 @@ def alunos_em_risco(request):
                     alunos_risco.append({
                         'id': aluno.id,
                         'nome': aluno.nome_completo,
+                        'escola': aluno.escola.nome if aluno.escola else "Não informada",
                         'tipo_risco': 'PDI Desatualizado',
                         'detalhe': 'PDI sem atualização há mais de 60 dias',
                         'severidade': 'média'
@@ -1018,20 +1066,11 @@ def alunos_em_risco(request):
         
         alunos_risco.sort(key=ordem_severidade)
         
-        return JsonResponse({'alunos_risco': alunos_risco})
-    except Exception as e:
-        print(f"Erro ao buscar dados de alunos em risco: {e}")
-        return JsonResponse({'alunos_risco': []})
-        # Ordenar por severidade (alta, média, baixa)
-        def ordem_severidade(item):
-            if item['severidade'] == 'alta':
-                return 0
-            elif item['severidade'] == 'média':
-                return 1
-            else:
-                return 2
+        print("\n=== Alunos em risco (resultado final) ===")
+        for aluno in alunos_risco:
+            print(f"ID: {aluno['id']}, Nome: {aluno['nome']}, Tipo: {aluno['tipo_risco']}, Detalhe: {aluno['detalhe']}")
         
-        alunos_risco.sort(key=ordem_severidade)
+        print("==== FIM DA FUNÇÃO ALUNOS EM RISCO ====\n\n")
         
         return JsonResponse({'alunos_risco': alunos_risco})
     except Exception as e:

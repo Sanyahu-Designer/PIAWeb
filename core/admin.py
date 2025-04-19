@@ -11,7 +11,8 @@ auth_app.verbose_name = 'Usuários'
 
 class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
-    add_form_template = 'admin/auth/user/add_form.html'
+    change_form_template = 'admin/change_form_standard.html'
+    add_form_template = 'admin/change_form_standard.html'
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

@@ -8,17 +8,13 @@
         /* Abordagem com múltiplas fontes para garantir compatibilidade em diferentes ambientes */
         @font-face {
             font-family: 'Roboto';
-            src: url('{{ STATIC_URL }}fonts/Roboto-Regular.ttf') format('truetype'),
-                 url('/static/fonts/Roboto-Regular.ttf') format('truetype'),
-                 url('{% static "fonts/Roboto-Regular.ttf" %}') format('truetype');
+            src: url('{% static "fonts/Roboto-Regular.ttf" %}') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
         @font-face {
             font-family: 'Roboto';
-            src: url('{{ STATIC_URL }}fonts/Roboto-Bold.ttf') format('truetype'),
-                 url('/static/fonts/Roboto-Bold.ttf') format('truetype'),
-                 url('{% static "fonts/Roboto-Bold.ttf" %}') format('truetype');
+            src: url('{% static "fonts/Roboto-Bold.ttf" %}') format('truetype');
             font-weight: bold;
             font-style: normal;
         }

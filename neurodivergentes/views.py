@@ -309,8 +309,6 @@ def gerar_relatorio_pdf(request, neurodivergente_id):
                 escola = Escola.objects.filter(profissionais_educacao__id=pedagogo.id).first()
             else:
                 escola = None
-        else:
-            escola = None
     else:
         pedagogo = None
         escola = None
@@ -1600,3 +1598,120 @@ def imprimir_anamnese(request, anamnese_id):
     response['Content-Disposition'] = f'filename=anamnese_{anamnese.id}.pdf'
     
     return response
+
+@login_required
+def imprimir_aluno(request, aluno_id):
+    """View para imprimir um relatório completo do Aluno/Paciente"""
+    aluno = get_object_or_404(
+        Neurodivergente.objects.select_related('escola', 'ano_escolar'),
+        id=aluno_id
+    )
+    
+    # Buscar informações sobre neurodivergências
+    try:
+        neurodivergencia = Neurodivergencia.objects.prefetch_related(
+            'diagnosticos__condicao',
+            'diagnosticos__categoria'
+        ).get(neurodivergente=aluno)
+        diagnosticos = neurodivergencia.diagnosticos.all()
+        status_neurodivergencia = "Em Investigação" if not diagnosticos.exists() else ", ".join([d.condicao.nome for d in diagnosticos])
+    except Neurodivergencia.DoesNotExist:
+        neurodivergencia = None
+        diagnosticos = []
+        status_neurodivergencia = "Não"
+    
+    # Contar registros relacionados
+    evolucoes_count = RegistroEvolucao.objects.filter(neurodivergente=aluno).count()
+    pdis_count = PDI.objects.filter(neurodivergente=aluno).count()
+    peis_count = Monitoramento.objects.filter(neurodivergente=aluno).count()
+    pareceres_count = ParecerAvaliativo.objects.filter(neurodivergente=aluno).count()
+    
+    # Verificar se existe anamnese
+    tem_anamnese = Anamnese.objects.filter(neurodivergente=aluno).exists()
+    
+    # Buscar grupo familiar
+    grupo_familiar = aluno.grupo_familiar.all()
+    
+    hoje = date.today()
+    for membro in grupo_familiar:
+        if membro.data_nascimento:
+            nascimento = membro.data_nascimento
+            idade = hoje.year - nascimento.year - ((hoje.month, hoje.day) < (nascimento.month, nascimento.day))
+            membro.idade_calculada = idade
+        else:
+            membro.idade_calculada = None
+    
+    context = {
+        'aluno': aluno,
+        'neurodivergencia': neurodivergencia,
+        'diagnosticos': diagnosticos,
+        'status_neurodivergencia': status_neurodivergencia,
+        'evolucoes_count': evolucoes_count,
+        'pdis_count': pdis_count,
+        'peis_count': peis_count,
+        'pareceres_count': pareceres_count,
+        'tem_anamnese': tem_anamnese,
+        'grupo_familiar': grupo_familiar,
+        'data_impressao': timezone.now()
+    }
+    
+    # Configura as fontes
+    font_config = FontConfiguration()
+    css_string = '''
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('%s') format('truetype');
+            font-weight: bold;
+        }
+    ''' % (
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Regular.ttf'),
+        os.path.join(settings.STATIC_ROOT, 'fonts/Roboto-Bold.ttf')
+    )
+    
+    # Renderiza o template HTML
+    html_string = render_to_string('neurodivergentes/relatorio_aluno.html', context)
+    
+    # Cria o PDF com as configurações de fonte
+    base_url = request.build_absolute_uri('/').rstrip('/')
+    html = HTML(string=html_string, base_url=base_url)
+    css = CSS(string=css_string)
+    pdf = html.write_pdf(
+        stylesheets=[css],
+        presentational_hints=True
+    )
+    
+    # Retorna o PDF como resposta HTTP
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=aluno_{aluno.id}.pdf'
+    
+    return response
+
+@login_required
+def imprimir_neurodivergencia(request, neurodivergencia_id):
+    """
+    Gera um relatório de neurodivergência para impressão.
+    """
+    try:
+        neurodivergencia = Neurodivergencia.objects.get(pk=neurodivergencia_id)
+        diagnosticos = DiagnosticoNeurodivergente.objects.filter(neurodivergencia=neurodivergencia)
+        
+        context = {
+            'neurodivergencia': neurodivergencia,
+            'diagnosticos': diagnosticos,
+            'data_impressao': timezone.now(),
+        }
+        
+        html_string = render_to_string('neurodivergentes/relatorio_neurodivergencia.html', context)
+        html = HTML(string=html_string)
+        pdf = html.write_pdf()
+        
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'filename=neurodivergencia_{neurodivergencia_id}.pdf'
+        return response
+    except Neurodivergencia.DoesNotExist:
+        raise Http404("Neurodivergência não encontrada")

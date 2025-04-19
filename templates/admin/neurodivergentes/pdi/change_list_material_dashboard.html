@@ -76,12 +76,12 @@
                 {% endfor %}
               </form>
               
-              <div class="d-flex align-items-center ms-3">
-                <a href="{% url 'admin:neurodivergentes_pdi_add' %}" class="btn btn-outline-primary btn-sm mb-0 me-2">
+              <div class="d-flex align-items-center">
+                <a href="{% url 'admin:neurodivergentes_pdi_add' %}" class="btn btn-outline-primary btn-sm mb-0 ms-3">
                   <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Adicionar Novo
                 </a>
                 {% if request.GET.neurodivergente__id__exact %}
-                <button type="button" id="relatorioGeralBtn" class="btn btn-outline-primary btn-sm mb-0">
+                <button type="button" id="relatorioGeralBtn" class="btn btn-outline-primary btn-sm mb-0 ms-3">
                   <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">description</i> Relatório Geral
                 </button>
                 {% endif %}

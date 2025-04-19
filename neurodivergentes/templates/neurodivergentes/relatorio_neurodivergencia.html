@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neurodivergência - {{ neurodivergencia.neurodivergente.nome_completo|title }}</title>
+    <style>
+        /* Abordagem com múltiplas fontes para garantir compatibilidade em diferentes ambientes */
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{{ STATIC_URL }}fonts/Roboto-Regular.ttf') format('truetype'),
+                 url('/static/fonts/Roboto-Regular.ttf') format('truetype'),
+                 url('{% static "fonts/Roboto-Regular.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('{{ STATIC_URL }}fonts/Roboto-Bold.ttf') format('truetype'),
+                 url('/static/fonts/Roboto-Bold.ttf') format('truetype'),
+                 url('{% static "fonts/Roboto-Bold.ttf" %}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
+        :root {
+            --primary-color: #4e73df;
+            --text-color: #344767;
+            --border-color: #e3e6f0;
+            --background-color: #f8f9fc;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-hover-shadow: 0 7px 14px -3px rgba(0, 0, 0, 0.15), 0 3px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 9pt;
+                color: #666;
+                margin-top: 0.3cm;
+            }
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            line-height: 1.4;
+            background-color: #f8f9fc;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            margin-bottom: 1.5rem;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        
+        @media screen {
+            .header {
+                background-color: var(--primary-color);
+                color: white;
+                border-radius: 0.5rem;
+            }
+        }
+        
+        .header-main {
+            text-align: center;
+        }
+        
+        .header-main h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .header-dates {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        /* Novo estilo de cards */
+        .section {
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            page-break-inside: avoid;
+            transition: all 0.3s ease;
+        }
+        
+        @media screen {
+            .section:hover {
+                box-shadow: var(--card-hover-shadow);
+            }
+        }
+        
+        .section-title {
+            margin-top: 0;
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 1.25rem;
+        }
+        
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 15px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            color: white;
+        }
+        
+        .badge-green {
+            background-color: #28a745;
+        }
+        
+        .badge-red {
+            background-color: #dc3545;
+        }
+        
+        .badge-blue {
+            background-color: #007bff;
+        }
+        
+        .badge-orange {
+            background-color: #FF9800;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            font-weight: 600;
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        
+        table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .page-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+            }
+            
+            .header {
+                background-color: white !important;
+                color: var(--text-color) !important;
+            }
+            
+            .section {
+                box-shadow: none;
+                border: 1px solid #eee;
+            }
+            
+            .page-footer {
+                position: fixed;
+                bottom: 20px;
+                left: 0;
+                right: 0;
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-main">
+                <h1>Neurodivergência - {{ neurodivergencia.neurodivergente.nome_completo|title }}</h1>
+            </div>
+            <div class="header-dates">
+                <span>Data do Relatório: {{ data_impressao|date:"d/m/Y" }}</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Dados do Aluno/Paciente</h2>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Nome Completo</div>
+                    <div class="info-value">{{ neurodivergencia.neurodivergente.nome_completo }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Data de Nascimento</div>
+                    <div class="info-value">{{ neurodivergencia.neurodivergente.data_nascimento|date:"d/m/Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Idade</div>
+                    <div class="info-value">{{ neurodivergencia.neurodivergente.idade }} anos</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Gênero</div>
+                    <div class="info-value">{% if neurodivergencia.neurodivergente.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">CPF</div>
+                    <div class="info-value">{{ neurodivergencia.neurodivergente.cpf|default:"Não informado" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Escola</div>
+                    <div class="info-value">{{ neurodivergencia.neurodivergente.escola.nome|default:"Não informado" }}</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">
+                        <span class="badge {% if neurodivergencia.neurodivergente.ativo %}badge-green{% else %}badge-red{% endif %}">
+                            {% if neurodivergencia.neurodivergente.ativo %}Ativo{% else %}Inativo{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Dados do Diagnóstico</h2>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Data do Diagnóstico</div>
+                    <div class="info-value">
+                        {% if neurodivergencia.data_diagnostico %}
+                            {{ neurodivergencia.data_diagnostico|date:"d/m/Y" }}
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Profissional Responsável</div>
+                    <div class="info-value">{{ neurodivergencia.profissional_diagnostico|default:"Não informado" }}</div>
+                </div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-item" style="flex-basis: 100%;">
+                    <div class="info-label">Observações</div>
+                    <div class="info-value">{{ neurodivergencia.observacoes|default:"Não informado"|linebreaks }}</div>
+                </div>
+            </div>
+            
+            {% if diagnosticos %}
+            <h3 style="font-size: 16px; margin-top: 15px; color: #344767;">Condições Diagnosticadas</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Condição</th>
+                        <th>CID-10</th>
+                        <th>Data de Identificação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for diagnostico in diagnosticos %}
+                    <tr>
+                        <td>{{ diagnostico.categoria.nome }}</td>
+                        <td>{{ diagnostico.condicao.nome }}</td>
+                        <td>{{ diagnostico.condicao.cid_10 }}</td>
+                        <td>{{ diagnostico.data_identificacao|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Nenhuma condição diagnosticada registrada.</p>
+            {% endif %}
+        </div>
+
+        <div class="page-footer">
+            Relatório gerado em {{ data_impressao|date:"d/m/Y H:i" }} | PIA - Plano Individual de Aprendizagem
+        </div>
+    </div>
+</body>
+</html>

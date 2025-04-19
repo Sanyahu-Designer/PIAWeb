@@ -19,6 +19,8 @@
 {% block extrahead %}
   {{ block.super }}
   {{ media.js }}
+  <!-- Adiciona o Bootstrap JS para o modal -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock extrahead %}
 
 {% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock bodyclass %}
@@ -80,6 +82,11 @@
                 <a href="{% url 'admin:adaptacao_curricular_adaptacaocurricularindividualizada_add' %}" class="btn btn-outline-primary btn-sm mb-0 ms-3">
                   <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Adicionar Novo PEI
                 </a>
+                {% if request.GET.aluno__id__exact %}
+                <button type="button" id="btn-relatorio-geral" class="btn btn-outline-primary btn-sm mb-0 ms-3">
+                  <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">description</i> Relatório Geral
+                </button>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -180,6 +187,9 @@
                                 <a href="{% url 'admin:adaptacao_curricular_adaptacaocurricularindividualizada_change' obj.id %}" class="btn btn-outline-primary btn-sm mb-0 me-2">
                                   <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
                                 </a>
+                                <a href="{% url 'adaptacao_curricular:imprimir_adaptacao_completa' obj.id %}" target="_blank" class="btn btn-outline-primary btn-sm mb-0 me-2">
+                                  <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">print</i> Imprimir
+                                </a>
                                 <a href="{% url 'admin:adaptacao_curricular_adaptacaocurricularindividualizada_delete' obj.id %}" class="btn btn-outline-danger btn-sm mb-0">
                                   <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
                                 </a>
@@ -224,4 +234,105 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para Relatório Geral -->
+{% if request.GET.aluno__id__exact %}
+<div class="modal fade" id="relatorioGeralModal" tabindex="-1" role="dialog" aria-labelledby="relatorioGeralModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header p-0 position-relative mt-n4 mx-3 z-index-2">
+        <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae); width: 100%;">
+          <h6 class="text-white text-capitalize ps-3 mb-0">Gerar Relatório Geral</h6>
+        </div>
+      </div>
+      <form method="get" action="{% url 'adaptacao_curricular:gerar_relatorio_geral_pei' request.GET.aluno__id__exact %}" id="formRelatorioGeral" target="_blank">
+        <div class="modal-body p-4">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group input-group-static mb-4">
+                <label for="data_inicial_geral">Data Inicial</label>
+                <input type="date" name="data_inicial" id="data_inicial_geral" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-static mb-4">
+                <label for="data_final_geral">Data Final</label>
+                <input type="date" name="data_final" id="data_final_geral" class="form-control" required>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between px-4">
+          <button type="button" class="btn btn-outline-secondary" onclick="closeRelatorioModal()">
+            <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">close</i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">description</i> Gerar Relatório
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  function openRelatorioModal() {
+    var modal = document.getElementById('relatorioGeralModal');
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+    
+    // Criar backdrop
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    document.body.appendChild(backdrop);
+  }
+
+  function closeRelatorioModal() {
+    var modal = document.getElementById('relatorioGeralModal');
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    
+    // Remover backdrop
+    var backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.parentNode.removeChild(backdrop);
+    }
+  }
+
+  // Configura a validação do formulário
+  document.addEventListener('DOMContentLoaded', function() {
+    var formRelatorioGeral = document.getElementById('formRelatorioGeral');
+    if (formRelatorioGeral) {
+      formRelatorioGeral.onsubmit = function(e) {
+        var dataInicial = document.getElementById('data_inicial_geral').value;
+        var dataFinal = document.getElementById('data_final_geral').value;
+        
+        if (!dataInicial || !dataFinal) {
+          e.preventDefault();
+          alert('Por favor, preencha as datas inicial e final.');
+          return false;
+        }
+      };
+    }
+  });
+</script>
+{% endif %}
 {% endblock content %}
+
+{% block extrajs %}
+{{ block.super }}
+<script type="text/javascript">
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa o botão de Relatório Geral
+    var relatorioBtn = document.getElementById('btn-relatorio-geral');
+    if (relatorioBtn) {
+      // Adicionar evento de clique ao botão
+      relatorioBtn.addEventListener('click', function() {
+        openRelatorioModal();
+      });
+    }
+  });
+</script>
+{% endblock %}

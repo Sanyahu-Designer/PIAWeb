@@ -262,12 +262,12 @@
       </div>
     </div>
     
-    <!-- Tabela de Alerta de Alunos em Risco -->
+    <!-- Tabela de Alerta de Alunos -->
     <div class="col-lg-6 col-md-12">
       <div class="card z-index-2">
         <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
           <div class="bg-gradient-danger-pastel shadow-danger-pastel border-radius-lg py-3 pe-1">
-            <h6 class="text-white text-capitalize ps-3 mb-0">Alerta de Alunos em Risco</h6>
+            <h6 class="text-white text-capitalize ps-3 mb-0">Alerta de Alunos/Pacientes</h6>
           </div>
         </div>
         <div class="card-body p-3">
@@ -275,10 +275,10 @@
             <table class="table align-items-center mb-0">
               <thead>
                 <tr>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tipo de Risco</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Detalhe</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Severidade</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Escola</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tipos de Alerta</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Detalhes</th>
                 </tr>
               </thead>
               <tbody id="alunos-em-risco-table">
@@ -291,7 +291,7 @@
         </div>
         <div class="card-footer p-2">
           <p class="mb-0 text-sm">
-            Alunos que necessitam de atenção especial com base em critérios de acompanhamento
+            Alunos que necessitam de atenção especial
           </p>
         </div>
       </div>
@@ -318,7 +318,7 @@
             <table class="table align-items-center mb-0">
               <thead>
                 <tr>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Último Atendimento</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Escola</th>
                 </tr>
@@ -379,7 +379,7 @@
             <table class="table align-items-center mb-0">
               <thead>
                 <tr>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Data de Atendimento</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Escola</th>
                 </tr>
@@ -1001,6 +1001,7 @@
           data: {
             labels: data.labels,
             datasets: [{
+              label: 'Alunos',
               data: datasetData,
               backgroundColor: pastelColors.slice(0, datasetData.length),
               borderWidth: 0,
@@ -1029,7 +1030,8 @@
                 enabled: true,
                 callbacks: {
                   label: function(context) {
-                    return `${context.dataset.label}: ${context.raw} alunos`;
+                    const label = context.chart.data.labels[context.dataIndex];
+                    return `${label}: ${context.raw} alunos`;
                   }
                 }
               }
@@ -1136,38 +1138,79 @@
         tableBody.innerHTML = '';
         
         if (data.alunos_risco && data.alunos_risco.length > 0) {
+          // Agrupar alunos por ID
+          const alunosAgrupados = {};
+          
+          // Primeiro passo: agrupar os dados por aluno
           data.alunos_risco.forEach(aluno => {
+            if (!alunosAgrupados[aluno.id]) {
+              alunosAgrupados[aluno.id] = {
+                id: aluno.id,
+                nome: aluno.nome,
+                escola: aluno.escola,
+                riscos: []
+              };
+            }
+            
+            // Adicionar este risco à lista de riscos do aluno
+            alunosAgrupados[aluno.id].riscos.push({
+              tipo: aluno.tipo_risco,
+              detalhe: aluno.detalhe,
+              severidade: aluno.severidade
+            });
+          });
+          
+          // Segundo passo: criar as linhas da tabela, uma para cada aluno
+          Object.values(alunosAgrupados).forEach(aluno => {
             const row = document.createElement('tr');
             
-            // Definir classe de severidade
-            let severidadeClass = '';
-            if (aluno.severidade === 'alta') {
-              severidadeClass = 'text-danger';
-            } else if (aluno.severidade === 'média') {
-              severidadeClass = 'text-warning';
-            } else {
-              severidadeClass = 'text-info';
-            }
+            // Consolidar todos os tipos de risco em uma única string
+            const tiposRisco = aluno.riscos.map(risco => {
+              let severidadeClass = '';
+              if (risco.severidade === 'alta') {
+                severidadeClass = 'text-danger';
+              } else if (risco.severidade === 'média') {
+                severidadeClass = 'text-warning';
+              } else {
+                severidadeClass = 'text-info';
+              }
+              
+              return `<span class="${severidadeClass}">${risco.tipo}</span>`;
+            }).join('<br>');
+            
+            // Consolidar todos os detalhes em uma única string
+            const detalhes = aluno.riscos.map(risco => {
+              let severidadeClass = '';
+              if (risco.severidade === 'alta') {
+                severidadeClass = 'text-danger';
+              } else if (risco.severidade === 'média') {
+                severidadeClass = 'text-warning';
+              } else {
+                severidadeClass = 'text-info';
+              }
+              
+              return `<span class="${severidadeClass}">${risco.detalhe}</span>`;
+            }).join('<br>');
             
             row.innerHTML = `
               <td>
                 <div class="d-flex px-2 py-1">
                   <div class="d-flex flex-column justify-content-center">
-                    <h6 class="mb-0 text-sm">{{ aluno.nome }}</h6>
-                    <p class="text-xs text-secondary mb-0">ID: {{ aluno.id }}</p>
+                    <h6 class="mb-0 text-sm">${aluno.nome}</h6>
                   </div>
                 </div>
               </td>
               <td>
-                <p class="text-xs font-weight-bold mb-0">{{ aluno.tipo_risco }}</p>
+                <p class="text-xs font-weight-bold mb-0">${aluno.escola}</p>
               </td>
               <td>
-                <p class="text-xs text-secondary mb-0">{{ aluno.detalhe }}</p>
+                <p class="text-xs font-weight-bold mb-0">${tiposRisco}</p>
               </td>
               <td>
-                <span class="badge badge-sm {{ severidadeClass }}">{{ aluno.severidade|upper }}</span>
+                <p class="text-xs text-secondary mb-0">${detalhes}</p>
               </td>
             `;
+            
             tableBody.appendChild(row);
           });
         } else {
