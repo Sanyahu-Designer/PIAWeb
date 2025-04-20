@@ -55,6 +55,8 @@ from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
+from configuracoes.models import ConfiguracaoCliente
+
 def calculate_progresso_total(pdi):
     """Calcula o progresso total do PDI"""
     metas = pdi.metas_habilidades.all()
@@ -1240,11 +1242,24 @@ def gerar_relatorio_parecer_pdf(request, neurodivergente_id):
         messages.warning(request, 'Nenhum parecer encontrado no período selecionado.')
         return HttpResponseRedirect(reverse('admin:neurodivergentes_pareceravaliativo_changelist') + f'?neurodivergente__id__exact={neurodivergente_id}')
     
+    # Busca as configurações da prefeitura (pega a primeira ativa, ou a mais recente)
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = config.logomarca.url if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+
     context = {
-        'aluno': neurodivergente,
         'pareceres': pareceres,
-        'periodo': f"{data_inicial_dt.strftime('%d/%m/%Y')} a {data_final_dt.strftime('%d/%m/%Y')}",
-        'data_impressao': timezone.now()
+        'neurodivergente': neurodivergente,
+        'periodo': {
+            'inicio': datetime.strptime(data_inicial, '%Y-%m-%d').strftime('%d/%m/%Y'),
+            'fim': datetime.strptime(data_final, '%Y-%m-%d').strftime('%d/%m/%Y')
+        },
+        'total_pareceres': pareceres.count(),
+        'data_impressao': timezone.now(),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
     }
     
     # Configura o CSS com as fontes
@@ -1281,17 +1296,6 @@ def gerar_relatorio_parecer_pdf(request, neurodivergente_id):
     response['Content-Disposition'] = f'filename=relatorio_pareceres_{neurodivergente.id}.pdf'
     
     return response
-
-import logging
-from datetime import datetime
-from django.utils import timezone
-from django.urls import reverse
-from django.contrib import messages
-from django.db.models import Prefetch
-from weasyprint import HTML, CSS
-from django.conf import settings
-
-logger = logging.getLogger(__name__)
 
 @login_required
 def gerar_relatorio_parecer_geral_pdf(request, neurodivergente_id):
@@ -1369,6 +1373,12 @@ def gerar_relatorio_parecer_geral_pdf(request, neurodivergente_id):
             logger.error(f"Erro ao buscar diagnósticos: {str(diag_error)}")
             diagnosticos = []
         
+        # Busca as configurações da prefeitura (pega a primeira ativa, ou a mais recente)
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = config.logomarca.url if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+
         # Prepara contexto com todos os dados
         context = {
             'neurodivergente': neurodivergente,
@@ -1380,7 +1390,10 @@ def gerar_relatorio_parecer_geral_pdf(request, neurodivergente_id):
                 'fim': datetime.strptime(data_final, '%Y-%m-%d').strftime('%d/%m/%Y')
             },
             'total_pareceres': pareceres.count(),
-            'data_impressao': timezone.now()
+            'data_impressao': timezone.now(),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
         
         # Log de diagnóstico
@@ -1437,9 +1450,18 @@ def imprimir_parecer(request, parecer_id):
     """View para gerar o relatório individual do parecer em PDF"""
     parecer = get_object_or_404(ParecerAvaliativo, id=parecer_id)
     
+    # Busca as configurações da prefeitura (pega a primeira ativa, ou a mais recente)
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = config.logomarca.url if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+
     context = {
         'parecer': parecer,
-        'data_impressao': timezone.now()
+        'data_impressao': timezone.now(),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
     }
     
     # Configura o CSS com as fontes

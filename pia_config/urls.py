@@ -21,10 +21,6 @@ urlpatterns = [
     path('dashboard/', dashboard_gerente, name='dashboard'),
     path('dashboard/admin/', admin.site.urls, name='admin'),  # Admin site com prefixo 'admin'
     
-    # O Django Admin já gerencia automaticamente as URLs para todos os modelos registrados
-    # Não é necessário incluir admin.site.urls múltiplas vezes
-    # A linha 'path('dashboard/', admin.site.urls, name='dashboard')' acima já inclui o admin site
-    
     # URLs personalizadas para usar os templates do Material Dashboard 3
     path('dashboard/admin/adaptacao_curricular/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/aci/change_list_material_dashboard.html', {'title': 'ACI', 'cl': {'opts': {'verbose_name_plural': 'Adaptações Curriculares Individualizadas', 'app_label': 'adaptacao_curricular', 'app_config': {'verbose_name': 'Adaptação Curricular'}}}})), name='aci_dashboard'),
     path('dashboard/admin/neurodivergentes/', staff_member_required(lambda request: TemplateResponse(request, 'admin/neurodivergentes/neurodivergente/change_list_material_dashboard.html', {'title': 'Neurodivergentes'})), name='neurodivergentes_dashboard'),
@@ -109,6 +105,12 @@ urlpatterns = [
     
     # Adicionar uma URL para a página de teste de WebSocket
     path('websocket-test/', lambda request: serve(request, 'websocket-test.html', document_root=settings.STATIC_ROOT)),
+    
+    # URL para as configurações - redireciona diretamente para a configuração existente
+    path('dashboard/admin/configuracoes/', include('configuracoes.urls', namespace='configuracoes')),
+    
+    # Garantir que o admin do Django não sobrescreva nossa URL personalizada
+    #path('dashboard/admin/', admin.site.urls),
 ]
 
 # Servir arquivos estáticos e de mídia

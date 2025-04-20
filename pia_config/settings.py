@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'adaptacao_curricular',
     'django_ckeditor_5',
     'realtime',
+    'configuracoes',
 ]
 
 LOGIN_REDIRECT_URL = '/dashboard/'

@@ -1,0 +1,387 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/form_fields_style.css' %}">
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<script src="{% static 'admin/js/jquery.init.js' %}"></script>
+<script src="{% static 'admin/js/core.js' %}"></script>
+<script src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
+<script src="{% static 'admin/js/actions.js' %}"></script>
+<script src="{% static 'admin/js/urlify.js' %}"></script>
+<script src="{% static 'admin/js/prepopulate.js' %}"></script>
+<script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+<script src="{% static 'admin/js/jquery.init.js' %}"></script>
+{{ media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">Home</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{% if add %}Adicionar{% else %}Editar{% endif %} {{ opts.verbose_name }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card my-4">
+                <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                    <div class="bg-gradient-secondary shadow-secondary border-radius-lg pt-4 pb-3">
+                        <h6 class="text-white text-capitalize ps-3">
+                            {% if add %}Adicionar{% else %}Editar{% endif %} Configuração da Prefeitura
+                        </h6>
+                    </div>
+                </div>
+                <div class="card-body px-4 pb-2">
+                    <div class="row">
+                        <div class="col-12">
+                            <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>
+                                {% csrf_token %}
+                                {% block form_top %}{% endblock %}
+                                
+                                {% if errors %}
+                                <div class="alert alert-danger alert-dismissible text-white" role="alert">
+                                    <span class="text-sm">Por favor, corrija os erros abaixo.</span>
+                                    <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="fieldset-container mb-4">
+                                    <legend class="mb-3">Dados Institucionais</legend>
+                                    
+                                    <!-- Campo de logomarca -->
+                                    <div class="row mb-5">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="id_logomarca">{{ adminform.form.logomarca.label }}</label>
+                                                
+                                                <!-- Layout em duas colunas para logo e texto de ajuda -->
+                                                <div class="row align-items-center">
+                                                    <!-- Coluna da logo -->
+                                                    <div class="col-md-4">
+                                                        <!-- Container para a prévia da imagem com upload integrado -->
+                                                        <div class="logo-upload-container text-center">
+                                                            <div class="photo-preview-container mb-3">
+                                                                <div class="avatar avatar-xl bg-gradient-primary rounded-circle" id="photo-preview">
+                                                                    {% if original.logomarca %}
+                                                                        <img src="{{ original.logomarca.url }}" class="avatar-img" alt="Logomarca">
+                                                                    {% else %}
+                                                                        <i class="material-symbols-rounded text-white" style="font-size: 48px;">image</i>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Campo de upload de foto -->
+                                                            <div class="file-upload">
+                                                                {{ adminform.form.logomarca }}
+                                                                <label for="id_logomarca" class="file-upload-label">
+                                                                    <i class="material-symbols-rounded">upload</i>
+                                                                    <span class="file-upload-text">Escolher logomarca</span>
+                                                                </label>
+                                                            </div>
+                                                            
+                                                            {% if adminform.form.logomarca.errors %}
+                                                            <div class="invalid-feedback d-block mt-2">
+                                                                {{ adminform.form.logomarca.errors }}
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Coluna do texto de ajuda -->
+                                                    <div class="col-md-8">
+                                                        <!-- Texto de ajuda explícito -->
+                                                        <div class="help-text-container">
+                                                            <div class="help-text text-muted">
+                                                                Imagem do brasão oficial (formato recomendado: PNG, dimensões ideais 120x120px ou 150x100px, fundo transparente) para uso no cabeçalho dos relatórios
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos nome_municipio e cnpj -->
+                                    <div class="row mb-3 mt-4">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_nome_municipio">{{ adminform.form.nome_municipio.label }}</label>
+                                                {{ adminform.form.nome_municipio }}
+                                                {% if adminform.form.nome_municipio.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.nome_municipio.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_cnpj">{{ adminform.form.cnpj.label }}</label>
+                                                {{ adminform.form.cnpj }}
+                                                {% if adminform.form.cnpj.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.cnpj.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos endereco e bairro -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_endereco">{{ adminform.form.endereco.label }}</label>
+                                                {{ adminform.form.endereco }}
+                                                {% if adminform.form.endereco.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.endereco.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_bairro">{{ adminform.form.bairro.label }}</label>
+                                                {{ adminform.form.bairro }}
+                                                {% if adminform.form.bairro.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.bairro.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos cidade e estado -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_cidade">{{ adminform.form.cidade.label }}</label>
+                                                {{ adminform.form.cidade }}
+                                                {% if adminform.form.cidade.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.cidade.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_estado">{{ adminform.form.estado.label }}</label>
+                                                {{ adminform.form.estado }}
+                                                {% if adminform.form.estado.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.estado.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos cep e telefone_geral -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_cep">{{ adminform.form.cep.label }}</label>
+                                                {{ adminform.form.cep }}
+                                                {% if adminform.form.cep.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.cep.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_telefone_geral">{{ adminform.form.telefone_geral.label }}</label>
+                                                {{ adminform.form.telefone_geral }}
+                                                {% if adminform.form.telefone_geral.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.telefone_geral.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos email_institucional e site_oficial -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_email_institucional">{{ adminform.form.email_institucional.label }}</label>
+                                                {{ adminform.form.email_institucional }}
+                                                {% if adminform.form.email_institucional.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.email_institucional.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_site_oficial">{{ adminform.form.site_oficial.label }}</label>
+                                                {{ adminform.form.site_oficial }}
+                                                {% if adminform.form.site_oficial.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.site_oficial.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos facebook e instagram -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_facebook">{{ adminform.form.facebook.label }}</label>
+                                                {{ adminform.form.facebook }}
+                                                {% if adminform.form.facebook.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.facebook.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_instagram">{{ adminform.form.instagram.label }}</label>
+                                                {{ adminform.form.instagram }}
+                                                {% if adminform.form.instagram.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.instagram.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="fieldset-container mb-4">
+                                    <legend class="mb-3">Dados das Autoridades</legend>
+                                    
+                                    <!-- Campos nome_prefeito e nome_vice_prefeito -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_nome_prefeito">{{ adminform.form.nome_prefeito.label }}</label>
+                                                {{ adminform.form.nome_prefeito }}
+                                                {% if adminform.form.nome_prefeito.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.nome_prefeito.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_nome_vice_prefeito">{{ adminform.form.nome_vice_prefeito.label }}</label>
+                                                {{ adminform.form.nome_vice_prefeito }}
+                                                {% if adminform.form.nome_vice_prefeito.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.nome_vice_prefeito.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos nome_secretario_saude e nome_secretario_educacao -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_nome_secretario_saude">{{ adminform.form.nome_secretario_saude.label }}</label>
+                                                {{ adminform.form.nome_secretario_saude }}
+                                                {% if adminform.form.nome_secretario_saude.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.nome_secretario_saude.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_nome_secretario_educacao">{{ adminform.form.nome_secretario_educacao.label }}</label>
+                                                {{ adminform.form.nome_secretario_educacao }}
+                                                {% if adminform.form.nome_secretario_educacao.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ adminform.form.nome_secretario_educacao.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% block submit_buttons_bottom %}
+                                <div class="submit-row d-flex gap-2 justify-content-start mt-4">
+                                    <button type="submit" name="_save" class="btn btn-primary mb-0">
+                                        <span class="material-symbols-rounded align-middle" style="font-size:20px;vertical-align:middle;">save</span>
+                                        <span class="align-middle ms-1">Salvar</span>
+                                    </button>
+                                    <button type="submit" name="_continue" class="btn btn-outline-primary mb-0 ms-2">
+                                        <span class="material-symbols-rounded align-middle" style="font-size:20px;vertical-align:middle;">edit</span>
+                                        <span class="align-middle ms-1">Salvar e continuar editando</span>
+                                    </button>
+                                </div>
+                                {% endblock %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+<script>
+  (function($) {
+    $(document).ready(function() {
+      // Estiliza os campos de formulário
+      $('.form-group input[type="text"], .form-group input[type="email"], .form-group input[type="url"], .form-group textarea').addClass('form-control');
+      
+      // Adiciona classes para campos obrigatórios
+      $('.required-field').parent().find('input, select, textarea').addClass('required');
+      
+      // Inicializa os campos com classes do Material Dashboard
+      $('.form-control').parent().addClass('input-group input-group-outline');
+      $('.form-control').each(function() {
+        if ($(this).val()) {
+          $(this).parent().addClass('is-filled');
+        }
+      });
+      
+      $('.form-control').on('focus', function() {
+        $(this).parent().addClass('is-focused');
+      });
+      
+      $('.form-control').on('blur', function() {
+        $(this).parent().removeClass('is-focused');
+        if ($(this).val()) {
+          $(this).parent().addClass('is-filled');
+        } else {
+          $(this).parent().removeClass('is-filled');
+        }
+      });
+    });
+  })(django.jQuery);
+</script>
+{% endblock %}

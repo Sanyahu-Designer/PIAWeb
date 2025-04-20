@@ -236,6 +236,17 @@
             <span class="nav-link-text ms-1">Nova Mensagem</span>
           </a>
         </li>
+        
+        <!-- SISTEMA -->
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">SISTEMA</h6>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'configuracoes' in request.path %}active bg-gradient-dark text-white{% else %}text-dark{% endif %}" href="{% url 'configuracoes:configuracao_redirect' %}">
+            <i class="material-symbols-rounded opacity-5">settings</i>
+            <span class="nav-link-text ms-1">Configurações</span>
+          </a>
+        </li>
       </ul>
     </div>
     <div class="sidenav-footer position-absolute w-100 bottom-0">
