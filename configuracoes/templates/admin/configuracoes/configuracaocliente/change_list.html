@@ -29,15 +29,57 @@
             </div>
             {% if cl.result_count == 0 %}
             <div class="text-center py-5">
-              <p class="text-secondary">Nenhuma configuração cadastrada.</p>
+              <p class="text-secondary">Nenhuma Prefeitura cadastrada.</p>
               {% if has_add_permission %}
               <a href="{% url 'admin:configuracoes_configuracaocliente_add' %}" class="btn btn-outline-primary">
-                <i class="material-symbols-rounded opacity-10">add</i> Adicionar Configuração
+                <i class="material-symbols-rounded opacity-10">add</i> Adicionar Prefeitura
               </a>
               {% endif %}
             </div>
             {% else %}
-            {% result_list cl %}
+            <div class="table-responsive p-0">
+              <table class="table align-items-center mb-0">
+                <thead>
+                  <tr>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nome da Prefeitura</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">CNPJ da Prefeitura</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nome do Prefeito(a)</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for obj in cl.result_list %}
+                  <tr>
+                    <td>
+                      <div class="d-flex px-2 py-1">
+                        <div>
+                          {% if obj.logomarca %}
+                            <img src="{{ obj.logomarca.url }}" class="avatar avatar-sm me-3 border-radius-lg" alt="Logo {{ obj.nome_municipio }}">
+                          {% else %}
+                            <div class="avatar avatar-sm me-3 d-flex align-items-center justify-content-center" style="background-color: #f8d0d3;">
+                              <i class="material-symbols-rounded text-white">image_not_supported</i>
+                            </div>
+                          {% endif %}
+                        </div>
+                        <div class="d-flex flex-column justify-content-center">
+                          <h6 class="mb-0 text-sm">{{ obj.nome_municipio }}</h6>
+                        </div>
+                      </div>
+                    </td>
+                    <td><p class="text-xs font-weight-bold mb-0">{{ obj.cnpj }}</p></td>
+                    <td><p class="text-xs font-weight-bold mb-0">{{ obj.nome_prefeito }}</p></td>
+                    <td class="align-middle text-center">
+                      <div class="ms-auto">
+                        <a href="{% url 'admin:configuracoes_configuracaocliente_change' obj.pk %}" class="btn btn-outline-primary btn-sm mb-0 me-2">
+                          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
             {% endif %}
           </div>
         </div>

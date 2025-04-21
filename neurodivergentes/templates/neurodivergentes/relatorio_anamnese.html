@@ -34,11 +34,11 @@
         }
 
         .header {
-            background: #3498db;
-            color: white;
+            color: #2c5282;
             padding: 1.2em 1.5em;
             margin: -0.5cm -2cm 2em -2cm;
             text-align: center;
+            background: none;
         }
 
         .header h1 {
@@ -208,6 +208,19 @@
     </button>
 
     <div class="header">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            {% if logo_prefeitura_url %}
+                <img src="{{ logo_prefeitura_url }}" alt="Logomarca Prefeitura" style="height: 60px; max-width: 120px; object-fit: contain; background: transparent; border-radius: 8px; margin-right: 32px;">
+            {% endif %}
+            <div style="text-align: left;">
+                <div style="font-size: 1.35rem; font-weight: 700; color: #2c5282; line-height: 1.1;">
+                    {{ nome_prefeitura|default:'Prefeitura Municipal' }}
+                </div>
+                <div style="font-size: 0.65rem; color: #4a5568; font-weight: 400; margin-top: 2px;">
+                    CNPJ: {{ cnpj_prefeitura|default:'-' }}
+                </div>
+            </div>
+        </div>
         <h1>ANAMNESE</h1>
         <h2>{{ anamnese.neurodivergente.nome_completo }}</h2>
         <p>Data de Nascimento: {{ anamnese.neurodivergente.data_nascimento|date:"d/m/Y" }}</p>

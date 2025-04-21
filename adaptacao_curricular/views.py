@@ -11,6 +11,7 @@ from weasyprint.text.fonts import FontConfiguration
 from .models import AdaptacaoCurricularIndividualizada, BNCCDisciplina, AdaptacaoHabilidade
 from datetime import datetime, timedelta
 from neurodivergentes.models import Neurodivergente
+from configuracoes.models import ConfiguracaoCliente
 import os
 import logging
 
@@ -158,6 +159,12 @@ def imprimir_adaptacao_completa(request, adaptacao_id):
             adaptacoes_por_disciplina[disciplina] = []
         adaptacoes_por_disciplina[disciplina].append(adaptacao_habilidade)
     
+    # Buscar dados institucionais para o cabeçalho
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+    
     # Renderiza o template HTML
     html_string = render_to_string(
         'admin/adaptacao_curricular/relatorio_completo.html',
@@ -165,6 +172,9 @@ def imprimir_adaptacao_completa(request, adaptacao_id):
             'adaptacao': adaptacao,
             'adaptacoes_por_disciplina': adaptacoes_por_disciplina,
             'data_geracao': timezone.now(),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
     )
     
@@ -280,6 +290,12 @@ def gerar_relatorio_geral_pei(request, aluno_id):
             
             adaptacoes_por_pei[aci_id]['disciplinas'][disciplina.id]['habilidades'].append(adaptacao_habilidade)
         
+        # Buscar dados institucionais para o cabeçalho
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+        
         # Prepara o contexto para o template
         context = {
             'aluno': aluno,
@@ -287,6 +303,9 @@ def gerar_relatorio_geral_pei(request, aluno_id):
             'data_final': data_final,
             'adaptacoes_por_pei': adaptacoes_por_pei,
             'data_geracao': timezone.now(),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
         
         # Renderiza o template HTML

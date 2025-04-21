@@ -32,7 +32,7 @@ class ConfiguracaoClienteAdmin(admin.ModelAdmin):
         }),
     )
     
-    list_display = ('nome_municipio', 'cnpj', 'nome_prefeito', 'data_atualizacao', 'acoes')
+    list_display = ('nome_municipio', 'cnpj', 'logomarca_preview', 'nome_prefeito', 'data_atualizacao', 'acoes')
     search_fields = ('nome_municipio', 'cnpj', 'nome_prefeito')
     readonly_fields = ('data_atualizacao', 'logomarca_preview')
     

@@ -96,12 +96,21 @@ def imprimir_pdi(request, pdi_id):
         'metas_habilidades__meta_habilidade'
     ), id=pdi_id)
     
+    # Buscar dados institucionais para o cabeçalho
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+    
     # Prepara o contexto com todos os dados necessários
     context = {
         'pdi': pdi,
         'data_impressao': timezone.now(),
         'metas': pdi.metas_habilidades.all().select_related('meta_habilidade'),
-        'progresso_total': calculate_progresso_total(pdi)
+        'progresso_total': calculate_progresso_total(pdi),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
     }
     
     # Configura as fontes
@@ -563,6 +572,12 @@ def gerar_relatorio_geral_html(request, neurodivergente_id):
             # Calcula frequência média
             frequencia_media = pdis.count()
         
+        # Buscar dados institucionais para o cabeçalho
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+        
         # Prepara contexto com todos os dados
         context = {
             'neurodivergente': neurodivergente,
@@ -578,7 +593,10 @@ def gerar_relatorio_geral_html(request, neurodivergente_id):
             'pedagogo': pedagogo,
             'escola': escola,
             'frequencia_media': frequencia_media,
-            'datas_metas': datas_metas
+            'datas_metas': datas_metas,
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
         
         # Log de diagnóstico
@@ -591,6 +609,61 @@ def gerar_relatorio_geral_html(request, neurodivergente_id):
         logger.error(f"Erro inesperado ao gerar relatório HTML: {str(e)}", exc_info=True)
         messages.error(request, f'Erro ao gerar relatório: {str(e)}')
         return HttpResponseRedirect(reverse('admin:neurodivergentes_pdi_changelist') + f'?neurodivergente__id__exact={neurodivergente_id}')
+
+@login_required
+def gerar_relatorio_evolucao_html(request, neurodivergente_id):
+    try:
+        # Obtém as datas do filtro
+        data_inicial = request.GET.get('data_inicial')
+        data_final = request.GET.get('data_final')
+        
+        if not data_inicial or not data_final:
+            messages.error(request, 'Por favor, selecione um período para gerar o relatório.')
+            return HttpResponseRedirect(reverse('admin:neurodivergentes_registroevolucao_changelist') + 
+                                      f'?neurodivergente__id__exact={neurodivergente_id}')
+        
+        # Converte as datas para datetime
+        try:
+            data_inicial_dt = datetime.strptime(data_inicial + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
+            data_final_dt = datetime.strptime(data_final + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+        except Exception as date_error:
+            messages.error(request, 'Formato de data inválido.')
+            return HttpResponseRedirect(reverse('admin:neurodivergentes_registroevolucao_changelist') + 
+                                      f'?neurodivergente__id__exact={neurodivergente_id}')
+        
+        # Busca o neurodivergente
+        neurodivergente = get_object_or_404(Neurodivergente, id=neurodivergente_id)
+        
+        # Busca as evoluções do período
+        evolucoes = RegistroEvolucao.objects.filter(
+            neurodivergente=neurodivergente,
+            data__range=(data_inicial_dt, data_final_dt)
+        ).order_by('data')
+        
+        # Buscar dados institucionais para o cabeçalho
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+        
+        context = {
+            'neurodivergente': neurodivergente,
+            'evolucoes': evolucoes,
+            'nome_completo': f"{neurodivergente.primeiro_nome} {neurodivergente.ultimo_nome}",
+            'data_inicial': data_inicial_dt.strftime('%d/%m/%Y'),
+            'data_final': data_final_dt.strftime('%d/%m/%Y'),
+            'data_geracao': timezone.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
+        }
+        
+        return render(request, 'neurodivergentes/relatorio_evolucao.html', context)
+        
+    except Exception as e:
+        messages.error(request, 'Erro ao gerar relatório.')
+        return HttpResponseRedirect(reverse('admin:neurodivergentes_registroevolucao_changelist') + 
+                                  f'?neurodivergente__id__exact={neurodivergente_id}')
 
 @login_required
 def grafico_evolucao(request, neurodivergente_id):
@@ -818,9 +891,18 @@ def imprimir_evolucao(request, evolucao_id):
         
         logger.info(f'Evolução encontrada: {evolucao.id} - {evolucao.neurodivergente.nome_completo}')
         
+        # Buscar dados institucionais para o cabeçalho
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+        
         context = {
             'evolucao': evolucao,
             'data_impressao': timezone.now(),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
         
         css_string = '''
@@ -984,8 +1066,12 @@ def imprimir_evolucao(request, evolucao_id):
         logger.info('Gerando PDF')
         base_url = request.build_absolute_uri('/').rstrip('/')
         html = HTML(string=html_string, base_url=base_url)
-        css = CSS(string=css_string)
-        pdf = html.write_pdf(stylesheets=[css], font_config=font_config, presentational_hints=True)
+        css = CSS(string=css_string, font_config=font_config)
+        pdf = html.write_pdf(
+            stylesheets=[css],
+            font_config=font_config,
+            presentational_hints=True
+        )
         
         logger.info('Enviando PDF')
         response = HttpResponse(content_type='application/pdf')
@@ -1029,13 +1115,22 @@ def gerar_relatorio_evolucao_html(request, neurodivergente_id):
             data__range=(data_inicial_dt, data_final_dt)
         ).order_by('data')
         
+        # Buscar dados institucionais para o cabeçalho
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+        
         context = {
             'neurodivergente': neurodivergente,
             'evolucoes': evolucoes,
             'nome_completo': f"{neurodivergente.primeiro_nome} {neurodivergente.ultimo_nome}",
             'data_inicial': data_inicial_dt.strftime('%d/%m/%Y'),
             'data_final': data_final_dt.strftime('%d/%m/%Y'),
-            'data_geracao': timezone.now().strftime('%d/%m/%Y %H:%M:%S')
+            'data_geracao': timezone.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
         
         return render(request, 'neurodivergentes/relatorio_evolucao.html', context)
@@ -1179,10 +1274,19 @@ def imprimir_pei(request, pei_id):
         id=pei_id
     )
     
+    # Buscar dados institucionais para o cabeçalho
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+    
     context = {
         'pei': pei,
         'aluno': pei.neurodivergente,
         'data_impressao': timezone.now(),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
         'request': request
     }
     
@@ -1244,7 +1348,7 @@ def gerar_relatorio_parecer_pdf(request, neurodivergente_id):
     
     # Busca as configurações da prefeitura (pega a primeira ativa, ou a mais recente)
     config = ConfiguracaoCliente.objects.order_by('-id').first()
-    logo_prefeitura_url = config.logomarca.url if config and config.logomarca else None
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
     nome_prefeitura = config.nome_municipio if config else None
     cnpj_prefeitura = config.cnpj if config else None
 
@@ -1375,7 +1479,7 @@ def gerar_relatorio_parecer_geral_pdf(request, neurodivergente_id):
         
         # Busca as configurações da prefeitura (pega a primeira ativa, ou a mais recente)
         config = ConfiguracaoCliente.objects.order_by('-id').first()
-        logo_prefeitura_url = config.logomarca.url if config and config.logomarca else None
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
         nome_prefeitura = config.nome_municipio if config else None
         cnpj_prefeitura = config.cnpj if config else None
 
@@ -1452,7 +1556,7 @@ def imprimir_parecer(request, parecer_id):
     
     # Busca as configurações da prefeitura (pega a primeira ativa, ou a mais recente)
     config = ConfiguracaoCliente.objects.order_by('-id').first()
-    logo_prefeitura_url = config.logomarca.url if config and config.logomarca else None
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
     nome_prefeitura = config.nome_municipio if config else None
     cnpj_prefeitura = config.cnpj if config else None
 
@@ -1537,11 +1641,20 @@ def gerar_relatorio_pei_pdf(request, neurodivergente_id):
         messages.warning(request, 'Nenhum PEI encontrado no período selecionado.')
         return redirect('neurodivergentes:lista_pei', neurodivergente_id=neurodivergente_id)
     
+    # Buscar dados institucionais para o cabeçalho
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+    
     context = {
         'aluno': neurodivergente,
         'peis': peis,
         'periodo': f"{dict(MESES)[mes_inicial]} a {dict(MESES)[mes_final]} de {ano}",
-        'data_impressao': timezone.now()
+        'data_impressao': timezone.now(),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
     }
     
     # Configura o CSS com as fontes
@@ -1579,7 +1692,6 @@ def gerar_relatorio_pei_pdf(request, neurodivergente_id):
     
     return response
 
-
 @login_required
 def imprimir_anamnese(request, anamnese_id):
     """View para imprimir uma anamnese individual em PDF"""
@@ -1594,10 +1706,19 @@ def imprimir_anamnese(request, anamnese_id):
         id=anamnese_id
     )
     
+    # Buscar dados institucionais para o cabeçalho
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+    
     context = {
         'anamnese': anamnese,
         'aluno': anamnese.neurodivergente,
         'data_impressao': timezone.now(),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
         'request': request
     }
     
@@ -1663,6 +1784,12 @@ def imprimir_aluno(request, aluno_id):
         else:
             membro.idade_calculada = None
     
+    # Buscar dados institucionais para o cabeçalho
+    config = ConfiguracaoCliente.objects.order_by('-id').first()
+    logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+    nome_prefeitura = config.nome_municipio if config else None
+    cnpj_prefeitura = config.cnpj if config else None
+    
     context = {
         'aluno': aluno,
         'neurodivergencia': neurodivergencia,
@@ -1674,7 +1801,10 @@ def imprimir_aluno(request, aluno_id):
         'pareceres_count': pareceres_count,
         'tem_anamnese': tem_anamnese,
         'grupo_familiar': grupo_familiar,
-        'data_impressao': timezone.now()
+        'data_impressao': timezone.now(),
+        'logo_prefeitura_url': logo_prefeitura_url,
+        'nome_prefeitura': nome_prefeitura,
+        'cnpj_prefeitura': cnpj_prefeitura,
     }
     
     # Configura as fontes
@@ -1722,10 +1852,19 @@ def imprimir_neurodivergencia(request, neurodivergencia_id):
         neurodivergencia = Neurodivergencia.objects.get(pk=neurodivergencia_id)
         diagnosticos = DiagnosticoNeurodivergente.objects.filter(neurodivergencia=neurodivergencia)
         
+        # Buscar dados institucionais para o cabeçalho
+        config = ConfiguracaoCliente.objects.order_by('-id').first()
+        logo_prefeitura_url = request.build_absolute_uri(config.logomarca.url) if config and config.logomarca else None
+        nome_prefeitura = config.nome_municipio if config else None
+        cnpj_prefeitura = config.cnpj if config else None
+        
         context = {
             'neurodivergencia': neurodivergencia,
             'diagnosticos': diagnosticos,
             'data_impressao': timezone.now(),
+            'logo_prefeitura_url': logo_prefeitura_url,
+            'nome_prefeitura': nome_prefeitura,
+            'cnpj_prefeitura': cnpj_prefeitura,
         }
         
         html_string = render_to_string('neurodivergentes/relatorio_neurodivergencia.html', context)
