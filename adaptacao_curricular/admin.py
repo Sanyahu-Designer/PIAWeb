@@ -106,6 +106,31 @@ class AdaptacaoHabilidadeForm(forms.ModelForm):
                 raise forms.ValidationError('Por favor, selecione uma habilidade.')
         return cleaned_data
 
+class AdaptacaoCurricularIndividualizadaForm(forms.ModelForm):
+    class Meta:
+        model = AdaptacaoCurricularIndividualizada
+        fields = '__all__'
+        widgets = {
+            'aluno': LabelAboveWidget(attrs={
+                'class': 'select2-aluno',
+                'data-placeholder': 'Selecione o Aluno/Paciente',
+                'style': 'width: 100%; display: block;',
+                'label': 'Aluno/Paciente',
+            }),
+            'escola': LabelAboveWidget(attrs={
+                'class': 'select2-escola',
+                'data-placeholder': 'Selecione a Escola',
+                'style': 'width: 100%; display: block;',
+                'label': 'Escola',
+            }),
+            'profissional_responsavel': LabelAboveWidget(attrs={
+                'class': 'select2-profissional',
+                'data-placeholder': 'Selecione o Profissional Responsável',
+                'style': 'width: 100%; display: block;',
+                'label': 'Profissional Responsável',
+            }),
+        }
+
 class AdaptacaoHabilidadeInline(admin.StackedInline):
     model = AdaptacaoHabilidade
     form = AdaptacaoHabilidadeForm
@@ -174,6 +199,8 @@ class AdaptacaoCurricularIndividualizadaAdmin(admin.ModelAdmin):
     list_display = ['get_aluno_nome', 'get_total_adaptacoes', 'get_ultima_adaptacao', 'get_acoes']
     list_filter = ['aluno', 'escola']
     list_per_page = 20
+    
+    form = AdaptacaoCurricularIndividualizadaForm
     
     def get_urls(self):
         urls = super().get_urls()

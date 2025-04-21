@@ -5,7 +5,7 @@
 
 {% block breadcrumbs %}
 <div class="breadcrumbs">
-  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  <a href="/dashboard/">{% translate 'Home' %}</a>
   &rsaquo; <a href="{% url 'admin:app_list' app_label=app_label %}">{{ app_label|capfirst|escape }}</a>
   &rsaquo; {{ model_name|capfirst }}
 </div>

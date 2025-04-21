@@ -45,10 +45,12 @@ class ConfiguracaoClienteAdmin(admin.ModelAdmin):
         """
         Botões de ação para cada registro na lista.
         """
+        from django.urls import reverse
+        url = reverse('admin:configuracoes_configuracaocliente_change', args=[obj.id])
         return format_html(
             '<a href="{}" class="btn btn-outline-primary btn-sm mb-0" title="Editar">'
             '<i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar</a>',
-            f'/admin/configuracoes/configuracaocliente/{obj.id}/change/'
+            url
         )
     
     acoes.short_description = 'Ações'

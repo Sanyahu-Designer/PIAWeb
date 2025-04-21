@@ -5,8 +5,8 @@
 
 {% block navbar_buttons %}
 <div class="d-flex">
-  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
-    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Início
   </a>
   <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
     <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
@@ -20,7 +20,7 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">Início</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'realtime:chat_list' %}">Mensagens</a></li>
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Nova Mensagem</li>
   </ol>
@@ -30,81 +30,17 @@
 {% block extrahead %}
 {{ block.super }}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="{% static 'admin/css/form_fields_style.css' %}">
 <style>
-    /* Estilos para o Select2 */
-    .select2-container--default .select2-selection--single {
-        height: 38px;
-        border-radius: 4px;
-        border: 1px solid #ced4da;
-    }
-    
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 38px;
-        padding-left: 20px !important;
-    }
-    
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px;
-    }
-    
-    /* Espaçamento para os itens do dropdown */
-    .select2-results__option {
-        padding: 8px 8px 8px 35px !important;
-    }
-    
-    /* Estilo para o item selecionado */
-    .select2-container--default .select2-results__option--selected {
-        padding-left: 35px !important;
-    }
-    
-    /* Estilo para o item destacado no hover */
-    .select2-container--default .select2-results__option--highlighted {
-        padding-left: 35px !important;
-    }
-</style>
-<style>
-    .select2-container--default .select2-selection--single {
-        height: 38px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 38px;
-        padding-left: 12px;
-        color: #495057;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px;
-    }
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #007bff;
-    }
-    .select2-dropdown {
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .form-label {
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-    .card-title {
-        display: flex;
-        align-items: center;
-    }
-    .card-title i {
+    /* Espaçamento entre ícones e texto nos labels do formulário */
+    .form-label i {
         margin-right: 8px;
+        vertical-align: middle;
     }
-    /* Espaçamento consistente entre ícones e texto */
-    .icon-spacing {
+    /* Espaçamento entre ícone e texto no título do card */
+    .card-title i {
         margin-right: 12px;
-        width: 20px;
-        text-align: center;
-        display: inline-block;
-    }
-    /* Ajuste para o botão voltar */
-    .btn i {
-        margin-right: 5px;
+        vertical-align: middle;
     }
 </style>
 {% endblock %}
@@ -119,11 +55,6 @@
                         <i class="fas fa-paper-plane icon-spacing" style="margin-right: 12px;"></i>
                         Nova Mensagem
                     </h3>
-                    <div class="card-tools">
-                        <a href="{% url 'realtime:chat_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
-                    </div>
                 </div>
                 <div class="card-body">
                     <!-- Formulário Django -->
@@ -141,7 +72,7 @@
                                 </div>
                             {% endif %}
                             <small class="form-text text-muted">
-                                <i class="fas fa-info-circle icon-spacing"></i>Selecione o usuário para quem deseja enviar a mensagem
+                                <i class="fas fa-info-circle" style="margin-right: 8px; vertical-align: middle;"></i>Selecione o usuário para quem deseja enviar a mensagem
                             </small>
                         </div>
                         
@@ -165,7 +96,10 @@
                             </div>
                         {% endif %}
                         
-                        <div class="text-end mt-4">
+                        <div class="text-end mt-4 d-flex justify-content-end gap-2">
+                            <a href="{% url 'realtime:chat_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-paper-plane"></i> Enviar Mensagem
                             </button>
@@ -179,36 +113,21 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Inicializa o Select2
+        // Inicialização padrão do Select2 para o sistema PIA
         $('.select2').select2({
             placeholder: "Selecione um destinatário",
-            allowClear: true,
+            allowClear: false,
             width: '100%',
+            minimumResultsForSearch: 0, // Sempre mostra o campo de busca
             language: {
-                noResults: function() {
-                    return "Nenhum resultado encontrado";
-                }
-            },
-            // Formatação dos itens no dropdown
-            templateResult: function(option) {
-                if (!option.id) {
-                    return option.text;
-                }
-                return $('<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + option.text + '</span>');
+                noResults: function() { return "Nenhum resultado encontrado"; },
+                searching: function() { return "Buscando..."; }
             }
-        });
-        
-        // Garante que o espaçamento seja aplicado sempre que o dropdown for aberto
-        $(document).on('select2:open', function() {
-            setTimeout(function() {
-                $('.select2-results__option').each(function() {
-                    $(this).css('padding-left', '35px');
-                });
-            }, 10);
         });
     });
 </script>
-{% endblock %} 
+{% endblock %}

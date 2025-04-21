@@ -233,7 +233,7 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">{% translate 'Home' %}</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">{{ opts.app_config.verbose_name }}</a></li>
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ opts.verbose_name_plural|capfirst }}</li>
   </ol>
@@ -284,6 +284,20 @@
                         id="{{ field.field.id_for_label }}_display"
                       >
                     </div>
+                    {% if original.laudo_medico %}
+                      <div class="d-flex align-items-center gap-3 mt-2" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 0.5rem; padding: 0.5rem 1rem; margin-left: 0; margin-right: 0;">
+                        <a href="{{ original.laudo_medico.url }}" target="_blank" class="btn btn-outline-secondary btn-sm mb-0 d-flex align-items-center" style="height: 32px;">
+                          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">attach_file</i>
+                          <span class="ms-1">Ver laudo atual</span>
+                        </a>
+                        <div class="form-check mb-0 d-flex align-items-center" style="margin-left: 10px;">
+                          <input type="checkbox" name="laudo_medico-clear" id="id_laudo_medico_clear" class="form-check-input" style="margin-top: 0;">
+                          <label for="id_laudo_medico_clear" class="form-check-label ms-1 mb-0" style="color: #e91e63; font-weight: 500; cursor: pointer; margin-bottom: 0; white-space: nowrap;">
+                            Excluir laudo
+                          </label>
+                        </div>
+                      </div>
+                    {% endif %}
                     <div class="help-text text-muted mt-1 small">Anexe um arquivo relevante para o diagnóstico, como um laudo médico ou relatório de avaliação.</div>
                   </div>
                 </div>

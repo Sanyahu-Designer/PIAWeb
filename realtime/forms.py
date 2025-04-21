@@ -10,14 +10,12 @@ class MessageForm(forms.ModelForm):
         fields = ['recipient', 'message']
         widgets = {
             'recipient': forms.Select(attrs={
-                'class': 'form-select select2',
-                'style': 'width: 100%; height: 38px; border-radius: 4px; border: 1px solid #ced4da; text-indent: 10px;',
+                'class': 'select2',
                 'data-placeholder': 'Selecione um destinatário'
             }),
             'message': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 5,
-                'style': 'border-radius: 4px; border: 1px solid #ced4da;'
             }),
         }
     

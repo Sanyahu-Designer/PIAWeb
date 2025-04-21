@@ -167,7 +167,7 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">{% translate 'Home' %}</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:app_list' app_label='neurodivergentes' %}">Aluno/Paciente</a></li>
     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'admin:neurodivergentes_anamnese_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
     <li class="breadcrumb-item text-sm text-dark active" aria-current="page">
@@ -188,37 +188,100 @@
       {% if fieldset.description %}
         <div class="description">{{ fieldset.description|safe }}</div>
       {% endif %}
-      
       <div class="row">
         {% for line in fieldset %}
           {% for field in line %}
-            <div class="col-12 col-md-6 mb-3">
-              <div class="form-group {% if field.field.required %}required{% endif %}">
-                {% if field.is_checkbox %}
-                  <div class="form-check">
-                    {{ field.field }}
-                    <label for="{{ field.field.id_for_label }}" class="form-check-label">{{ field.field.label }}</label>
+            {% if field.field.name == 'anexos' %}
+              <div class="col-12 mb-3">
+                <div class="card card-body blur shadow-blur mb-3">
+                  <div class="form-group">
+                    <h6 class="text-dark mb-3">
+                      Anexar Documentos Complementares
+                      <span class="text-muted" style="font-size: 0.7em; margin-left: 5px;">(opcional)</span>
+                    </h6>
+                    <div class="input-group input-group-outline">
+                      <input 
+                        type="file" 
+                        class="form-control" 
+                        id="{{ field.field.id_for_label }}" 
+                        name="{{ field.field.name }}"
+                        style="opacity: 0; position: absolute; z-index: -1;"
+                      >
+                      <div class="input-group-prepend">
+                        <span class="input-group-text bg-gradient-primary">
+                          <i class="material-symbols-rounded text-white">upload_file</i>
+                        </span>
+                      </div>
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        placeholder="Selecionar Arquivo" 
+                        readonly 
+                        style="background-color: #f8f9fa; cursor: pointer;"
+                        onclick="document.getElementById('{{ field.field.id_for_label }}').click();"
+                        id="{{ field.field.id_for_label }}_display"
+                      >
+                    </div>
+                    {% if field.field.initial %}
+                      <div class="d-flex align-items-center gap-3 mt-2" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 0.5rem; padding: 0.5rem 1rem; margin-left: 0; margin-right: 0;">
+                        <a href="{{ field.field.initial.url }}" target="_blank" class="btn btn-outline-secondary btn-sm mb-0 d-flex align-items-center" style="height: 32px;">
+                          <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">attach_file</i>
+                          <span class="ms-1">Ver anexo atual</span>
+                        </a>
+                        <div class="form-check mb-0 d-flex align-items-center" style="margin-left: 10px;">
+                          <input type="checkbox" name="{{ field.field.name }}-clear" id="id_{{ field.field.name }}_clear" class="form-check-input" style="margin-top: 0;">
+                          <label for="id_{{ field.field.name }}_clear" class="form-check-label ms-1 mb-0" style="color: #e91e63; font-weight: 500; cursor: pointer; margin-bottom: 0; white-space: nowrap;">
+                            Excluir anexo
+                          </label>
+                        </div>
+                      </div>
+                    {% endif %}
+                    <small class="form-text text-muted mt-2">
+                      Você pode anexar documentos como relatórios, laudos ou outros documentos relevantes para complementar a anamnese.
+                    </small>
                   </div>
-                {% else %}
-                  <label for="{{ field.field.id_for_label }}" class="form-label">{{ field.field.label }}</label>
-                  <div class="input-group">
-                    {{ field.field }}
-                  </div>
-                {% endif %}
-                
-                {% if field.field.help_text %}
-                  <small class="form-text text-muted">{{ field.field.help_text|safe }}</small>
-                {% endif %}
-                
-                {% if field.field.errors %}
-                  <div class="invalid-feedback d-block">
-                    {% for error in field.field.errors %}
-                      {{ error }}
-                    {% endfor %}
-                  </div>
-                {% endif %}
+                </div>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    var fileInput = document.getElementById('{{ field.field.id_for_label }}');
+                    var displayInput = document.getElementById('{{ field.field.id_for_label }}_display');
+                    {% if field.field.initial %}
+                      var initialFileName = '{{ field.field.initial.name }}'.split('/').pop().split('\\').pop();
+                      displayInput.value = initialFileName;
+                    {% endif %}
+                    fileInput.addEventListener('change', function() {
+                      var fileName = this.value.split('\\').pop().split('/').pop();
+                      displayInput.value = fileName ? fileName : 'Selecionar Arquivo';
+                    });
+                  });
+                </script>
+            {% else %}
+              <div class="col-12 col-md-6 mb-3">
+                <div class="form-group {% if field.field.required %}required{% endif %}">
+                  {% if field.is_checkbox %}
+                    <div class="form-check">
+                      {{ field.field }}
+                      <label for="{{ field.field.id_for_label }}" class="form-check-label">{{ field.field.label }}</label>
+                    </div>
+                  {% else %}
+                    <label for="{{ field.field.id_for_label }}" class="form-label">{{ field.field.label }}</label>
+                    <div class="input-group">
+                      {{ field.field }}
+                    </div>
+                  {% endif %}
+                  {% if field.field.help_text %}
+                    <small class="form-text text-muted">{{ field.field.help_text|safe }}</small>
+                  {% endif %}
+                  {% if field.field.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in field.field.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
               </div>
-            </div>
+            {% endif %}
           {% endfor %}
         {% endfor %}
       </div>

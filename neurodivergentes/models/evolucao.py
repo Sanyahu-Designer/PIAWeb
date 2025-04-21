@@ -33,4 +33,4 @@ class RegistroEvolucao(models.Model):
         ordering = ['-data', '-created_at']
 
     def __str__(self):
-        return f"Histórico de Evolução - {self.neurodivergente}"
+        return f"Evolução - {self.neurodivergente}"

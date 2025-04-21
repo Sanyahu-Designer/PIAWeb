@@ -128,7 +128,7 @@
                     </div>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'admin:index' %}active{% endif %}" href="{% url 'admin:index' %}">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_gerente' %}active{% endif %}" href="/dashboard/">
                                 <i class="fas fa-home me-2"></i>
                                 Home
                             </a>
@@ -181,7 +181,7 @@
                     <div class="d-flex align-items-center gap-3">
                         {% if user.is_authenticated %}
                             <!-- Botões de navegação -->
-                            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+                            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
                                 <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
                             </a>
                             <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">

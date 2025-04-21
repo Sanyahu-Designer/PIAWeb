@@ -30,6 +30,7 @@ class Profissional(models.Model):
     ]
 
     PROFISSAO_CHOICES = [
+        ('', '---------'),  
         ('PROFISSIONAIS DA SAÚDE', (
             ('fisioterapeuta', 'Fisioterapeuta'),
             ('fonoaudiologo', 'Fonoaudiólogo'),
@@ -82,7 +83,8 @@ class Profissional(models.Model):
     profissao = models.CharField(
         'Profissão',
         max_length=50,
-        choices=PROFISSAO_CHOICES
+        choices=PROFISSAO_CHOICES,
+        blank=True
     )
     especialidade = models.CharField(
         'Especialidade',
@@ -161,7 +163,7 @@ class Profissional(models.Model):
         ordering = ['user__first_name', 'user__last_name']
 
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.get_profissao_display()}"
+        return self.user.get_full_name()
 
     def foto_preview(self):
         if self.foto_perfil:
