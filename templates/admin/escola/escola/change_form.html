@@ -489,12 +489,8 @@
       placeholder: 'Selecione as opções',
       allowClear: false,
       language: {
-        noResults: function() {
-          return "Nenhum resultado encontrado";
-        },
-        searching: function() {
-          return "Buscando...";
-        }
+        noResults: function() { return "Nenhum resultado encontrado"; },
+        searching: function() { return "Buscando..."; }
       }
     });
     }
@@ -510,12 +506,8 @@
       allowClear: false,
       minimumResultsForSearch: 0,
       language: {
-        noResults: function() {
-          return "Nenhum resultado encontrado";
-        },
-        searching: function() {
-          return "Buscando...";
-        }
+        noResults: function() { return "Nenhum resultado encontrado"; },
+        searching: function() { return "Buscando..."; }
       }
     });
     }
@@ -1027,9 +1019,9 @@
     }
     
     // Adicionar dica visual para os campos de profissionais
-    django.jQuery('.equipe-multiprofissional').closest('.fieldset-container').find('h5').append(
-      '<span class="badge bg-gradient-primary ms-2" style="font-size: 0.7rem; vertical-align: middle;">Novo!</span>'
-    );
+    // django.jQuery('.equipe-multiprofissional').closest('.fieldset-container').find('h5').append(
+    //   '<span class="badge bg-gradient-primary ms-2" style="font-size: 0.7rem; vertical-align: middle;">Novo!</span>'
+    // );
   });
 </script>
 {% endblock %}
