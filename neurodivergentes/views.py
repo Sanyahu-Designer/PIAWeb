@@ -1287,14 +1287,13 @@ def imprimir_pei(request, pei_id):
         'logo_prefeitura_url': logo_prefeitura_url,
         'nome_prefeitura': nome_prefeitura,
         'cnpj_prefeitura': cnpj_prefeitura,
-        'request': request
     }
     
     # Configura as fontes
     font_config = FontConfiguration()
     
     # Renderiza o template HTML
-    html_string = render_to_string('neurodivergentes/relatorio_pei.html', context, request=request)
+    html_string = render_to_string('neurodivergentes/relatorio_pei.html', context)
     
     # Cria o PDF
     base_url = request.build_absolute_uri('/').rstrip('/')
@@ -1868,7 +1867,8 @@ def imprimir_neurodivergencia(request, neurodivergencia_id):
         }
         
         html_string = render_to_string('neurodivergentes/relatorio_neurodivergencia.html', context)
-        html = HTML(string=html_string)
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        html = HTML(string=html_string, base_url=base_url)
         pdf = html.write_pdf()
         
         response = HttpResponse(pdf, content_type='application/pdf')

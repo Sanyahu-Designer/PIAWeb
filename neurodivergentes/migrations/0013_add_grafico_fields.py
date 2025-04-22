@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='pareceravaliativo',
-            name='grafico_frequencia',
-            field=models.ImageField(blank=True, null=True, upload_to='neurodivergentes/pareceres/graficos/', verbose_name='Gráfico de Frequência'),
-        ),
-        migrations.AddField(
-            model_name='pareceravaliativo',
-            name='grafico_monitoramento',
-            field=models.ImageField(blank=True, null=True, upload_to='neurodivergentes/pareceres/graficos/', verbose_name='Gráfico de Monitoramento'),
-        ),
+        # migrations.AddField(
+        #     model_name='pareceravaliativo',
+        #     name='grafico_frequencia',
+        #     field=models.ImageField(blank=True, null=True, upload_to='neurodivergentes/pareceres/graficos/', verbose_name='Gráfico de Frequência'),
+        # ),
+        # migrations.AddField(
+        #     model_name='pareceravaliativo',
+        #     name='grafico_monitoramento',
+        #     field=models.ImageField(blank=True, null=True, upload_to='neurodivergentes/pareceres/graficos/', verbose_name='Gráfico de Monitoramento'),
+        # ),
     ]
