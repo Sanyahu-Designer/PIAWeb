@@ -55,3 +55,8 @@
 **Descrição:** Lista os alunos que estão há mais tempo sem receber atendimento.  
 **Tipo de Visualização:** Tabela interativa  
 **Quando aparecem Dados:** Quando existirem alunos com PDIs concluídos há mais de 15 dias. Exibe até 5 alunos ordenados pelo tempo sem atendimento (do maior para o menor) e mostra o total de alunos nessa situação.
+
+## 11. Neurodivergências por Escola
+**Descrição:** Informa a quantidade de neurodivergências atendidas pela escola, o gráfico mostra a quantidade por neurodivergência.
+**Tipo de Visualização:** Barra empilhada  
+**Quando aparecem Dados:** Quando existirem alunos com neurodivergência cadastrados para a escola e que possuam diagnóstico de neurodivergência.

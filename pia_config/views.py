@@ -1076,3 +1076,11 @@ def alunos_em_risco(request):
     except Exception as e:
         print(f"Erro ao buscar dados de alunos em risco: {e}")
         return JsonResponse({'alunos_risco': []})
+
+# Handler para erros 403 (acesso negado)
+def custom_permission_denied_view(request, exception=None):
+    """
+    View para exibir página amigável de acesso negado (403).
+    """
+    response = render(request, '403.html', status=403)
+    return response

@@ -1,0 +1,124 @@
+<style id="tour-btn-fix">
+  /* Desativa pointer-events só na área do botão do tour */
+  .col-lg-8.col-md-6.mb-4 {
+    pointer-events: none !important;
+  }
+  #tour-float-btn {
+    z-index: 2147483647 !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    opacity: 1 !important;
+    display: block !important;
+    outline: none !important;
+  }
+  /* Ajustes para o popover do tour */
+  .tour-popover-fix.bs-popover-auto, .tour-popover-fix.bs-popover-right, .tour-popover-fix.bs-popover-end {
+    min-width: 320px !important;
+    max-width: 400px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    z-index: 2147483647 !important;
+  }
+  .tour-popover-fix .popover-body {
+    padding: 1rem 1rem 0.5rem 1rem !important;
+    font-size: 1rem !important;
+    color: #222 !important;
+    background: #fff !important;
+    border-radius: 0.5rem !important;
+    font-family: 'Roboto', Helvetica, Arial, sans-serif !important;
+    overflow: visible !important;
+    min-height: 80px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .tour-popover-fix .btn {
+    min-width: 90px !important;
+    font-family: 'Roboto', Helvetica, Arial, sans-serif !important;
+    font-size: 0.92rem !important;
+  }
+  .tour-popover-fix .d-flex {
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+    justify-content: flex-end !important;
+  }
+  .tour-popover-fix .text-muted {
+    font-size: 0.85em !important;
+    margin-top: 0.5rem !important;
+  }
+</style>
+<script>
+  // Garante que o estilo seja aplicado após o carregamento
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!document.getElementById('tour-btn-fix')) {
+      document.head.insertAdjacentHTML('beforeend', `\
+        <style id=\"tour-btn-fix\">\
+          /* Desativa pointer-events só na área do botão do tour */\
+          .col-lg-8.col-md-6.mb-4 {\
+            pointer-events: none !important;\
+          }\
+          #tour-float-btn {\
+            z-index: 2147483647 !important;\
+            pointer-events: auto !important;\
+            position: fixed !important;\
+            bottom: 24px !important;\
+            right: 24px !important;\
+            opacity: 1 !important;\
+            display: block !important;\
+            outline: none !important;\
+          }\
+          /* Ajustes para o popover do tour */\
+          .tour-popover-fix.bs-popover-auto, .tour-popover-fix.bs-popover-right, .tour-popover-fix.bs-popover-end {\
+            min-width: 320px !important;\
+            max-width: 400px !important;\
+            white-space: normal !important;\
+            word-break: break-word !important;\
+            z-index: 2147483647 !important;\
+          }\
+          .tour-popover-fix .popover-body {\
+            padding: 1rem 1rem 0.5rem 1rem !important;\
+            font-size: 1rem !important;\
+            color: #222 !important;\
+            background: #fff !important;\
+            border-radius: 0.5rem !important;\
+            font-family: 'Roboto', Helvetica, Arial, sans-serif !important;\
+            overflow: visible !important;\
+            min-height: 80px !important;\
+            display: flex;\
+            flex-direction: column;\
+            justify-content: flex-end;\
+          }\
+          .tour-popover-fix .btn {\
+            min-width: 90px !important;\
+            font-family: 'Roboto', Helvetica, Arial, sans-serif !important;\
+            font-size: 0.92rem !important;\
+          }\
+          .tour-popover-fix .d-flex {\
+            gap: 0.5rem !important;\
+            margin-top: 0.5rem !important;\
+            justify-content: flex-end !important;\
+          }\
+          .tour-popover-fix .text-muted {\
+            font-size: 0.85em !important;\
+            margin-top: 0.5rem !important;\
+          }\
+        </style>\
+      `);
+    }
+    // Força o botão para frente
+    var btn = document.getElementById('tour-float-btn');
+    if (btn) {
+      btn.style.zIndex = '2147483647';
+      btn.style.pointerEvents = 'auto';
+      btn.style.position = 'fixed';
+      btn.style.bottom = '24px';
+      btn.style.right = '24px';
+      btn.style.opacity = '1';
+      btn.style.display = 'block';
+      btn.style.outline = 'none';
+      document.body.appendChild(btn); // Garante que é o último filho
+    }
+  });
+</script>

@@ -98,6 +98,59 @@
     flex: 0 0 100%;
     max-width: 100%;
   }
+
+  /* --- MELHORIA VISUAL DO CAMPO DE PESQUISA (SELECT2) --- */
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection--multiple,
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection--single {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    min-height: 38px !important;
+    padding: 0.25rem 0.5rem !important;
+    font-family: 'Roboto', Helvetica, Arial, sans-serif !important;
+    font-size: 1rem !important;
+    background: #fff !important;
+    color: #344767 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection--multiple:focus,
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection--single:focus {
+    border-color: #e91e63 !important;
+    box-shadow: 0 0 0 0.2rem rgba(233,30,99,0.15) !important;
+    outline: 0 !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection__rendered {
+    line-height: 36px !important;
+    padding-left: 0.5rem !important;
+    color: #344767 !important;
+    font-family: 'Roboto', Helvetica, Arial, sans-serif !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection__arrow {
+    display: none !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-selection__clear {
+    display: none !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-dropdown {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08) !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-search__field {
+    border: 1px solid #d2d6da !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem !important;
+    font-family: 'Roboto', Helvetica, Arial, sans-serif !important;
+  }
+  #id_groups.select2-hidden-accessible + .select2-container--default .select2-search__field:focus {
+    border-color: #e91e63 !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(233,30,99,0.25) !important;
+  }
+
+  /* --- REMOVIDO ESTILO DO CAMPO DE PESQUISA DAS PERMISSÕES, POIS NÃO SERÁ MAIS EXIBIDO NESTA PÁGINA --- */
+
+  /* --- FIM DO BLOCO REMOVIDO --- */
 </style>
 {% endblock %}
 
@@ -140,18 +193,35 @@
         {% if field.field.name == 'user_permissions' %}
           <div class="full-width-field mb-3">
             <div class="form-row permissions-field-container">
+              {# Aqui ficava o campo de permissões customizado (cards) #}
+            </div>
+          </div>
+        {% elif field.field.name == 'groups' %}
+          <div class="full-width-field mb-3">
+            <div class="form-row">
               <div class="field-box field-{{ field.field.name }}{% if not field.is_readonly and field.errors %} errors{% endif %}">
                 {{ field.field }}
-                {% if field.field.help_text %}
-                  <div class="help text-muted small mt-1">{{ field.field.help_text|safe }}</div>
-                {% endif %}
                 {% if not field.is_readonly and field.errors %}
                   <div class="text-danger small mt-1">{{ field.errors }}</div>
                 {% endif %}
               </div>
             </div>
+            <button type="submit" class="btn btn-primary mt-3" style="min-width: 120px;">Salvar</button>
           </div>
-        {% elif field.field.name in 'username,password1,password2,is_superuser,is_staff,is_active' %}
+        {% elif field.field.name == 'is_superuser' %}
+          {% if request.user.is_superuser %}
+            <div class="full-width-field mb-3">
+              <div class="form-row">
+                {{ field.field }}
+                {% if not field.is_readonly and field.errors %}
+                  <div class="text-danger small mt-1">{{ field.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% else %}
+            {# Campo is_superuser oculto para quem NÃO é superusuário #}
+          {% endif %}
+        {% elif field.field.name in 'username,password1,password2,is_staff,is_active' %}
           <div class="full-width-field mb-3">
             <div class="form-row">
               <div class="field-box field-{{ field.field.name }}{% if not field.is_readonly and field.errors %} errors{% endif %}">

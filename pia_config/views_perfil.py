@@ -48,52 +48,35 @@ def perfil_usuario(request):
     if request.method == 'POST' and request.user.id == user.id:
         if request.FILES.get('foto_perfil'):
             foto = request.FILES['foto_perfil']
-            
-            # Se o usuário tiver um profissional associado, salvar a foto no profissional
             try:
-                if hasattr(user, 'profissional'):
+                if hasattr(user, 'profissional') and user.profissional:
                     user.profissional.foto_perfil = foto
                     user.profissional.save()
                     foto_url = user.profissional.foto_perfil.url
                 else:
-                    # Caso contrário, salvar no diretório padrão
                     path = default_storage.save(f'fotos_perfil/{user.username}.jpg', ContentFile(foto.read()))
                     foto_url = default_storage.url(path)
             except Exception as e:
                 messages.error(request, f'Erro ao salvar a foto: {str(e)}')
-                # Fallback para o diretório padrão em caso de erro
                 path = default_storage.save(f'fotos_perfil/{user.username}.jpg', ContentFile(foto.read()))
                 foto_url = default_storage.url(path)
-            
             messages.success(request, 'Foto de perfil atualizada com sucesso!')
             return redirect('auth_user_perfil')
-            
         elif request.FILES.get('capa_perfil'):
             capa = request.FILES['capa_perfil']
-            
-            # Verificar o formato da imagem
             if not capa.name.lower().endswith(('.jpg', '.jpeg', '.png')):
                 messages.error(request, 'A imagem de capa deve estar no formato JPG ou PNG.')
                 return redirect('auth_user_perfil')
-                
-            # Verificar o tamanho da imagem (máximo 2MB)
             if capa.size > 2 * 1024 * 1024:
                 messages.error(request, 'A imagem de capa deve ter no máximo 2MB.')
                 return redirect('auth_user_perfil')
-            
-            # Salvar a imagem de capa
             try:
-                # Criar o diretório se não existir
                 os.makedirs(os.path.join(settings.MEDIA_ROOT, 'capas_perfil'), exist_ok=True)
-                
-                # Salvar a imagem
                 path = default_storage.save(f'capas_perfil/{user.username}.jpg', ContentFile(capa.read()))
                 capa_url = default_storage.url(path)
-                
                 messages.success(request, 'Imagem de capa atualizada com sucesso!')
             except Exception as e:
                 messages.error(request, f'Erro ao salvar a imagem de capa: {str(e)}')
-            
             return redirect('auth_user_perfil')
     
     return TemplateResponse(request, 'admin/auth/user/perfil.html', {

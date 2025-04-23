@@ -276,7 +276,7 @@
               <thead>
                 <tr>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Escola</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Escola</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tipos de Alerta</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Detalhes</th>
                 </tr>
@@ -292,6 +292,27 @@
         <div class="card-footer p-2">
           <p class="mb-0 text-sm">
             Alunos que necessitam de atenção especial
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOVO GRÁFICO: Neurodivergências por Escola -->
+  <div class="row mt-5">
+    <div class="col-12 mb-4">
+      <div class="card z-index-2">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+          <div class="bg-gradient-info-pastel shadow-info-pastel border-radius-lg py-3 pe-1">
+            <h6 class="text-white text-capitalize ps-3 mb-0">Neurodivergências por Escola</h6>
+          </div>
+        </div>
+        <div class="card-body">
+          <canvas id="chart-neurodivergencias-escola" height="120"></canvas>
+        </div>
+        <div class="card-footer p-2">
+          <p class="mb-0 text-sm">
+            Quantidade de alunos por tipo de neurodivergência em cada escola
           </p>
         </div>
       </div>
@@ -1221,6 +1242,45 @@
         console.error('Erro ao carregar dados de alerta de alunos em risco:', error);
         document.getElementById('alunos-em-risco-table').innerHTML = 
           '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+      });
+
+    // NOVO GRÁFICO: Neurodivergências por Escola
+    fetch('/neurodivergentes/api/neurodivergencias-por-escola/')
+      .then(response => response.json())
+      .then(data => {
+        // data.labels: nomes das escolas
+        // data.datasets: lista de datasets (um para cada neurodivergência)
+        const ctx = document.getElementById('chart-neurodivergencias-escola').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.labels,
+            datasets: data.datasets
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' },
+              title: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.dataset.label}: ${context.raw}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { stacked: true, ticks: { display: false } },
+              y: { stacked: true, beginAtZero: true }
+            }
+          }
+        });
+      })
+      .catch(error => {
+        console.error('Erro ao carregar dados do gráfico de neurodivergências por escola:', error);
       });
   });
 </script>

@@ -102,7 +102,6 @@
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aluno/Paciente</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Idade</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Contato</th>
-                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Cidade</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Status</th>
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                       </tr>
@@ -140,9 +139,6 @@
                           <td>
                             <p class="text-xs font-weight-bold mb-0">{% if obj.celular %}{{ obj.celular }}{% else %}Não informado{% endif %}</p>
                             <p class="text-xs text-secondary mb-0">{% if obj.email %}{{ obj.email }}{% else %}Sem e-mail{% endif %}</p>
-                          </td>
-                          <td class="align-middle text-center">
-                            <span class="badge badge-sm" style="background-color: {% if obj.genero == 'M' %}#a8d8f0{% else %}#f8d0d3{% endif %}">{{ obj.cidade }} - {{ obj.estado }}</span>
                           </td>
                           <td class="align-middle text-center">
                             <span class="badge badge-sm" style="background-color: {% if obj.ativo %}#4CAF50{% else %}#F44336{% endif %}">

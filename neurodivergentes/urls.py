@@ -24,7 +24,8 @@ from .views import (
     gerar_relatorio_parecer_geral_pdf,
     imprimir_anamnese,
     imprimir_aluno,
-    imprimir_neurodivergencia
+    imprimir_neurodivergencia,
+    api_neurodivergencias_por_escola
 )
 from .admin_views import ParecerGraficosView
 from .graficos_parecer import dados_graficos_parecer
@@ -67,6 +68,9 @@ urlpatterns = [
     path('anamnese/<int:anamnese_id>/imprimir/', imprimir_anamnese, name='imprimir_anamnese'),
     path('aluno/<int:aluno_id>/imprimir/', imprimir_aluno, name='imprimir_aluno'),
     path('neurodivergencia/<int:neurodivergencia_id>/imprimir/', imprimir_neurodivergencia, name='imprimir_neurodivergencia'),
+    path('api/neurodivergencias-por-escola/',
+         api_neurodivergencias_por_escola,
+         name='api_neurodivergencias_por_escola'),
 ]
 
 # Adicione esta linha para servir arquivos de mídia durante o desenvolvimento

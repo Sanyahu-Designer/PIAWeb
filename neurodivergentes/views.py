@@ -1876,3 +1876,47 @@ def imprimir_neurodivergencia(request, neurodivergencia_id):
         return response
     except Neurodivergencia.DoesNotExist:
         raise Http404("Neurodivergência não encontrada")
+
+@require_GET
+def api_neurodivergencias_por_escola(request):
+    from .models import Escola, Neurodivergente, DiagnosticoNeurodivergente, CondicaoNeurodivergente
+    escolas = Escola.objects.all()
+
+    # Buscar apenas as condicoes de diagnósticos realmente vinculados a alunos ativos
+    neurodivergentes = Neurodivergente.objects.filter(ativo=True, escola__isnull=False)
+    diagnos = DiagnosticoNeurodivergente.objects.filter(
+        neurodivergencia__neurodivergente__in=neurodivergentes
+    ).select_related('condicao', 'neurodivergencia__neurodivergente')
+    condicoes_usadas = CondicaoNeurodivergente.objects.filter(id__in=diagnos.values_list('condicao_id', flat=True).distinct())
+
+    labels = [escola.nome for escola in escolas]
+    condicoes = list(condicoes_usadas)
+    condicao_id_to_nome = {condicao.id: condicao.nome for condicao in condicoes}
+
+    data_por_condicao = {condicao.nome: [0 for _ in escolas] for condicao in condicoes}
+    escola_id_to_idx = {escola.id: idx for idx, escola in enumerate(escolas)}
+
+    for diag in diagnos:
+        escola = diag.neurodivergencia.neurodivergente.escola
+        condicao = diag.condicao
+        if escola and condicao and condicao.id in condicao_id_to_nome:
+            escola_idx = escola_id_to_idx.get(escola.id)
+            if escola_idx is not None:
+                data_por_condicao[condicao.nome][escola_idx] += 1
+
+    import random
+    def pastel_color():
+        base = 200
+        r = random.randint(base, 255)
+        g = random.randint(base, 255)
+        b = random.randint(base, 255)
+        return f'rgb({r},{g},{b})'
+    datasets = []
+    for condicao_nome, data in data_por_condicao.items():
+        datasets.append({
+            'label': condicao_nome,
+            'data': data,
+            'backgroundColor': pastel_color(),
+            'stack': 'Stack 0',
+        })
+    return JsonResponse({'labels': labels, 'datasets': datasets})

@@ -116,6 +116,10 @@
 {% endfor %}
 {% endblock %}
 
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+{% endblock %}
+
 {% block javascript %}
 {{ block.super }}
 <script>

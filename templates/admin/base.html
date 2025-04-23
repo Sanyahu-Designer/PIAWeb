@@ -105,7 +105,7 @@
       <ul class="navbar-nav">
         <!-- Menu principal -->
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/admin/' %}active bg-gradient-dark text-white{% else %}text-dark{% endif %}" href="{% url 'admin:index' %}">
+          <a id="tour-dashboard" class="nav-link {% if request.path == '/admin/' %}active bg-gradient-dark text-white{% else %}text-dark{% endif %}" href="{% url 'admin:index' %}">
             <i class="material-symbols-rounded opacity-5">dashboard</i>
             <span class="nav-link-text ms-1">Dashboard</span>
           </a>
@@ -119,56 +119,56 @@
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/neurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/admin/neurodivergentes/neurodivergente/">
+            <a id="tour-alunos" class="nav-link text-dark {% if 'neurodivergentes/neurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/admin/neurodivergentes/neurodivergente/">
               <i class="material-symbols-rounded opacity-5">person</i>
               <span class="nav-link-text ms-1">Alunos/Pacientes</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/anamnese' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/anamnese/">
+            <a id="tour-anamneses" class="nav-link text-dark {% if 'neurodivergentes/anamnese' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/anamnese/">
               <i class="material-symbols-rounded opacity-5">description</i>
               <span class="nav-link-text ms-1">Anamneses</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/registroevolucao' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/registroevolucao/">
+            <a id="tour-evolucao" class="nav-link text-dark {% if 'neurodivergentes/registroevolucao' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/registroevolucao/">
               <i class="material-symbols-rounded opacity-5">trending_up</i>
               <span class="nav-link-text ms-1">Histórico de Evolução</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/neurodivergencia' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/neurodivergencia/">
+            <a id="tour-neurodivergentes" class="nav-link text-dark {% if 'neurodivergentes/neurodivergencia' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/neurodivergencia/">
               <i class="material-symbols-rounded opacity-5">psychology</i>
               <span class="nav-link-text ms-1">Neurodivergentes</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/monitoramento' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/monitoramento/">
+            <a id="tour-paee" class="nav-link text-dark {% if 'neurodivergentes/monitoramento' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/monitoramento/">
               <i class="material-symbols-rounded opacity-5">assignment_ind</i>
               <span class="nav-link-text ms-1">PAEE</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/pdi' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pdi/">
+            <a id="tour-pdi" class="nav-link text-dark {% if 'neurodivergentes/pdi' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pdi/">
               <i class="material-symbols-rounded opacity-5">assignment</i>
               <span class="nav-link-text ms-1">PDIs</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'adaptacao_curricular' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/">
+            <a id="tour-pei" class="nav-link text-dark {% if 'adaptacao_curricular' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/">
               <i class="material-symbols-rounded opacity-5">school</i>
               <span class="nav-link-text ms-1">PEI</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/pareceravaliativo' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pareceravaliativo/">
+            <a id="tour-pareceres" class="nav-link text-dark {% if 'neurodivergentes/pareceravaliativo' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/pareceravaliativo/">
               <i class="material-symbols-rounded opacity-5">grading</i>
               <span class="nav-link-text ms-1">Pareceres</span>
             </a>
@@ -180,42 +180,42 @@
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'adaptacao_curricular/bncchabilidade' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/bncchabilidade/">
+            <a id="tour-bncc" class="nav-link text-dark {% if 'adaptacao_curricular/bncchabilidade' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/bncchabilidade/">
               <i class="material-symbols-rounded opacity-5">code</i>
               <span class="nav-link-text ms-1">Código BNCC</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'adaptacao_curricular/bnccdisciplina' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/bnccdisciplina/">
+            <a id="tour-bncc-disciplina" class="nav-link text-dark {% if 'adaptacao_curricular/bnccdisciplina' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/adaptacao_curricular/bnccdisciplina/">
               <i class="material-symbols-rounded opacity-5">menu_book</i>
               <span class="nav-link-text ms-1">Disciplinas BNCC</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/categorianeurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/categorianeurodivergente/">
+            <a id="tour-categorias" class="nav-link text-dark {% if 'neurodivergentes/categorianeurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/categorianeurodivergente/">
               <i class="material-symbols-rounded opacity-5">category</i>
               <span class="nav-link-text ms-1">Categorias CID-10</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/condicaoneurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/condicaoneurodivergente/">
+            <a id="tour-condicoes" class="nav-link text-dark {% if 'neurodivergentes/condicaoneurodivergente' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/condicaoneurodivergente/">
               <i class="material-symbols-rounded opacity-5">medical_information</i>
               <span class="nav-link-text ms-1">Condições CID-10</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'neurodivergentes/metahabilidade' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/metahabilidade/">
+            <a id="tour-metahabilidade" class="nav-link text-dark {% if 'neurodivergentes/metahabilidade' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/neurodivergentes/metahabilidade/">
               <i class="material-symbols-rounded opacity-5">emoji_events</i>
               <span class="nav-link-text ms-1">Metas/Habilidades</span>
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'auth' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/auth/">
+            <a id="tour-usuarios" class="nav-link text-dark {% if 'auth' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/auth/">
               <i class="material-symbols-rounded opacity-5">security</i>
               <span class="nav-link-text ms-1">Usuários</span>
             </a>
@@ -227,7 +227,7 @@
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'escola/escola' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/escola/escola/">
+            <a id="tour-escolas" class="nav-link text-dark {% if 'escola/escola' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/escola/escola/">
               <i class="material-symbols-rounded opacity-5">school</i>
               <span class="nav-link-text ms-1">Escolas</span>
             </a>
@@ -239,7 +239,7 @@
           </li>
           
           <li class="nav-item">
-            <a class="nav-link text-dark {% if 'profissionais_app/profissional' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/profissionais_app/profissional/">
+            <a id="tour-profissionais" class="nav-link text-dark {% if 'profissionais_app/profissional' in request.path %}active bg-gradient-dark text-white{% endif %}" href="/dashboard/profissionais_app/profissional/">
               <i class="material-symbols-rounded opacity-5">groups</i>
               <span class="nav-link-text ms-1">Profissionais</span>
             </a>
@@ -253,19 +253,19 @@
           <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">MENSAGENS</h6>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark {% if 'chat' in request.path and 'privatemessage' not in request.path %}active bg-gradient-dark text-white{% endif %}" href="{% url 'realtime:chat_list' %}">
+          <a id="tour-mensagens" class="nav-link text-dark {% if 'chat' in request.path and 'privatemessage' not in request.path %}active bg-gradient-dark text-white{% endif %}" href="{% url 'realtime:chat_list' %}">
             <i class="material-symbols-rounded opacity-5">chat</i>
             <span class="nav-link-text ms-1">Mensagens</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark {% if 'privatemessage' in request.path %}active bg-gradient-dark text-white{% endif %}" href="{% url 'realtime:chat_list' %}">
+          <a id="tour-minhas-mensagens" class="nav-link text-dark {% if 'privatemessage' in request.path %}active bg-gradient-dark text-white{% endif %}" href="{% url 'realtime:chat_list' %}">
             <i class="material-symbols-rounded opacity-5">inbox</i>
             <span class="nav-link-text ms-1">Minhas Mensagens</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark" href="{% url 'realtime:new_message' %}">
+          <a id="tour-nova-mensagem" class="nav-link text-dark" href="{% url 'realtime:new_message' %}">
             <i class="material-symbols-rounded opacity-5">add</i>
             <span class="nav-link-text ms-1">Nova Mensagem</span>
           </a>
@@ -287,13 +287,13 @@
         <div class="d-flex align-items-center justify-content-between w-100">
           {% block navbar_buttons %}
           <div class="d-flex">
-            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
+            <a id="tour-navbar-home" class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'admin:index' %}">
               <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Home
             </a>
-            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+            <a id="tour-navbar-mensagens" class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
               <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
             </a>
-            <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+            <a id="tour-navbar-ajuda" class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
               <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
             </a>
           </div>
@@ -324,10 +324,10 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
                 <li class="mb-2">
-                  <div class="dropdown-header">Menu do Usuário</div>
+                  <div id="tour-user-nome" class="dropdown-header">Menu do Usuário</div>
                 </li>
                 <li class="mb-2">
-                  <a class="dropdown-item border-radius-md" href="{% url 'admin:password_change' %}">
+                  <a id="tour-user-senha" class="dropdown-item border-radius-md" href="{% url 'admin:password_change' %}">
                     <div class="d-flex py-1">
                       <div class="d-flex flex-column justify-content-center">
                         <h6 class="text-sm font-weight-normal mb-1">
@@ -338,7 +338,7 @@
                   </a>
                 </li>
                 <li class="mb-2">
-                  <a class="dropdown-item border-radius-md" href="{% url 'logout' %}">
+                  <a id="tour-user-sair" class="dropdown-item border-radius-md" href="{% url 'logout' %}">
                     <div class="d-flex py-1">
                       <div class="d-flex flex-column justify-content-center">
                         <h6 class="text-sm font-weight-normal mb-1">
@@ -501,6 +501,14 @@
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
   </script>
+  
+  <!-- Gráficos do dashboard -->
+  <div id="tour-grafico-evolucao" class="dashboard-chart"></div>
+  <div id="tour-grafico-distribuicao" class="dashboard-chart"></div>
+  <div id="tour-grafico-comparativo" class="dashboard-chart"></div>
+  
+  <!-- Tour Bootstrap -->
+  <script src="{% static 'js/tour.js' %}"></script>
 </body>
 
 </html>
