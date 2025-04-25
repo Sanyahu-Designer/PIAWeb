@@ -6,6 +6,7 @@ from django.dispatch import receiver
 
 class GrupoFamiliar(models.Model):
     VINCULO_CHOICES = [
+        ('', '---------'),  # Opção em branco para evitar seleção automática
         ('pai_mae', 'Pai/Mãe'),
         ('filho', 'Filho(a)'),
         ('irmao', 'Irmão(ã)'),
@@ -22,7 +23,7 @@ class GrupoFamiliar(models.Model):
         ('sogro', 'Sogro(a)'),
         ('tutor', 'Tutor(a)'),
         ('cuidador', 'Cuidador(a)'),
-        ('outro', 'Outro'),
+        ('outro', 'Outro')
     ]
     
     neurodivergente = models.ForeignKey(

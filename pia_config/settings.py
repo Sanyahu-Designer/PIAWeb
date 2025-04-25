@@ -44,8 +44,6 @@ if ENVIRONMENT == 'development':
     CSRF_TRUSTED_ORIGINS.extend([
         'http://localhost:8000',
         'http://127.0.0.1:8000',
-        'http://pia.sanyahudesigner.com.br',
-        'https://pia.sanyahudesigner.com.br'
     ])
 else:
     CSRF_TRUSTED_ORIGINS.extend([
@@ -79,6 +77,7 @@ INSTALLED_APPS = [
     'django_ckeditor_5',
     'realtime',
     'configuracoes',
+    'institucional',
 ]
 
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -117,7 +116,7 @@ MIDDLEWARE = [
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
-ROOT_URLCONF = 'pia_config.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {

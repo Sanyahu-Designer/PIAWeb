@@ -34,7 +34,30 @@ class NeurodivergenteForms(forms.ModelForm):
             'ativo': forms.CheckboxInput(attrs={
                 'class': 'form-check-input',
                 'style': 'margin-left: 0.5rem;'
-            })
+            }),
+            'nacionalidade': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione a nacionalidade',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
+            'pais_origem': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Informe o país de origem (opcional)',
+                'style': 'width: 100%;'
+            }),
+            'cor_pele': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione a cor da pele',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
+            'tipo_sanguineo': forms.Select(attrs={
+                'class': 'form-select select2',
+                'data-placeholder': 'Selecione o tipo sanguíneo',
+                'data-minimum-results-for-search': '0',
+                'style': 'width: 100%;'
+            }),
         }
 
     def clean_cep(self):

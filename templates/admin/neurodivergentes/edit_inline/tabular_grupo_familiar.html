@@ -102,10 +102,21 @@
       width: '100%',
       dropdownParent: $('#{{ inline_admin_formset.formset.prefix }}-group')
     });
-    
+
     // Melhora a aparência dos checkboxes de exclusão
     $('#{{ inline_admin_formset.formset.prefix }}-group input[type="checkbox"]').addClass('form-check-input');
-    
+
+    // --- CORREÇÃO: Limpa o campo de vínculo do empty-form ao carregar ---
+    function clearEmptyFormVinculo() {
+      const emptyFormRow = $('.grupo-familiar-row.empty-form');
+      if (emptyFormRow.length) {
+        // Limpa o select de vínculo
+        emptyFormRow.find('select[name$="-vinculo"]').val('').trigger('change');
+      }
+    }
+    // Limpa ao carregar
+    clearEmptyFormVinculo();
+
     // Função para formatar as datas no carregamento inicial
     function formatInitialDates() {
       $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').each(function() {
@@ -118,31 +129,30 @@
         }
       });
     }
-    
+
     // Formata as datas existentes
     formatInitialDates();
-    
+
     // Observa mudanças na DOM para lidar com linhas adicionadas dinamicamente
     const observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         if (mutation.addedNodes.length) {
           formatInitialDates();
-          
           // Aplica estilos aos novos campos
           $('#{{ inline_admin_formset.formset.prefix }}-group select').addClass('form-control form-control-sm');
           $('#{{ inline_admin_formset.formset.prefix }}-group input[type="text"]').addClass('form-control form-control-sm');
           $('#{{ inline_admin_formset.formset.prefix }}-group input[type="date"]').addClass('form-control form-control-sm');
-          
           // Inicializa Select2 para os novos campos
           $('#{{ inline_admin_formset.formset.prefix }}-group select').select2({
             theme: 'bootstrap4',
             width: '100%',
             dropdownParent: $('#{{ inline_admin_formset.formset.prefix }}-group')
           });
+          // Limpa o campo de vínculo do novo empty-form
+          clearEmptyFormVinculo();
         }
       });
     });
-    
     // Observa o container do inline formset
     observer.observe(document.getElementById('{{ inline_admin_formset.formset.prefix }}-group'), {
       childList: true,

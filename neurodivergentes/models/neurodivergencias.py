@@ -13,8 +13,8 @@ class CategoriaNeurodivergente(models.Model):
         ordering = ['ordem', 'nome']
 
     def __str__(self):
-        return "Categorias CID-10"
-        
+        return self.nome
+
     def get_nome_real(self):
         return self.nome
 
@@ -93,7 +93,7 @@ class DiagnosticoNeurodivergente(models.Model):
         related_name='diagnosticos',
         verbose_name='Neurodivergência'
     )
-    data_identificacao = models.DateField('Data de Identificação')
+    data_identificacao = models.DateField('Data de Identificação', blank=True, null=True)
     observacoes = models.TextField('Observações', blank=True)
     
     def save(self, *args, **kwargs):

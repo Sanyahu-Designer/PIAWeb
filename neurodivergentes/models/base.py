@@ -47,6 +47,33 @@ class Neurodivergente(models.Model):
         ]
     )
     rg = models.CharField('RG', max_length=20, blank=True, null=True)
+
+    # NOVOS CAMPOS OPCIONAIS
+    NACIONALIDADE_CHOICES = [
+        ('brasileira', 'Brasileira'),
+        ('estrangeira', 'Estrangeira'),
+    ]
+    COR_PELE_CHOICES = [
+        ('branca', 'Branca'),
+        ('preta', 'Preta'),
+        ('parda', 'Parda'),
+        ('amarela', 'Amarela'),
+        ('indigena', 'Indígena'),
+    ]
+    TIPO_SANGUINEO_CHOICES = [
+        ('A+', 'A+'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B-', 'B-'),
+        ('AB+', 'AB+'),
+        ('AB-', 'AB-'),
+        ('O+', 'O+'),
+        ('O-', 'O-'),
+    ]
+    nacionalidade = models.CharField('Nacionalidade', max_length=20, choices=NACIONALIDADE_CHOICES, blank=True)
+    pais_origem = models.CharField('País de Origem', max_length=50, blank=True)
+    cor_pele = models.CharField('Cor da Pele', max_length=10, choices=COR_PELE_CHOICES, blank=True)
+    tipo_sanguineo = models.CharField('Tipo Sanguíneo', max_length=3, choices=TIPO_SANGUINEO_CHOICES, blank=True)
     
     # Localização
     estado_nascimento = models.CharField(

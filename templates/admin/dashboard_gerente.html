@@ -496,6 +496,32 @@
     box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(244, 67, 53, 0.2);
   }
 </style>
+
+<style>
+  /* --- CORREÇÃO DE SOBREPOSIÇÃO DOS GRÁFICOS --- */
+  #genero-neurodiv-chart, .chart-canvas {
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+  }
+  .card, .card-body, .chart, .row.mt-5 {
+    z-index: 1 !important;
+    position: relative !important;
+  }
+</style>
+<script>
+// Remover overlays comuns que possam cobrir o gráfico ao carregar a página
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.popover, .modal-backdrop, .tour-overlay, .tour-popover-fix').forEach(el => el.remove());
+  var canvas = document.getElementById('genero-neurodiv-chart');
+  if (canvas) {
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.zIndex = '10';
+    if (canvas.parentElement) canvas.parentElement.style.zIndex = '10';
+  }
+});
+</script>
+
 {% endblock %}
 
 {% block extrajs %}

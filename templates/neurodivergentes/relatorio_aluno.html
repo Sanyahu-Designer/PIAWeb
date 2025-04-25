@@ -304,16 +304,18 @@
                     <div class="info-label">Data de Nascimento</div>
                     <div class="info-value">{{ aluno.data_nascimento|date:"d/m/Y" }}</div>
                 </div>
+            </div>
+            <div class="info-row">
                 <div class="info-item">
                     <div class="info-label">Idade</div>
                     <div class="info-value">{{ aluno.idade }} anos</div>
                 </div>
-            </div>
-            <div class="info-row">
                 <div class="info-item">
                     <div class="info-label">Gênero</div>
                     <div class="info-value">{% if aluno.genero == 'M' %}Masculino{% else %}Feminino{% endif %}</div>
                 </div>
+            </div>
+            <div class="info-row">
                 <div class="info-item">
                     <div class="info-label">CPF</div>
                     <div class="info-value">{{ aluno.cpf }}</div>
@@ -335,6 +337,28 @@
                             {% if aluno.ativo %}Ativo{% else %}Inativo{% endif %}
                         </span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Informações Complementares</h2>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Nacionalidade</div>
+                    <div class="info-value">{{ aluno.get_nacionalidade_display|default:"-" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">País de Origem</div>
+                    <div class="info-value">{{ aluno.pais_origem|default:"-" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Cor da Pele</div>
+                    <div class="info-value">{{ aluno.get_cor_pele_display|default:"-" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Tipo Sanguíneo</div>
+                    <div class="info-value">{{ aluno.get_tipo_sanguineo_display|default:"-" }}</div>
                 </div>
             </div>
         </div>
@@ -382,7 +406,7 @@
                 </div>
                 <div class="info-item">
                     <div class="info-label">Ano Escolar</div>
-                    <div class="info-value">{{ aluno.ano_escolar.nome|default:"Não informado" }}</div>
+                    <div class="info-value">{{ aluno.ano_escolar|default:"Não informado" }}</div>
                 </div>
             </div>
         </div>
@@ -390,18 +414,6 @@
         <div class="section">
             <h2 class="section-title">Neurodivergência</h2>
             <div class="info-row">
-                <div class="info-item">
-                    <div class="info-label">Status</div>
-                    <div class="info-value">
-                        {% if status_neurodivergencia == "Em Investigação" %}
-                            <span class="badge badge-orange">Em Investigação</span>
-                        {% elif status_neurodivergencia == "Não" %}
-                            <span class="badge badge-blue">Não</span>
-                        {% else %}
-                            <span class="badge badge-purple">{{ status_neurodivergencia }}</span>
-                        {% endif %}
-                    </div>
-                </div>
                 {% if neurodivergencia %}
                 <div class="info-item">
                     <div class="info-label">Data do Diagnóstico</div>

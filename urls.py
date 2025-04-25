@@ -6,6 +6,7 @@ from pia_config.views import custom_permission_denied_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('institucional.urls')),
     path('', include('pia_config.urls')),  # Define a página inicial como a página de login
     # Removendo URLs antigas que causavam redirecionamentos incorretos
     # path('profissionais/', include('profissionais.urls')),

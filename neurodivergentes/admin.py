@@ -89,10 +89,6 @@ class GrupoFamiliarInline(admin.StackedInline):
         return CustomFormset
     
     def formfield_for_choice_field(self, db_field, request, **kwargs):
-        """
-        Sobrescreve o método formfield_for_choice_field para garantir que
-        o campo Vínculo/Parentesco tenha as opções corretas.
-        """
         if db_field.name == 'vinculo':
             kwargs['widget'] = forms.Select(attrs={'class': 'form-control'})
             kwargs['choices'] = GrupoFamiliar.VINCULO_CHOICES
@@ -126,12 +122,12 @@ class NeurodivergenteAdmin(admin.ModelAdmin):
             ),
             'classes': ('tab-dados-pessoais',)
         }),
-      #  ('Localização', {
-      #      'fields': (
-      #          'estado_nascimento', 'cidade_nascimento'
-      #      ),
-      #      'classes': ('tab-localizacao',)
-      #  }),
+        ('Informações Complementares', {
+            'fields': (
+                ('nacionalidade', 'pais_origem', 'cor_pele', 'tipo_sanguineo'),
+            ),
+            'classes': ('tab-info-complementares',)
+        }),
         ('Endereço', {
             'fields': (
                 'cep', 'endereco', 'numero', 'complemento',
@@ -291,6 +287,10 @@ class DiagnosticoNeurodivergenteForms(forms.ModelForm):
             self.original_condicao_id = self.instance.condicao_id
         else:
             self.original_condicao_id = None
+            
+        # Torna o campo data_identificacao opcional no admin
+        if 'data_identificacao' in self.fields:
+            self.fields['data_identificacao'].required = False
             
     def save(self, commit=True):
         instance = super().save(commit=False)
