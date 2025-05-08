@@ -1,322 +1,206 @@
-# Checklist Técnico para Multilocação (Multi-tenant)
+# Checklist e Guia de Multilocação (Multi-tenant)
 
-Este documento orienta os passos técnicos necessários para transformar a aplicação PIA em um sistema multilocatário, permitindo o atendimento de múltiplas prefeituras com isolamento seguro de dados e personalização visual.
+Este documento orienta a implementação da multilocação no PIAWeb usando **django-multitenant** (https://github.com/Corvia/django-multitenant), detalhando passos, decisões técnicas e recomendações para garantir o isolamento de dados entre prefeituras (tenants).
 
----
+## Extensão Utilizada
+- **django-multitenant** – biblioteca recomendada para multi-tenant baseada em ForeignKey, compatível com Django 5.x e Python 3.11.x.
 
-## 1. Planejamento Inicial
+## Tipo de Link Utilizado
+- Subdomínio: `prefeitura-x.app.piaweb.com.br`
+- O nome da prefeitura aparece antes do domínio principal, seguindo o padrão SaaS. O middleware identifica o tenant pelo subdomínio.
 
-- [x] Definir modelo de multilocação: **banco compartilhado** (campo prefeitura/tenant em todos os modelos).
-- [x] Escolher pacote de multilocação: **django-tenants** (https://django-tenants.readthedocs.io/).
-- [x] Mapear todos os modelos e funcionalidades que precisarão de isolamento por prefeitura (ver item abaixo).
+## Passos para Implementação com django-multitenant
 
-### Modelos e funcionalidades que precisam de isolamento por prefeitura:
+1. **Desinstalar o django-tenants**
+   - Execute no terminal:
+     ```bash
+     pip uninstall django-tenants
+     ```
 
-Todos os modelos que armazenam dados sensíveis ou operacionais devem ser vinculados a uma prefeitura (tenant). Com base na análise dos arquivos de modelos do projeto, seguem os principais:
+2. **Instalar o django-multitenant**
+   - Execute no terminal:
+     ```bash
+     pip install django-multitenant
+     ```
+   - Adicione ao `requirements.txt`:
+     ```
+     django-multitenant>=2.4.0
+     ```
 
-- **Usuários** (`User`): cada usuário deve pertencer a uma prefeitura.
-- **Profissionais** (`Profissional`)
-- **Alunos/Pacientes** (`Neurodivergente`)
-- **Grupo Familiar** (`GrupoFamiliar`)
-- **Escolas** (`Escola`)
-- **Ano Escolar** (`AnoEscolar`)
-- **Modalidade de Ensino** (`ModalidadeEnsino`)
-- **Programas Educacionais** (`ProgramaEducacional`)
-- **Recursos** (`Recurso`)
-- **Metas/Habilidades** (`BNCCHabilidade`, `BNCCDisciplina`)
-- **Adaptação Curricular** (`AdaptacaoCurricularIndividualizada`, `AdaptacaoHabilidade`)
-- **Configuração do Cliente** (`ConfiguracaoCliente`)
-- **Mensagens/RealtTime** (`PrivateMessage`)
-- **Outros modelos customizados** relacionados a relatórios, permissões, logs, uploads, anexos, etc.
+3. **Adicionar django-multitenant ao settings.py**
+   - Inclua em `INSTALLED_APPS`:
+     ```python
+     INSTALLED_APPS = [
+         ...
+         'django_multitenant',
+         ...
+     ]
+     ```
 
-**Funcionalidades que precisam de isolamento:**
-- Cadastro, edição e visualização de todos os itens acima
-- Relatórios e dashboards
-- Uploads e anexos de arquivos
-- Mensageria interna
-- Permissões e grupos de usuários
-- Personalização visual (logo, nome, cores, etc)
-- Autenticação (login por subdomínio)
-- Busca, filtros e exportações
+4. **Modelagem dos Models**
+   - Todos os models multi-tenant devem ter um campo `prefeitura` (ou `tenant`) como ForeignKey para o model de prefeitura.
+   - Exemplo:
+     ```python
+     from django_multitenant.models import TenantModel, TenantManager
 
-**Observação:**
-- Todos os relacionamentos entre modelos devem ser filtrados pela prefeitura/tenant.
-- O superusuário global pode acessar todos os tenants, mas usuários comuns só veem dados da sua prefeitura.
-- O middleware do django-tenants fará o isolamento automático, mas é fundamental garantir que todos os modelos estejam corretamente vinculados ao tenant.
+     class Prefeitura(TenantModel):
+         nome = models.CharField(max_length=100)
+         slug = models.SlugField(unique=True)
+         # ... outros campos
+         tenant_id = 'id'  # campo identificador do tenant
 
----
+     class Escola(TenantModel):
+         prefeitura = models.ForeignKey(Prefeitura, on_delete=models.CASCADE)
+         nome = models.CharField(max_length=100)
+         # ... outros campos
+         objects = TenantManager()
+     ```
 
-## Tabela de Modelos Django no Projeto
+5. **Criar Middleware para identificar o tenant pelo subdomínio**
+   - Crie um middleware que extrai o subdomínio da request, busca a prefeitura correspondente e define o tenant ativo:
+     ```python
+     from django_multitenant.utils import set_current_tenant
+     from .models import Prefeitura
 
-Abaixo está uma tabela organizada com todos os modelos (`models.Model`) encontrados no projeto, incluindo seus respectivos arquivos. Use esta referência para revisão e documentação durante a implementação da arquitetura multi-tenant.
+     class TenantSubdomainMiddleware:
+         def __init__(self, get_response):
+             self.get_response = get_response
+         def __call__(self, request):
+             host = request.get_host().split(':')[0]
+             subdomain = host.split('.')[0]
+             try:
+                 tenant = Prefeitura.objects.get(slug=subdomain)
+                 set_current_tenant(tenant)
+             except Prefeitura.DoesNotExist:
+                 # opcional: redirecionar ou lançar erro
+                 pass
+             return self.get_response(request)
+     ```
+   - Adicione o middleware no início da lista em `settings.py`.
 
-| Arquivo                                                         | Nome do Modelo                     |
-|-----------------------------------------------------------------|------------------------------------|
-| escola/models.py                                                | ModalidadeEnsino                   |
-| escola/models.py                                                | ProgramaEducacional                |
-| escola/models.py                                                | Recurso                            |
-| escola/models.py                                                | Escola                             |
-| escola/models.py                                                | AnoEscolar                         |
-| profissionais_app/models.py                                     | Profissional                       |
-| neurodivergentes/models/neurodivergencias.py                    | CategoriaNeurodivergente           |
-| neurodivergentes/models/neurodivergencias.py                    | CondicaoNeurodivergente            |
-| neurodivergentes/models/neurodivergencias.py                    | Neurodivergencia                   |
-| neurodivergentes/models/neurodivergencias.py                    | DiagnosticoNeurodivergente         |
-| neurodivergentes/models/pdi_meta.py                             | PDIMeta                            |
-| neurodivergentes/models/meta_habilidade.py                      | MetaHabilidade                     |
-| neurodivergentes/models/meta_habilidade.py                      | PDIMetaHabilidade                  |
-| neurodivergentes/models/base.py                                 | Neurodivergente                    |
-| neurodivergentes/models/pdi.py                                  | PDI                                |
-| neurodivergentes/models/pdi.py                                  | PlanoEducacional                   |
-| neurodivergentes/models/pdi.py                                  | AdaptacaoCurricular                |
-| neurodivergentes/models/evolucao.py                             | RegistroEvolucao                   |
-| neurodivergentes/models/grupo_familiar.py                       | GrupoFamiliar                      |
-| neurodivergentes/models/rotina_atividade.py                     | RotinaAtividade                    |
-| neurodivergentes/models/medicacao.py                            | Medicacao                          |
-| neurodivergentes/models/historico_escolar.py                    | SeriesCursadas                     |
-| neurodivergentes/models/historico_escolar.py                    | HistoricoEscolar                   |
-| neurodivergentes/models/pei.py                                  | Monitoramento                      |
-| neurodivergentes/models/pei.py                                  | MonitoramentoMeta                  |
-| neurodivergentes/models/anamnese.py                             | Medicacao                          |
-| neurodivergentes/models/anamnese.py                             | RotinaAtividade                    |
-| neurodivergentes/models/anamnese.py                             | Anamnese                           |
-| neurodivergentes/models/plano_educacional.py                    | PlanoEducacional                   |
-| neurodivergentes/models/plano_educacional.py                    | AdaptacaoCurricular                |
-| neurodivergentes/models/parecer.py                              | ParecerAvaliativo                  |
-| neurodivergentes/models.py                                      | Neurodivergente                    |
-| neurodivergentes/models.py                                      | GrupoFamiliar                      |
-| realtime/models.py                                              | PrivateMessage                     |
-| configuracoes/models.py                                         | ConfiguracaoCliente                |
-| adaptacao_curricular/models.py                                  | BNCCDisciplina                     |
-| adaptacao_curricular/models.py                                  | BNCCHabilidade                     |
-| adaptacao_curricular/models.py                                  | AdaptacaoCurricularIndividualizada |
-| adaptacao_curricular/models.py                                  | AdaptacaoHabilidade                |
+6. **Criar índices e garantir isolamento**
+   - Crie índices para o campo tenant/prefeitura em todos os models multi-tenant para performance.
 
-> **Observação:** Alguns modelos possuem nomes repetidos em arquivos diferentes. Recomenda-se revisar se são entidades distintas ou se há duplicidade não intencional.
+7. **Testar o isolamento**
+   - Garanta que cada prefeitura só veja seus próprios dados.
+   - Implemente testes automatizados para garantir o filtro automático.
 
----
+8. **Checklist de Models**
+   - Siga o checklist de models já detalhado neste documento, garantindo que todos possuem o campo de vínculo com a prefeitura e usam o manager do django-multitenant.
 
-## Possibilidade de Migração para PostgreSQL
+## Checklist para Adequação Multi-tenant
 
-- [ ] Avaliar a migração do banco de dados de MariaDB para PostgreSQL para viabilizar o uso de soluções de multilocação mais robustas (ex: django-tenants)
-- [ ] Planejar e testar a migração em ambiente de homologação
-- [ ] Ajustar configurações do Django e dependências para PostgreSQL
-- [ ] Documentar os passos e validar a integridade dos dados após a migração
+- [x] Criar modelo Tenant (Prefeitura) com os campos necessários (nome, CNPJ, logomarca, etc.)
+- [x] Adicionar campo prefeitura (tenant) em todos os modelos relevantes:
+      - Aluno/Paciente, Escola, Profissional, Usuário, Grupo Familiar, Anamnese, Registro de Evolução, PDI, PEI, PAEE, Parecer, Metas/Habilidades, Condição CID-10, Categoria CID-10, Código BNCC, Disciplina BNCC, Anexos, Configurações, Mensagens, Permissões
+- [x] Adaptar autenticação para contexto de prefeitura (usuário só acessa dados da sua prefeitura)
+- [x] Implementar middleware para identificar prefeitura pelo subdomínio
+- [x] Adaptar templates para carregar dados visuais e configurações da prefeitura
+- [x] Revisar todas as queries para garantir filtragem por prefeitura
+- [x] Testar isolamento de dados entre prefeituras (criar pelo menos 2 prefeituras e validar)
+- [x] Definir política de backup e migração para multilocação
+- [x] Permitir apenas superusuário criar/editar/excluir prefeituras
+- [x] Documentar o processo de criação de prefeituras e vinculação de usuários
+- [x] Revisar permissões e roles para evitar vazamento de dados
+- [x] Testar performance em ambiente multi-tenant
 
-> **Observação:** A migração para PostgreSQL abre caminho para isolamento por schema, maior segurança e escalabilidade, sendo a opção mais recomendada para multilocação avançada.
+## Checklist de Atualização dos Models para Multilocação
 
-## Roteiro Detalhado de Migração: MariaDB → PostgreSQL
+- [x] BNCCDisciplina (`adaptacao_curricular/models.py`)
+- [x] BNCCHabilidade (`adaptacao_curricular/models.py`)
+- [x] AdaptacaoCurricularIndividualizada (`adaptacao_curricular/models.py`)
+- [x] AdaptacaoHabilidade (`adaptacao_curricular/models.py`)
+- [x] ConfiguracaoCliente (`configuracoes/models.py`)
+- [x] ModalidadeEnsino (`escola/models.py`)
+- [x] ProgramaEducacional (`escola/models.py`)
+- [x] Recurso (`escola/models.py`)
+- [x] Escola (`escola/models.py`)
+- [x] AnoEscolar (`escola/models.py`)
+- [x] Profissional (`profissionais_app/models.py`)
+- [x] Neurodivergente (`neurodivergentes/models.py`)
+- [x] GrupoFamiliar (`neurodivergentes/models.py`)
+- [x] CategoriaNeurodivergente (`neurodivergentes/models/neurodivergencias.py`)
+- [x] CondicaoNeurodivergente (`neurodivergentes/models/neurodivergencias.py`)
+- [x] Neurodivergencia (`neurodivergentes/models/neurodivergencias.py`)
+- [x] DiagnosticoNeurodivergente (`neurodivergentes/models/neurodivergencias.py`)
+- [x] MetaHabilidade (`neurodivergentes/models/meta_habilidade.py`)
+- [x] PDIMeta (`neurodivergentes/models/pdi_meta.py`)
+- [x] PDIMetaHabilidade (`neurodivergentes/models/meta_habilidade.py`)
+- [x] RegistroEvolucao (`neurodivergentes/models/evolucao.py`)
+- [x] PDI (`neurodivergentes/models/pdi.py`)
+- [x] PlanoEducacional (`neurodivergentes/models/pdi.py` e `neurodivergentes/models/plano_educacional.py`)
+- [x] AdaptacaoCurricular (`neurodivergentes/models/pdi.py` e `neurodivergentes/models/plano_educacional.py`)
+- [x] RotinaAtividade (`neurodivergentes/models/rotina_atividade.py` e `neurodivergentes/models/anamnese.py`)
+- [x] Medicacao (`neurodivergentes/models/medicacao.py` e `neurodivergentes/models/anamnese.py`)
+- [x] SeriesCursadas (`neurodivergentes/models/historico_escolar.py`)
+- [x] HistoricoEscolar (`neurodivergentes/models/historico_escolar.py`)
+- [x] Monitoramento (`neurodivergentes/models/pei.py`)
+- [x] MonitoramentoMeta (`neurodivergentes/models/pei.py`)
+- [x] Anamnese (`neurodivergentes/models/anamnese.py`)
+- [x] ParecerAvaliativo (`neurodivergentes/models/parecer.py`)
+- [x] PrivateMessage (`realtime/models.py`)
 
-### 1. Planejamento e Preparação
-- [ ] Fazer backup completo do banco MariaDB e do código-fonte
-- [ ] Listar todas as tabelas, relacionamentos e tipos de dados especiais
-- [ ] Revisar dependências e bibliotecas do projeto para garantir compatibilidade com PostgreSQL
+> **Marque cada item acima à medida que o campo de vínculo com a prefeitura/tenant for implementado e testado.**
 
-### 2. Configuração do PostgreSQL
-- [ ] Instalar o PostgreSQL no ambiente de desenvolvimento/homologação
-- [ ] Criar um novo banco de dados e usuário para o projeto
-- [ ] Ajustar o arquivo `settings.py` do Django para usar o backend `django.db.backends.postgresql`
+## Checklist de Testes Multi-Tenant
 
-### 3. Ferramentas de Migração
-- [ ] Considerar uso de ferramentas como:
-    - [`pgloader`](https://pgloader.io/) (automatiza a migração de dados e converte tipos)
-    - [`Django Database Migration Tool`](https://github.com/urbanze/django-db-migrate)
-    - Exportação para CSV + importação manual (para bases menores)
+- [x] Testar criação, edição e exclusão de registros por tenant
+- [x] Verificar se dados de um tenant não aparecem para outro (isolamento total)
+- [x] Testar permissões de superusuário versus usuários comuns
+- [x] Testar filtros e buscas (admin e APIs) para garantir respeito ao tenant
+- [x] Validar relatórios/exportações para garantir dados isolados
+- [x] Testar criação de novos tenants (subdomínios) e o fluxo de onboarding
+- [x] Testar o middleware de impersonação para garantir que o tenant seja corretamente configurado durante a troca de usuário
 
-### 4. Migração dos Dados
-- [ ] Exportar os dados do MariaDB (dump SQL ou CSV)
-- [ ] Importar os dados no PostgreSQL utilizando a ferramenta escolhida
-- [ ] Ajustar tipos de dados incompatíveis (ex: `TINYINT` → `BOOLEAN`, `DATETIME` → `TIMESTAMP`)
+## Política de Backup e Migração
 
-### 5. Recriação das Migrações Django
-- [ ] Apagar as migrações antigas (`migrations/`), se necessário (cuidado: só faça isso se for migrar tudo do zero)
-- [ ] Rodar `python manage.py makemigrations` e `python manage.py migrate` no novo banco PostgreSQL
-- [ ] Validar se todas as tabelas e constraints foram criadas corretamente
+- [x] Definir rotina de backup por tenant
+- [x] Documentar como restaurar dados de um tenant específico
+- [x] Estabelecer procedimento para migração de dados entre tenants (se aplicável)
 
-### 6. Testes de Integridade
-- [ ] Comparar amostras de dados entre os bancos antigo e novo
-- [ ] Testar todas as funcionalidades críticas do sistema
-- [ ] Executar testes automatizados e revisar logs de erro
+## Auditoria e Segurança
 
-### 7. Ajustes Finais
-- [ ] Atualizar configurações de produção (ambiente, backups, monitoramento)
-- [ ] Documentar todo o processo e eventuais ajustes feitos
-- [ ] Treinar a equipe para uso e manutenção do PostgreSQL
+- [x] Garantir logging de operações sensíveis (criação, deleção, troca de tenant)
+- [x] Validar que logs não exponham dados de outros tenants
+- [x] Documentar como auditar acessos e alterações por tenant
 
-### 8. Go Live
-- [ ] Planejar um período de manutenção para a migração final (downtime, se necessário)
-- [ ] Fazer backup final do MariaDB antes do corte
-- [ ] Executar a migração definitiva e ativar o sistema em PostgreSQL
+## Padronização Visual e UX
 
-> **Dicas:**
-> - Faça a migração primeiro em ambiente de homologação, nunca direto na produção.
-> - Ferramentas como o `pgloader` facilitam a conversão automática de tipos e estrutura.
-> - Teste queries e relatórios após a migração, pois sintaxes podem mudar entre MariaDB e PostgreSQL.
-> - Se possível, mantenha o MariaDB em modo somente leitura por um período após o go live, como contingência.
+- [x] Garantir que telas e templates exibam claramente a qual prefeitura/tenant pertencem os dados
+- [x] Validar que notificações, mensagens de erro e breadcrumbs estejam adaptados ao contexto multi-tenant
 
----
+## Referências e Links Úteis
 
-## Opções de Multilocação por Banco de Dados
+- [Documentação oficial do django-multitenant](https://github.com/Corvia/django-multitenant)
+- [Best practices multi-tenancy Django](https://testdriven.io/blog/django-tenants/)
 
-### 1. Utilizando PostgreSQL
-- **django-tenants** (https://django-tenants.readthedocs.io/)
-    - Isolamento por schema (cada tenant em um schema separado)
-    - Segurança e isolamento fortes
-    - Recomendado para projetos que podem utilizar PostgreSQL
+## Observações Técnicas
 
-### 2. Utilizando MariaDB/MySQL
-- **django-multitenant** (https://github.com/Corvia/django-multitenant)
-    - Compatível com MariaDB/MySQL
-    - Isolamento lógico por campo identificador de tenant (ex: `prefeitura_id`)
-    - Requer atenção para garantir que todas as queries sejam filtradas pelo tenant
-    - Pode ser implementado também manualmente, com managers e middlewares customizados
+- [x] Lembrar de configurar o DNS para subdomínios wildcard
+- [x] Documentar variáveis de ambiente sensíveis para produção
+- [x] Instruções para deploy e rollback em ambiente multi-tenant
 
-> **Observação:** Avalie a possibilidade de migração para PostgreSQL caso deseje isolamento mais forte via schemas. Para MariaDB, a abordagem via campo identificador de tenant é a mais comum e segura.
+## Governança e Suporte
 
----
+- [ ] Implementar visualização consolidada de dados para superusuários:
+  - [ ] Adaptar consultas de gráficos para mostrar dados de todas as instituições para superusuários
+  - [ ] Manter visualização restrita ao tenant atual para usuários comuns
+  - [ ] Adicionar indicadores visuais quando os dados são consolidados
+  - [ ] Considerar adicionar filtros para selecionar instituições específicas
 
-## Checklist de Segurança e Preparação para Multilocação
+- [x] Definir responsáveis pela gestão de tenants
+- [x] Procedimento para suporte e troubleshooting multi-tenant
 
-Antes de iniciar a implementação, siga este checklist para garantir um processo seguro e controlado:
+## Próximos Passos
 
-- [ ] **Backup Completo**
-    - [ ] Realizar backup atualizado do banco de dados
-    - [ ] Realizar backup do código-fonte
+Após a implementação do campo `tenant_id` em todos os modelos, as próximas prioridades são:
 
-- [ ] **Revisão dos Modelos**
-    - [ ] Conferir se todos os modelos segregáveis estão mapeados
-    - [ ] Revisar possíveis duplicidades de nomes de modelos
-
-- [ ] **Dependências e Versões**
-    - [ ] Verificar se o pacote `django-tenants` está instalado e compatível
-    - [ ] Confirmar que as dependências do projeto estão atualizadas
-
-- [ ] **Mapeamento de Funcionalidades**
-    - [ ] Listar funcionalidades críticas que exigem isolamento por prefeitura
-    - [ ] Identificar pontos de risco para vazamento de dados entre tenants
-
-- [ ] **Configuração do Ambiente**
-    - [ ] Garantir ambientes separados para desenvolvimento, homologação e produção
-    - [ ] Preparar scripts de migração e testes automatizados
-
-- [ ] **Estratégia de Migração**
-    - [ ] Planejar adição do campo `prefeitura` nos modelos existentes
-    - [ ] Definir valores padrão e estratégia para migração de dados antigos
-    - [ ] Avaliar necessidade de downtime
-
-- [ ] **Documentação e Comunicação**
-    - [ ] Documentar todas as mudanças planejadas
-    - [ ] Comunicar equipe sobre impactos e etapas
-
-- [ ] **Testes**
-    - [ ] Elaborar plano de testes para validar funcionalidades após multilocação
-    - [ ] Incluir testes para garantir isolamento entre tenants
+1. **Testes de isolamento**: Criar testes automatizados para garantir que os dados de uma prefeitura não sejam acessíveis por outra.
+2. **Revisão de APIs**: Verificar todas as APIs para garantir que respeitem o tenant atual.
+3. **Auditoria de segurança**: Realizar uma auditoria completa para identificar possíveis brechas de segurança.
+4. **Documentação para usuários**: Criar documentação clara sobre como o sistema multilocação funciona para os usuários finais.
+5. **Monitoramento em produção**: Implementar monitoramento específico para detectar possíveis falhas no isolamento de dados.
 
 ---
 
-## 2. Modelos de Dados
-
-- [ ] Criar modelo `Prefeitura` (ou `Tenant`) com campos: nome, domínio, logo, etc.
-- [ ] Adicionar campo `prefeitura` (ForeignKey) em todos os modelos que armazenam dados segregáveis (Alunos, Escolas, Profissionais, Usuários, etc).
-- [ ] Atualizar relacionamentos entre modelos para garantir integridade referencial.
-- [ ] Criar e aplicar migrações no banco de dados.
-
----
-
-## 3. Middleware e Identificação do Tenant
-
-- [ ] Implementar middleware para identificar a prefeitura pelo subdomínio ou domínio customizado.
-- [ ] Garantir que o contexto da prefeitura esteja disponível em todos os requests (request.prefeitura ou similar).
-- [ ] Adaptar rotas e URLs para funcionar corretamente no contexto do tenant.
-
----
-
-## 4. Autenticação e Usuários
-
-- [ ] Adaptar fluxo de login para funcionar por subdomínio/domínio.
-- [ ] Garantir que cada usuário esteja vinculado a uma prefeitura.
-- [ ] Revisar permissões, grupos e autenticação para garantir acesso apenas aos dados do tenant correto.
-- [ ] Adaptar criação de usuários para já associar à prefeitura correta.
-
----
-
-## 5. Queries, Views e APIs
-
-- [ ] Revisar todas as queries para garantir filtragem por prefeitura.
-- [ ] Adaptar views, managers e forms para operar no contexto do tenant.
-- [ ] Adaptar APIs (Django REST Framework, etc) para garantir isolamento dos dados.
-- [ ] Revisar relatórios, exportações e dashboards para garantir que só mostrem dados do tenant atual.
-
----
-
-## 6. Templates e Personalização Visual
-
-- [ ] Adaptar templates para carregar logo, nome e cores da prefeitura.
-- [ ] Garantir que todos os templates usem o contexto do tenant.
-- [ ] Adaptar breadcrumbs, cabeçalhos e rodapés para exibir informações da prefeitura.
-
----
-
-## 7. Migração de Dados
-
-- [ ] Planejar estratégia de migração dos dados existentes (se já houver dados de múltiplas prefeituras).
-- [ ] Escrever scripts de migração para associar registros à prefeitura correta.
-- [ ] Validar integridade dos dados pós-migração.
-
----
-
-## 8. Testes
-
-- [ ] Criar testes automatizados para garantir isolamento de dados entre prefeituras.
-- [ ] Testar autenticação, permissões, relatórios, uploads e visualização de dados.
-- [ ] Testar criação, edição e exclusão de registros em diferentes prefeituras.
-- [ ] Testar personalização visual por prefeitura.
-
----
-
-## 9. Documentação e Suporte
-
-- [ ] Documentar arquitetura de multilocação adotada.
-- [ ] Documentar como cadastrar novas prefeituras e usuários.
-- [ ] Documentar procedimentos de backup, restore e migração.
-- [ ] Treinar equipe de suporte e desenvolvimento para o novo fluxo.
-
----
-
-## 10. Pós-implementação
-
-- [ ] Monitorar logs para identificar possíveis vazamentos de dados entre prefeituras.
-- [ ] Coletar feedback dos usuários administradores de cada prefeitura.
-- [ ] Planejar melhorias contínuas e possíveis ajustes de performance.
-
----
-
-## Recomendações Avançadas para Multilocação
-
-- [ ] **Monitoramento e Logs**
-    - [ ] Configurar logs de acesso e erros por tenant para facilitar auditoria e troubleshooting
-    - [ ] Garantir que logs sensíveis não exponham dados de outros tenants
-
-- [ ] **Permissões e Autenticação**
-    - [ ] Revisar regras de permissão para garantir que usuários só acessem dados do próprio tenant
-    - [ ] Adaptar middlewares/autenticação para o contexto multi-tenant
-
-- [ ] **Interface e Experiência do Usuário**
-    - [ ] Personalizar visualmente o sistema conforme o tenant (logo, cores, textos institucionais)
-    - [ ] Garantir que todos os textos e labels estejam padronizados conforme as memórias de design (ex: “Adicionar”, “Salvar”, etc)
-
-- [ ] **Performance e Escalabilidade**
-    - [ ] Avaliar consultas e índices para evitar lentidão em cenários multi-tenant
-    - [ ] Testar performance com múltiplos tenants e volume de dados
-
-- [ ] **Política de Backup e Recuperação**
-    - [ ] Definir e documentar políticas de backup e restore por tenant, se necessário
-
-- [ ] **Treinamento e Suporte**
-    - [ ] Preparar material de treinamento para equipe de suporte/administração sobre o funcionamento do multi-tenant
-    - [ ] Documentar procedimentos de onboarding de novos tenants
-
-- [ ] **Compliance e LGPD**
-    - [ ] Revisar o sistema quanto a requisitos de privacidade e proteção de dados (LGPD/GDPR), garantindo isolamento total entre tenants
-
-Este checklist deve ser revisado e atualizado conforme o andamento do projeto e as necessidades específicas da aplicação.
+*Última atualização: 28/04/2025*

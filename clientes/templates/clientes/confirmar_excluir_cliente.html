@@ -1,0 +1,110 @@
+{% extends "admin/base_material.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .gradient-header {
+      background: linear-gradient(to right, #6c757d, #8d99ae);
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 1.2rem 1rem 1rem 1.5rem;
+      margin-bottom: 0;
+    }
+    .gradient-header h6 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .btn-outline-primary {
+      color: #e91e63 !important;
+      border-color: #e91e63 !important;
+      background-color: transparent !important;
+    }
+    .btn-outline-primary:hover,
+    .btn-outline-primary:focus,
+    .btn-outline-primary:active {
+      color: #d81557 !important;
+      border-color: #d81557 !important;
+      background-color: transparent !important;
+      box-shadow: 0 3px 5px -1px rgba(233, 30, 99, 0.15) !important;
+    }
+    .material-symbols-rounded.opacity-10 {
+      opacity: 0.10;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+    .btn-danger {
+      background-color: #f44335;
+      border-color: #f44335;
+    }
+    .btn-danger:hover {
+      background-color: #d32f2f;
+      border-color: #d32f2f;
+      box-shadow: 0 14px 26px -12px rgba(244, 67, 53, 0.4), 0 4px 23px 0 rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(244, 67, 53, 0.2);
+    }
+  </style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Início
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">Início</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'listar_clientes' %}">Prefeituras</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Confirmar Exclusão</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 24px;">warning</i> 
+              Confirmar Exclusão
+            </h6>
+          </div>
+        </div>
+        <div class="card-body px-4 pb-2">
+          <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Atenção!</h4>
+            <p>Você está prestes a excluir a prefeitura <strong>{{ cliente.nome }}</strong>.</p>
+            <p>Esta ação também excluirá todos os usuários vinculados a esta prefeitura e não poderá ser desfeita.</p>
+            <hr>
+            <p class="mb-0">Tem certeza que deseja continuar?</p>
+          </div>
+          
+          <div class="d-flex justify-content-end mt-4">
+            <a href="{% url 'listar_clientes' %}" class="btn btn-secondary me-2">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">cancel</i> Cancelar
+            </a>
+            <form method="post" action="{% url 'excluir_cliente' cliente.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">
+                <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">delete_forever</i> Sim, Excluir
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

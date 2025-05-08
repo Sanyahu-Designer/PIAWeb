@@ -3,8 +3,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from ..models import Neurodivergente
 from profissionais_app.models import Profissional
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
+from encrypted_model_fields.fields import EncryptedTextField
 
-class RegistroEvolucao(models.Model):
+class RegistroEvolucao(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergente = models.ForeignKey(
         Neurodivergente,
         on_delete=models.CASCADE,
@@ -12,7 +18,7 @@ class RegistroEvolucao(models.Model):
         verbose_name='Aluno/Paciente'
     )
     data = models.DateField('Data')
-    descricao = models.TextField('Descrição da Evolução')
+    descricao = EncryptedTextField('Descrição da Evolução')
     profissional = models.ForeignKey(
         Profissional,
         on_delete=models.PROTECT,
@@ -26,6 +32,7 @@ class RegistroEvolucao(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Histórico de Evolução'

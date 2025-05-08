@@ -2,11 +2,12 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 if os.getenv('ENVIRONMENT', 'development') == 'production':
-    BASE_DIR = Path('/home/netsarim/caraapiaweb')
+    BASE_DIR = Path('/home/netsarim/app_piaweb')
 else:
     BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,26 +33,26 @@ if ENVIRONMENT == 'production':
 else:
     SECRET_KEY = 'django-insecure-l#65p7z-m9f4n-v02tgnf9rm%4!=u@fke*g4)brw$8+ym-$szj'
 
-ALLOWED_HOSTS = []
-if ENVIRONMENT == 'development':
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '*'])
-else:
-    ALLOWED_HOSTS.extend(['caraa.piaweb.com.br', 'www.caraa.piaweb.com.br'])
+# Chave exclusiva para criptografia de campos sensíveis
+ENCRYPTED_MODEL_FIELDS_KEY = os.environ.get('ENCRYPTED_MODEL_FIELDS_KEY', SECRET_KEY)
+
+# Chave obrigatória para django-encrypted-model-fields
+FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', 'r0kEoE2kakZK8Ms8g-iRJexQVYCqO_X4FgPVmOior_Y=')
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'app.piaweb.com.br',
+    'www.app.piaweb.com.br',
+]
 
 # CSRF Settings
-CSRF_TRUSTED_ORIGINS = []
-if ENVIRONMENT == 'development':
-    CSRF_TRUSTED_ORIGINS.extend([
-        'http://localhost:8000',
-        'http://127.0.0.1:8000',
-    ])
-else:
-    CSRF_TRUSTED_ORIGINS.extend([
-        'http://caraa.piaweb.com.br',
-        'https://caraa.piaweb.com.br',
-        'http://www.caraa.piaweb.com.br',
-        'https://www.caraa.piaweb.com.br'
-    ])
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://app.piaweb.com.br',
+    'https://www.app.piaweb.com.br',
+]
 
 # Duração padrão da sessão (2 semanas)
 SESSION_COOKIE_AGE = 1209600  # em segundos
@@ -61,6 +62,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Application definition
 INSTALLED_APPS = [
+    'django_multitenant',
     'neurodivergentes',
     'django.contrib.admin',
     'django.contrib.auth',  # Mantendo a aplicação auth original
@@ -78,6 +80,8 @@ INSTALLED_APPS = [
     'realtime',
     'configuracoes',
     'institucional',
+    'clientes',
+    'usuarios',
 ]
 
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -112,6 +116,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'clientes.middleware.ImpersonationMiddleware',
+    'clientes.tenant_middleware.TenantMiddleware',
+    'pia_config.middleware.RedirectLoginMiddleware',  # Novo middleware para interceptar redirecionamentos para login
 ]
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
@@ -135,6 +142,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'clientes.context_processors.superuser_permissions',
             ],
         },
     },
@@ -144,22 +152,12 @@ WSGI_APPLICATION = 'pia_config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mysql.connector.django',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('PROD_DB_NAME' if ENVIRONMENT == 'production' else 'DEV_DB_NAME'),
         'USER': os.getenv('PROD_DB_USER' if ENVIRONMENT == 'production' else 'DEV_DB_USER'),
         'PASSWORD': os.getenv('PROD_DB_PASSWORD' if ENVIRONMENT == 'production' else 'DEV_DB_PASSWORD'),
         'HOST': os.getenv('PROD_DB_HOST' if ENVIRONMENT == 'production' else 'DEV_DB_HOST'),
         'PORT': os.getenv('PROD_DB_PORT' if ENVIRONMENT == 'production' else 'DEV_DB_PORT'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-            'use_unicode': True,
-            'raise_on_warnings': True,
-        },
-        'TEST': {
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_unicode_520_ci',
-        }
     }
 }
 
@@ -201,8 +199,8 @@ if ENVIRONMENT == 'development':
     STATIC_ROOT = BASE_DIR / 'staticfiles'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 else:
-    STATIC_ROOT = '/home/netsarim/caraa.piaweb.com.br/static'
-    MEDIA_ROOT = '/home/netsarim/caraa.piaweb.com.br/media'
+    STATIC_ROOT = '/home/netsarim/app.piaweb.com.br/static'
+    MEDIA_ROOT = '/home/netsarim/app.piaweb.com.br/media'
 
 # Configurações de arquivos de mídia
 MEDIA_URL = '/media/'
@@ -257,6 +255,10 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'audit': {
+            'format': 'AUDIT {asctime} {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'console': {
@@ -265,10 +267,16 @@ LOGGING = {
             'formatter': 'verbose',
         },
         'file': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': os.path.join(BASE_DIR, 'logs/pia.log'),
             'formatter': 'verbose',
+        },
+        'audit_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/audit.log'),
+            'formatter': 'audit',
         },
     },
     'loggers': {
@@ -277,10 +285,18 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'realtime': {
+        'clientes': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True,
         },
+        'audit': {
+            'handlers': ['audit_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
+# Criar diretório de logs se não existir
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)

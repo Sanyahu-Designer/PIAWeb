@@ -1,0 +1,450 @@
+{% extends "admin/base_material.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}">
+  <style>
+    .gradient-header {
+      background: linear-gradient(to right, #6c757d, #8d99ae);
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 1.2rem 1rem 1rem 1.5rem;
+      margin-bottom: 0;
+    }
+    .gradient-header h6 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .form-control {
+      border: 1px solid #d2d6da;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .form-control:focus {
+      border-color: #e91e63;
+      box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+    }
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #344767;
+      margin-bottom: 0.5rem;
+    }
+    .form-check-input:checked {
+      background-color: #e91e63;
+      border-color: #e91e63;
+    }
+    .btn-primary {
+      background-color: #e91e63;
+      border-color: #e91e63;
+    }
+    .btn-primary:hover {
+      background-color: #d81557;
+      border-color: #d81557;
+      box-shadow: 0 14px 26px -12px rgba(233, 30, 99, 0.4), 0 4px 23px 0 rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(233, 30, 99, 0.2);
+    }
+    .btn-secondary {
+      background-color: #8392ab;
+      border-color: #8392ab;
+    }
+    .btn-secondary:hover {
+      background-color: #6c7a91;
+      border-color: #6c7a91;
+    }
+    .material-symbols-rounded.opacity-10 {
+      opacity: 0.10;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #d2d6da;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #e91e63;
+      box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+      outline: none;
+    }
+    .form-row {
+      margin-bottom: 1.5rem;
+    }
+  </style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Início
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">Início</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'listar_clientes' %}">Prefeituras</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Editar Prefeitura</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 24px;">edit_note</i> 
+              Editar Prefeitura
+            </h6>
+          </div>
+        </div>
+        <div class="card-body px-4 pb-2">
+          <form method="post" class="mt-3">
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-12">
+                <h5 class="mb-3">Informações Básicas da Prefeitura</h5>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                      <div class="text-danger">{{ form.nome.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ form.cnpj.id_for_label }}" class="form-label">{{ form.cnpj.label }}</label>
+                    {{ form.cnpj }}
+                    {% if form.cnpj.errors %}
+                      <div class="text-danger">{{ form.cnpj.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ form.inscricao_estadual.id_for_label }}" class="form-label">{{ form.inscricao_estadual.label }}</label>
+                    {{ form.inscricao_estadual }}
+                    {% if form.inscricao_estadual.errors %}
+                      <div class="text-danger">{{ form.inscricao_estadual.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.slug.id_for_label }}" class="form-label">{{ form.slug.label }}</label>
+                    {{ form.slug }}
+                    {% if form.slug.errors %}
+                      <div class="text-danger">{{ form.slug.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ form.ativo.id_for_label }}" class="form-label">{{ form.ativo.label }}</label>
+                    {{ form.ativo }}
+                    {% if form.ativo.errors %}
+                      <div class="text-danger">{{ form.ativo.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-12">
+                <h5 class="mb-3">Autoridades Municipais</h5>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.nome_prefeito.id_for_label }}" class="form-label">{{ form.nome_prefeito.label }}</label>
+                    {{ form.nome_prefeito }}
+                    {% if form.nome_prefeito.errors %}
+                      <div class="text-danger">{{ form.nome_prefeito.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.nome_vice_prefeito.id_for_label }}" class="form-label">{{ form.nome_vice_prefeito.label }}</label>
+                    {{ form.nome_vice_prefeito }}
+                    {% if form.nome_vice_prefeito.errors %}
+                      <div class="text-danger">{{ form.nome_vice_prefeito.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.nome_secretario_saude.id_for_label }}" class="form-label">{{ form.nome_secretario_saude.label }}</label>
+                    {{ form.nome_secretario_saude }}
+                    {% if form.nome_secretario_saude.errors %}
+                      <div class="text-danger">{{ form.nome_secretario_saude.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.email_secretario_saude.id_for_label }}" class="form-label">{{ form.email_secretario_saude.label }}</label>
+                    {{ form.email_secretario_saude }}
+                    {% if form.email_secretario_saude.errors %}
+                      <div class="text-danger">{{ form.email_secretario_saude.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.telefone_secretario_saude.id_for_label }}" class="form-label">{{ form.telefone_secretario_saude.label }}</label>
+                    {{ form.telefone_secretario_saude }}
+                    {% if form.telefone_secretario_saude.errors %}
+                      <div class="text-danger">{{ form.telefone_secretario_saude.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.nome_secretario_educacao.id_for_label }}" class="form-label">{{ form.nome_secretario_educacao.label }}</label>
+                    {{ form.nome_secretario_educacao }}
+                    {% if form.nome_secretario_educacao.errors %}
+                      <div class="text-danger">{{ form.nome_secretario_educacao.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.email_secretario_educacao.id_for_label }}" class="form-label">{{ form.email_secretario_educacao.label }}</label>
+                    {{ form.email_secretario_educacao }}
+                    {% if form.email_secretario_educacao.errors %}
+                      <div class="text-danger">{{ form.email_secretario_educacao.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.telefone_secretario_educacao.id_for_label }}" class="form-label">{{ form.telefone_secretario_educacao.label }}</label>
+                    {{ form.telefone_secretario_educacao }}
+                    {% if form.telefone_secretario_educacao.errors %}
+                      <div class="text-danger">{{ form.telefone_secretario_educacao.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Responsável Financeiro -->
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <h5 class="mb-3">Responsável Financeiro</h5>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.nome_responsavel_financeiro.id_for_label }}" class="form-label">{{ form.nome_responsavel_financeiro.label }}</label>
+                    {{ form.nome_responsavel_financeiro }}
+                    {% if form.nome_responsavel_financeiro.errors %}
+                      <div class="text-danger">{{ form.nome_responsavel_financeiro.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.cargo_responsavel_financeiro.id_for_label }}" class="form-label">{{ form.cargo_responsavel_financeiro.label }}</label>
+                    {{ form.cargo_responsavel_financeiro }}
+                    {% if form.cargo_responsavel_financeiro.errors %}
+                      <div class="text-danger">{{ form.cargo_responsavel_financeiro.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.email_responsavel_financeiro.id_for_label }}" class="form-label">{{ form.email_responsavel_financeiro.label }}</label>
+                    {{ form.email_responsavel_financeiro }}
+                    {% if form.email_responsavel_financeiro.errors %}
+                      <div class="text-danger">{{ form.email_responsavel_financeiro.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.telefone_responsavel_financeiro.id_for_label }}" class="form-label">{{ form.telefone_responsavel_financeiro.label }}</label>
+                    {{ form.telefone_responsavel_financeiro }}
+                    {% if form.telefone_responsavel_financeiro.errors %}
+                      <div class="text-danger">{{ form.telefone_responsavel_financeiro.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <h5 class="mb-3">Endereço</h5>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.logradouro.id_for_label }}" class="form-label">{{ form.logradouro.label }}</label>
+                    {{ form.logradouro }}
+                    {% if form.logradouro.errors %}
+                      <div class="text-danger">{{ form.logradouro.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-2 mb-3">
+                    <label for="{{ form.numero.id_for_label }}" class="form-label">{{ form.numero.label }}</label>
+                    {{ form.numero }}
+                    {% if form.numero.errors %}
+                      <div class="text-danger">{{ form.numero.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.complemento.id_for_label }}" class="form-label">{{ form.complemento.label }}</label>
+                    {{ form.complemento }}
+                    {% if form.complemento.errors %}
+                      <div class="text-danger">{{ form.complemento.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.bairro.id_for_label }}" class="form-label">{{ form.bairro.label }}</label>
+                    {{ form.bairro }}
+                    {% if form.bairro.errors %}
+                      <div class="text-danger">{{ form.bairro.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.cidade.id_for_label }}" class="form-label">{{ form.cidade.label }}</label>
+                    {{ form.cidade }}
+                    {% if form.cidade.errors %}
+                      <div class="text-danger">{{ form.cidade.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-2 mb-3">
+                    <label for="{{ form.estado.id_for_label }}" class="form-label">{{ form.estado.label }}</label>
+                    {{ form.estado }}
+                    {% if form.estado.errors %}
+                      <div class="text-danger">{{ form.estado.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-2 mb-3">
+                    <label for="{{ form.cep.id_for_label }}" class="form-label">{{ form.cep.label }}</label>
+                    {{ form.cep }}
+                    {% if form.cep.errors %}
+                      <div class="text-danger">{{ form.cep.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <h5 class="mb-3">Contato Principal</h5>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.email_principal.id_for_label }}" class="form-label">{{ form.email_principal.label }}</label>
+                    {{ form.email_principal }}
+                    {% if form.email_principal.errors %}
+                      <div class="text-danger">{{ form.email_principal.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.telefone_principal.id_for_label }}" class="form-label">{{ form.telefone_principal.label }}</label>
+                    {{ form.telefone_principal }}
+                    {% if form.telefone_principal.errors %}
+                      <div class="text-danger">{{ form.telefone_principal.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <h5 class="mb-3">Dimensionamento</h5>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.numero_habitantes.id_for_label }}" class="form-label">{{ form.numero_habitantes.label }}</label>
+                    {{ form.numero_habitantes }}
+                    {% if form.numero_habitantes.errors %}
+                      <div class="text-danger">{{ form.numero_habitantes.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.numero_escolas.id_for_label }}" class="form-label">{{ form.numero_escolas.label }}</label>
+                    {{ form.numero_escolas }}
+                    {% if form.numero_escolas.errors %}
+                      <div class="text-danger">{{ form.numero_escolas.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.numero_alunos.id_for_label }}" class="form-label">{{ form.numero_alunos.label }}</label>
+                    {{ form.numero_alunos }}
+                    {% if form.numero_alunos.errors %}
+                      <div class="text-danger">{{ form.numero_alunos.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <h5 class="mb-3">Usuário Administrador</h5>
+                <div class="row">
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ user_form.first_name.id_for_label }}" class="form-label">{{ user_form.first_name.label }}</label>
+                    {{ user_form.first_name }}
+                    {% if user_form.first_name.errors %}
+                      <div class="text-danger">{{ user_form.first_name.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ user_form.last_name.id_for_label }}" class="form-label">{{ user_form.last_name.label }}</label>
+                    {{ user_form.last_name }}
+                    {% if user_form.last_name.errors %}
+                      <div class="text-danger">{{ user_form.last_name.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ user_form.username.id_for_label }}" class="form-label">{{ user_form.username.label }}</label>
+                    {{ user_form.username }}
+                    {% if user_form.username.errors %}
+                      <div class="text-danger">{{ user_form.username.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="{{ user_form.email.id_for_label }}" class="form-label">{{ user_form.email.label }}</label>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                      <div class="text-danger">{{ user_form.email.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ user_form.password.id_for_label }}" class="form-label">{{ user_form.password.label }}</label>
+                    {{ user_form.password }}
+                    {% if user_form.password.errors %}
+                      <div class="text-danger">{{ user_form.password.errors }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ user_form.password2.id_for_label }}" class="form-label">{{ user_form.password2.label }}</label>
+                    {{ user_form.password2 }}
+                    {% if user_form.password2.errors %}
+                      <div class="text-danger">{{ user_form.password2.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="d-flex justify-content-end mt-4">
+              <a href="{% url 'listar_clientes' %}" class="btn btn-secondary me-2">
+                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">cancel</i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">save</i> Salvar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

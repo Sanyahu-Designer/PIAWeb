@@ -1,7 +1,13 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
+from django.core.exceptions import ValidationError
 
-class PDIMeta(models.Model):
+class PDIMeta(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     pdi = models.ForeignKey(
         'PDI',
         on_delete=models.CASCADE,
@@ -21,6 +27,7 @@ class PDIMeta(models.Model):
         default=0
     )
     ordem = models.PositiveSmallIntegerField(default=0)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Meta do PDI'

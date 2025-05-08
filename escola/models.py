@@ -1,13 +1,20 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from profissionais_app.models import Profissional
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
+from django.core.exceptions import ValidationError
 
-class ModalidadeEnsino(models.Model):
+class ModalidadeEnsino(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     nome = models.CharField('Nome', max_length=100)
     descricao = models.TextField('Descrição')
     idade_minima = models.IntegerField('Idade Mínima', null=True, blank=True)
     idade_maxima = models.IntegerField('Idade Máxima', null=True, blank=True)
     ativo = models.BooleanField('Ativo', default=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Modalidade de Ensino'
@@ -24,7 +31,10 @@ class ModalidadeEnsino(models.Model):
                     'idade_minima': 'A idade mínima não pode ser maior que a idade máxima.'
                 })
 
-class ProgramaEducacional(models.Model):
+class ProgramaEducacional(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     TIPOS_PROGRAMA = [
         ('inclusao', 'Inclusão'),
         ('reforco', 'Reforço Escolar Adaptado'),
@@ -36,6 +46,7 @@ class ProgramaEducacional(models.Model):
     tipo = models.CharField('Tipo', max_length=20, choices=TIPOS_PROGRAMA)
     descricao = models.TextField('Descrição')
     ativo = models.BooleanField('Ativo', default=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Programa Educacional'
@@ -44,7 +55,10 @@ class ProgramaEducacional(models.Model):
     def __str__(self):
         return self.nome
 
-class Recurso(models.Model):
+class Recurso(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     TIPOS_RECURSO = [
         ('sensorial', 'Salas Sensoriais'),
         ('tecnologia', 'Tecnologias Assistivas'),
@@ -57,6 +71,7 @@ class Recurso(models.Model):
     tipo = models.CharField('Tipo', max_length=20, choices=TIPOS_RECURSO)
     descricao = models.TextField('Descrição')
     ativo = models.BooleanField('Ativo', default=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Recurso'
@@ -65,7 +80,10 @@ class Recurso(models.Model):
     def __str__(self):
         return self.nome
 
-class Escola(models.Model):
+class Escola(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     TIPOS_ESCOLA = [
         ('publica', 'Pública'),
         ('privada', 'Privada'),
@@ -93,7 +111,6 @@ class Escola(models.Model):
         ('SP', 'São Paulo'), ('SE', 'Sergipe'), ('TO', 'Tocantins'),
     ]
 
-    # Informações Básicas
     nome = models.CharField('Nome', max_length=200)
     codigo_inep = models.CharField(
         'Código INEP',
@@ -107,7 +124,6 @@ class Escola(models.Model):
         ]
     )
 
-    # Contato
     telefone = models.CharField(
         'Telefone',
         max_length=15,
@@ -121,7 +137,6 @@ class Escola(models.Model):
     email = models.EmailField('E-mail')
     diretor = models.CharField('Diretor(a)', max_length=100)
 
-    # Endereço
     cep = models.CharField(
         'CEP',
         max_length=9,
@@ -139,16 +154,14 @@ class Escola(models.Model):
     cidade = models.CharField('Cidade', max_length=100)
     estado = models.CharField('Estado', max_length=2, choices=ESTADOS)
 
-    # Classificação
     tipo = models.CharField('Tipo', max_length=10, choices=TIPOS_ESCOLA)
     modalidades = models.ManyToManyField(
         ModalidadeEnsino,
         verbose_name='Modalidades de Ensino',
-        blank=True  # Tornando o campo opcional
+        blank=True
     )
     turnos = models.CharField('Turnos', max_length=10, choices=TURNOS)
 
-    # Campos Associativos
     capacidade_atendimento = models.IntegerField('Capacidade de Atendimento')
     programas_educacionais = models.ManyToManyField(
         ProgramaEducacional,
@@ -161,7 +174,6 @@ class Escola(models.Model):
         blank=True
     )
 
-    # Equipe Multiprofissional
     profissionais_educacao = models.ManyToManyField(
         Profissional,
         verbose_name='Profissionais da Educação',
@@ -197,10 +209,10 @@ class Escola(models.Model):
         blank=True
     )
 
-    # Controle
     ativo = models.BooleanField('Ativo', default=True)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Escola'
@@ -214,9 +226,13 @@ class Escola(models.Model):
         # Validação personalizada pode ser adicionada aqui
         pass
 
-class AnoEscolar(models.Model):
+class AnoEscolar(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     nome = models.CharField('Ano Escolar', max_length=50)
     ativo = models.BooleanField('Ativo', default=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Ano Escolar'

@@ -1,10 +1,16 @@
 from django.db import models
+from django_multitenant.models import TenantModel, TenantManager
 from escola.models import Escola
 from neurodivergentes.models import Neurodivergente
 from profissionais_app.models import Profissional
+from clientes.models import Cliente
 
-class BNCCDisciplina(models.Model):
+class BNCCDisciplina(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     nome = models.CharField('Nome da Disciplina', max_length=100)
+    objects = TenantManager()
 
     def __str__(self):
         return self.nome
@@ -14,7 +20,10 @@ class BNCCDisciplina(models.Model):
         verbose_name_plural = 'Disciplinas BNCC'
         ordering = ['nome']
 
-class BNCCHabilidade(models.Model):
+class BNCCHabilidade(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     ANOS_CHOICES = [
         ('1', '1º Ano'),
         ('2', '2º Ano'),
@@ -39,6 +48,7 @@ class BNCCHabilidade(models.Model):
     descricao = models.TextField('Descrição da Habilidade')
     ano = models.CharField('Ano', max_length=1, choices=ANOS_CHOICES)
     trimestre = models.CharField('Trimestre', max_length=1, choices=TRIMESTRE_CHOICES)
+    objects = TenantManager()
 
     def __str__(self):
         return f"{self.disciplina} - {self.codigo}"
@@ -48,8 +58,10 @@ class BNCCHabilidade(models.Model):
         verbose_name_plural = 'Códigos BNCC'
         ordering = ['disciplina', 'ano', 'trimestre', 'codigo']
 
-class AdaptacaoCurricularIndividualizada(models.Model):
-
+class AdaptacaoCurricularIndividualizada(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     MODALIDADE_CHOICES = [
         ('EI', 'Educação Infantil'),
         ('EF', 'Ensino Fundamental'),
@@ -91,7 +103,6 @@ class AdaptacaoCurricularIndividualizada(models.Model):
         ('S2', '2.º Semestre'),
     ]
 
-    # Informações Básicas
     aluno = models.ForeignKey(Neurodivergente, on_delete=models.CASCADE, verbose_name='Aluno/Paciente')
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE)
     modalidade_ensino = models.CharField('Modalidade de Ensino', max_length=2, choices=MODALIDADE_CHOICES, default='EF')
@@ -99,6 +110,7 @@ class AdaptacaoCurricularIndividualizada(models.Model):
     trimestre = models.CharField('Trimestre', max_length=2, choices=TRIMESTRE_CHOICES, default='1')
     profissional_responsavel = models.ForeignKey(Profissional, on_delete=models.CASCADE)
     data_cadastro = models.DateField('Data do Cadastro', auto_now_add=True)
+    objects = TenantManager()
 
     def __str__(self):
         return f"PEI - {self.aluno}"
@@ -108,10 +120,14 @@ class AdaptacaoCurricularIndividualizada(models.Model):
         verbose_name_plural = 'PEIs'
         ordering = ['-data_cadastro', 'aluno']
 
-class AdaptacaoHabilidade(models.Model):
+class AdaptacaoHabilidade(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     aci = models.ForeignKey(AdaptacaoCurricularIndividualizada, on_delete=models.CASCADE, related_name='adaptacoes')
     habilidade = models.ForeignKey(BNCCHabilidade, on_delete=models.PROTECT)
     descritivo_adaptacao = models.TextField('Descritivo da Adaptação Curricular')
+    objects = TenantManager()
 
     def __str__(self):
         return f"Adaptação - {self.aci.aluno} - {self.habilidade.disciplina} - {self.habilidade.codigo}"

@@ -1,8 +1,11 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from profissionais_app.models import Profissional
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
 
-class PlanoEducacional(models.Model):
+class PlanoEducacional(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     pdi = models.OneToOneField(
         'PDI',
         on_delete=models.CASCADE,
@@ -22,6 +25,7 @@ class PlanoEducacional(models.Model):
     recursos = models.TextField('Recursos Necessários')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Adaptação Curricular Individualizada'
@@ -36,7 +40,8 @@ class PlanoEducacional(models.Model):
                 'data_fim': 'A data de finalização não pode ser anterior à data de início.'
             })
 
-class AdaptacaoCurricular(models.Model):
+class AdaptacaoCurricular(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     plano_educacional = models.ForeignKey(
         PlanoEducacional,
         on_delete=models.CASCADE,
@@ -57,6 +62,7 @@ class AdaptacaoCurricular(models.Model):
     avaliacao = models.TextField('Processo Avaliativo')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Adaptação Curricular'

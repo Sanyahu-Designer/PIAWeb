@@ -1,0 +1,211 @@
+{% extends "admin/base_material.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .gradient-header {
+      background: linear-gradient(to right, #6c757d, #8d99ae);
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 1.2rem 1rem 1rem 1.5rem;
+      margin-bottom: 0;
+    }
+    .gradient-header h6 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .btn-outline-primary {
+      color: #e91e63 !important;
+      border-color: #e91e63 !important;
+      background-color: transparent !important;
+    }
+    .btn-outline-primary:hover,
+    .btn-outline-primary:focus,
+    .btn-outline-primary:active {
+      color: #d81557 !important;
+      border-color: #d81557 !important;
+      background-color: transparent !important;
+      box-shadow: 0 3px 5px -1px rgba(233, 30, 99, 0.15) !important;
+    }
+    .material-symbols-rounded.opacity-10 {
+      opacity: 0.10;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+    .table thead th {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom-width: 1px;
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+      letter-spacing: 0.025rem;
+      color: #344767;
+    }
+    .table tbody td {
+      padding: 1rem 0.5rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #f0f2f5;
+      color: #344767;
+    }
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.35em 0.65em;
+      border-radius: 0.5rem;
+    }
+    .badge-info {
+      background-color: #1A73E8;
+      color: #fff;
+    }
+    .badge-success {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    .badge-danger {
+      background-color: #f44335;
+      color: #fff;
+    }
+    .badge-secondary {
+      background-color: #8392ab;
+      color: #fff;
+    }
+  </style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Início
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">Início</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'listar_clientes' %}">Prefeituras</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Usuários da Prefeitura</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 24px;">group</i> 
+              Usuários da Prefeitura: {{ cliente.nome }}
+            </h6>
+          </div>
+        </div>
+        <div class="card-body px-4 pb-2">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="input-group input-group-outline w-25">
+              <input type="text" class="form-control" placeholder="Pesquisar..." id="searchInput">
+            </div>
+            <a href="{% url 'editar_cliente' cliente.id %}" class="btn btn-primary">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar Prefeitura
+            </a>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="table align-items-center mb-0" id="usuariosTable">
+              <thead>
+                <tr>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nome</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Grupos</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Último Login</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in usuarios %}
+                  <tr>
+                    <td>
+                      <div class="d-flex px-2 py-1">
+                        <div class="d-flex flex-column justify-content-center">
+                          <h6 class="mb-0 text-sm">{{ user.get_full_name|default:user.username }}</h6>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <p class="text-xs font-weight-bold mb-0">{{ user.email }}</p>
+                    </td>
+                    <td>
+                      {% for group in user.groups.all %}
+                        <span class="badge badge-info">{{ group.name }}</span>
+                      {% empty %}
+                        <span class="badge badge-secondary">Sem grupo</span>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      {% if user.is_active %}
+                        <span class="badge badge-success">Ativo</span>
+                      {% else %}
+                        <span class="badge badge-danger">Inativo</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <p class="text-xs font-weight-bold mb-0">{{ user.last_login|date:'d/m/Y H:i'|default:'Nunca' }}</p>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5" class="text-center">Nenhum usuário cadastrado para esta prefeitura.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="d-flex justify-content-start mt-4">
+            <a href="{% url 'listar_clientes' %}" class="btn btn-secondary">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">arrow_back</i> Voltar para Prefeituras
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('usuariosTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    searchInput.addEventListener('keyup', function() {
+      const term = searchInput.value.toLowerCase();
+      
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cellText = cells[j].textContent.toLowerCase();
+          if (cellText.indexOf(term) > -1) {
+            found = true;
+            break;
+          }
+        }
+        
+        row.style.display = found ? '' : 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

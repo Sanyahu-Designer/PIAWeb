@@ -1,10 +1,15 @@
 from django.db import models
 from django.utils import timezone
-from django_ckeditor_5.fields import CKEditor5Field
+from encrypted_model_fields.fields import EncryptedTextField
+from django_multitenant.models import TenantModel, TenantManager
 from ..models import Neurodivergente
 from profissionais_app.models import Profissional
+from clientes.models import Cliente
 
-class Monitoramento(models.Model):
+class Monitoramento(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergente = models.ForeignKey(
         Neurodivergente,
         verbose_name='Aluno/Paciente',
@@ -41,7 +46,7 @@ class Monitoramento(models.Model):
         verbose_name='Metas/Habilidades',
         help_text='Selecione uma ou mais metas/habilidades para este planejamento'
     )
-    observacoes = CKEditor5Field(
+    observacoes = EncryptedTextField(
         'Planejamento',
         help_text='Descreva o planejamento para esta meta/habilidade',
         null=True,
@@ -58,6 +63,7 @@ class Monitoramento(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'PAEE'
@@ -68,7 +74,10 @@ class Monitoramento(models.Model):
     def __str__(self):
         return f"PEI de {self.neurodivergente} - {self.get_mes_display()}/{self.ano}"
 
-class MonitoramentoMeta(models.Model):
+class MonitoramentoMeta(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     monitoramento = models.ForeignKey(
         'neurodivergentes.Monitoramento',
         on_delete=models.CASCADE,
@@ -79,6 +88,7 @@ class MonitoramentoMeta(models.Model):
         on_delete=models.CASCADE,
         related_name='monitoramento_metas'
     )
+    objects = TenantManager()
 
     class Meta:
         db_table = 'neurodivergentes_monitoramento_metas'

@@ -1,0 +1,192 @@
+{% extends "admin/base_material.html" %}
+{% load static %}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'admin/css/changelists.css' %}">
+  <style>
+    .gradient-header {
+      background: linear-gradient(to right, #6c757d, #8d99ae);
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 1.2rem 1rem 1rem 1.5rem;
+      margin-bottom: 0;
+    }
+    .gradient-header h6 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .table thead th {
+      background: #f8f9fa;
+      color: #495057;
+      font-size: 0.95rem;
+      border-bottom: 2px solid #dee2e6;
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      padding: 1rem;
+    }
+    .badge {
+      font-size: 0.85em;
+      font-weight: 500;
+      border-radius: 0.45em;
+      padding: 0.38em 0.7em;
+    }
+    .btn.btn-outline-primary {
+      color: #e91e63 !important;
+      border-color: #e91e63 !important;
+      background-color: transparent !important;
+    }
+    .btn.btn-outline-primary:hover,
+    .btn.btn-outline-primary:focus,
+    .btn.btn-outline-primary:active {
+      color: #d81557 !important;
+      border-color: #d81557 !important;
+      background-color: transparent !important;
+      box-shadow: 0 3px 5px -1px rgba(233, 30, 99, 0.15) !important;
+    }
+    .material-symbols-rounded.opacity-10 {
+      opacity: 0.10;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      background-color: #a8d8f0;
+    }
+    .avatar .material-symbols-rounded {
+      color: #fff;
+      font-size: 20px;
+      opacity: 1;
+    }
+    .table td {
+      vertical-align: middle;
+      padding: 0.75rem 1rem;
+    }
+    .d-flex.px-2.py-1 {
+      padding: 0.25rem 0.5rem !important;
+    }
+  </style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Início
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">Início</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'listar_clientes' %}">Prefeituras</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Usuários da Prefeitura</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 24px;">person</i> 
+              Usuários da Prefeitura: {{ cliente.nome }}
+            </h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div class="px-4 py-3 d-flex justify-content-end">
+            <a href="{% url 'criar_usuario_prefeitura' %}" class="btn btn-outline-primary btn-sm mb-0">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">add</i> Novo Usuário
+            </a>
+          </div>
+          <div class="table-responsive p-0">
+            <table class="table align-items-center mb-0">
+              <thead>
+                <tr>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nome</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Email</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Grupos</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Status</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Último Login</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in usuarios %}
+                <tr>
+                  <td>
+                    <div class="d-flex px-2 py-1">
+                      <div class="avatar avatar-sm me-3 bg-gradient-primary border-radius-md d-flex align-items-center justify-content-center">
+                        <i class="material-symbols-rounded text-white opacity-10">person</i>
+                      </div>
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="mb-0 text-sm">{{ user.get_full_name|default:user.username }}</h6>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <p class="text-xs font-weight-bold mb-0">{{ user.email }}</p>
+                  </td>
+                  <td>
+                    {% for group in user.groups.all %}
+                      <span class="badge badge-sm bg-gradient-info">{{ group.name }}</span>
+                    {% empty %}
+                      <span class="badge badge-sm bg-gradient-secondary">Sem grupo</span>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {% if user.is_active %}
+                      <span class="badge badge-sm bg-gradient-success">Ativo</span>
+                    {% else %}
+                      <span class="badge badge-sm bg-gradient-danger">Inativo</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <p class="text-xs font-weight-bold mb-0">{{ user.last_login|date:'d/m/Y H:i' }}</p>
+                  </td>
+                  <td class="align-middle text-center">
+                    <div class="ms-auto">
+                      <a href="{% url 'editar_usuario_prefeitura' user.pk %}" class="btn btn-outline-primary btn-sm mb-0 me-2" data-toggle="tooltip" data-original-title="Editar usuário">
+                        <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">edit</i> Editar
+                      </a>
+                      <a href="{% url 'excluir_usuario_prefeitura' user.pk %}" class="btn btn-outline-danger btn-sm mb-0" data-toggle="tooltip" data-original-title="Excluir usuário">
+                        <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">delete</i> Remover
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center py-4">
+                    <p class="text-sm text-secondary mb-0">Nenhum usuário cadastrado para esta prefeitura.</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

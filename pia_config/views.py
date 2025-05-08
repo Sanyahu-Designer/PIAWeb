@@ -1,7 +1,8 @@
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import logout
 from django.db.models import Count, Q, F
 from django.utils import timezone
 from django.http import JsonResponse
@@ -32,9 +33,23 @@ class CustomLoginView(LoginView):
 
 @login_required
 def dashboard(request):
-    # Vamos simplificar e usar o dashboard padrão do admin
-    from django.shortcuts import redirect
-    return redirect('admin:index')
+    # Se o usuário é superusuário e está no modo de personificação, redireciona para o dashboard_gerente
+    if hasattr(request, 'is_impersonating') and request.is_impersonating:
+        return redirect('dashboard_gerente')
+    
+    # Se o usuário pertence ao grupo 'Admin da Prefeitura', redireciona para a lista de usuários da prefeitura
+    if request.user.groups.filter(name='Admin da Prefeitura').exists():
+        # Obtém o profile do usuário para encontrar a prefeitura
+        profile = getattr(request.user, 'profile', None)
+        if profile and profile.cliente:
+            return redirect('listar_usuarios_cliente', cliente_id=profile.cliente.id)
+    
+    # Para superusuários, redireciona para o dashboard padrão do admin
+    if request.user.is_superuser:
+        return redirect('admin:index')
+    
+    # Para outros usuários, redireciona para o dashboard_gerente
+    return redirect('dashboard_gerente')
 
 def is_gerente(user):
     """Verifica se o usuário pertence ao grupo 'Gerente'"""
@@ -48,6 +63,15 @@ def dashboard_gerente(request):
     hoje = timezone.now().date()
     um_mes_atras = hoje - timedelta(days=30)
     um_ano_atras = hoje - timedelta(days=365)
+    
+    # Verificar se estamos no modo de impersonação ou se o usuário tem um profile
+    cliente = None
+    if hasattr(request, 'is_impersonating') and request.is_impersonating:
+        cliente = request.impersonated_cliente
+    else:
+        profile = getattr(request.user, 'profile', None)
+        if profile:
+            cliente = profile.cliente
     
     # Importamos os modelos necessários
     try:
@@ -63,19 +87,41 @@ def dashboard_gerente(request):
             DiagnosticoNeurodivergente = None
             PDI = None
     
+    # Filtramos os alunos com base na prefeitura (cliente)
+    # Como o modelo Neurodivergente não tem o campo cliente diretamente,
+    # vamos filtrar pelas escolas da prefeitura
+    alunos_query = Neurodivergente.objects.all()
+    
+    # Se temos um cliente (prefeitura), filtramos os alunos pelas escolas dessa prefeitura
+    if cliente:
+        try:
+            # Importamos o modelo Escola
+            from escola.models import Escola
+            
+            # Obtemos todas as escolas da prefeitura
+            escolas_da_prefeitura = Escola.objects.filter(cliente=cliente)
+            
+            # Filtramos os alunos que estão nessas escolas
+            if escolas_da_prefeitura.exists():
+                alunos_query = alunos_query.filter(escola__in=escolas_da_prefeitura)
+        except Exception as e:
+            # Se ocorrer algum erro, registramos e continuamos com todos os alunos
+            print(f"Erro ao filtrar alunos por escolas: {e}")
+    
     # Estatísticas de Alunos
-    total_alunos = Neurodivergente.objects.count()
+    total_alunos = alunos_query.count()
     
     # Alunos novos no último mês
     try:
-        novos_alunos_mes = Neurodivergente.objects.filter(created_at__gte=um_mes_atras).count()
+        novos_alunos_query = alunos_query.filter(created_at__gte=um_mes_atras)
+        novos_alunos_mes = novos_alunos_query.count()
     except:
         # Se o campo não existir, usamos um valor calculado
         novos_alunos_mes = int(total_alunos * 0.1)  # Estimativa de 10% de crescimento mensal
     
     # Distribuição por gênero
-    total_masculino = Neurodivergente.objects.filter(genero='M').count()
-    total_feminino = Neurodivergente.objects.filter(genero='F').count()
+    total_masculino = alunos_query.filter(genero='M').count()
+    total_feminino = alunos_query.filter(genero='F').count()
     
     if total_alunos > 0:
         percentual_masculino = round((total_masculino / total_alunos) * 100)
@@ -110,7 +156,7 @@ def dashboard_gerente(request):
                 diagnosticos__isnull=False
             ).values_list('neurodivergente_id', flat=True).distinct()
             
-            total_alunos_investigacao = Neurodivergente.objects.exclude(
+            total_alunos_investigacao = alunos_query.exclude(
                 id__in=alunos_com_neurodivergencia
             ).count()
         except:
@@ -120,12 +166,15 @@ def dashboard_gerente(request):
     if PDI:
         try:
             # PDIs ativos (não concluídos, não cancelados)
-            total_pdis_ativos = PDI.objects.exclude(status__in=['concluido', 'cancelado']).count()
+            total_pdis_ativos = PDI.objects.filter(
+                neurodivergente__in=alunos_query,
+                status__in=['iniciado', 'em_andamento']
+            ).count()
             
             # Buscar PDIs ativos (apenas iniciados ou em andamento)
             pdis_vencendo_query = PDI.objects.filter(
-                status__in=['iniciado', 'em_andamento'],
-                neurodivergente__ativo=True  # Apenas alunos ativos
+                neurodivergente__in=alunos_query,
+                status__in=['iniciado', 'em_andamento']
             ).select_related('neurodivergente', 'neurodivergente__escola', 'pedagogo_responsavel')
             
             # Adicionar informação de dias restantes para cada PDI
@@ -173,11 +222,13 @@ def dashboard_gerente(request):
     
     # Escolas com maior demanda (ordenadas pelo número de alunos)
     try:
+        from escola.models import Escola
         escolas_maior_demanda = Escola.objects.annotate(
             total_alunos=Count('alunos')
         ).order_by('-total_alunos')[:5]
-    except:
+    except Exception as e:
         # Se não conseguir fazer a consulta com anotação
+        from escola.models import Escola
         escolas_maior_demanda = Escola.objects.all()[:5]
     
     # Alunos sem atendimento recente (último PDI concluído há mais de 15 dias)
@@ -192,7 +243,7 @@ def dashboard_gerente(request):
             # Buscar todos os PDIs concluídos de alunos ativos
             pdis_concluidos = PDI.objects.filter(
                 status='concluido',
-                neurodivergente__ativo=True  # Apenas alunos ativos
+                neurodivergente__in=alunos_query
             ).select_related('neurodivergente', 'neurodivergente__escola').order_by('neurodivergente_id', '-data_criacao')
             
             # Para cada aluno, pegar o PDI concluído mais recente
@@ -240,7 +291,7 @@ def dashboard_gerente(request):
         '21+': 0
     }
     
-    for aluno in Neurodivergente.objects.all():
+    for aluno in alunos_query:
         try:
             idade = aluno.idade()
         except:
@@ -285,7 +336,7 @@ def dashboard_gerente(request):
                 
             try:
                 # Tenta contar os alunos criados neste mês
-                count = Neurodivergente.objects.filter(
+                count = alunos_query.filter(
                     created_at__gte=inicio_mes,
                     created_at__lte=fim_mes
                 ).count()
@@ -1077,10 +1128,46 @@ def alunos_em_risco(request):
         print(f"Erro ao buscar dados de alunos em risco: {e}")
         return JsonResponse({'alunos_risco': []})
 
+# View para a página inicial que verifica se o usuário já está autenticado
+def index_view(request):
+    """
+    View para a página inicial. Se o usuário já estiver autenticado,
+    redireciona automaticamente para o dashboard. Caso contrário,
+    mostra a página de login.
+    """
+    # Verifica se o usuário já está autenticado
+    if request.user.is_authenticated:
+        # Redireciona para o dashboard
+        return redirect('dashboard')
+    else:
+        # Usa a CustomLoginView para mostrar a página de login
+        return CustomLoginView.as_view()(request)
+
+# Função de logout personalizada
+def custom_logout(request):
+    """
+    View personalizada para processar o logout e redirecionar para a página de login.
+    """
+    # Executa o logout
+    logout(request)
+    
+    # Adiciona mensagem de sucesso
+    messages.success(request, 'Você saiu do sistema com sucesso.')
+    
+    # Redireciona para a página de login
+    return redirect('login')
+
 # Handler para erros 403 (acesso negado)
 def custom_permission_denied_view(request, exception=None):
     """
-    View para exibir página amigável de acesso negado (403).
+    View para exibir mensagem de acesso negado e redirecionar para o dashboard.
     """
-    response = render(request, '403.html', status=403)
-    return response
+    # Adicionar mensagem de alerta que será exibida no dashboard
+    messages.warning(
+        request, 
+        'Você não tem permissão para acessar esta página. '
+        'Se você acredita que isso é um erro, entre em contato com o administrador da instituição.'
+    )
+    
+    # Redirecionar para o dashboard
+    return redirect('/dashboard/')

@@ -36,6 +36,59 @@ Os dados tratados na PIAWeb são de uso exclusivo da prefeitura. **Não há comp
 ## 7. Disponibilização
 Sugere-se disponibilizar a política de privacidade na página inicial da aplicação e/ou em área de fácil acesso dentro do sistema.
 
+## 8. Checklist de Log de Auditoria LGPD
+
+Para garantir conformidade com a LGPD e exigências governamentais, o log de auditoria do sistema PIAWeb deve atender aos seguintes requisitos:
+
+### Ações que devem ser registradas
+- Login/logout de usuários
+- Troca de tenant (prefeitura)
+- Criação, edição e exclusão de dados pessoais (alunos, profissionais, familiares, etc.)
+- Alteração de permissões, grupos e configurações sensíveis
+- Exportação/download de dados pessoais
+- Visualização de dados sensíveis
+- Tentativas de acesso não autorizado/falhas de autenticação
+
+### Campos mínimos em cada linha do log
+- Data e hora
+- Usuário responsável (id, login, nome)
+- IP de origem
+- Tipo de ação (ex: create, update, delete, export, view, tenant_switch)
+- Objeto afetado (ex: id do aluno, nome do arquivo exportado, tabela/modelo afetado)
+- Valor anterior e novo (quando aplicável)
+- Resultado da ação (sucesso/falha)
+
+### Requisitos de segurança
+- O log não pode ser alterado ou apagado por usuários comuns.
+- Logs devem ser mantidos por tempo suficiente (ex: 5 anos).
+- O acesso ao log deve ser restrito e auditável.
+
+### Disponibilidade para auditoria
+- Implementar (ou planejar) uma página interna para consulta dos logs, com filtros por usuário, ação, data etc.
+- Documentar o procedimento para exportação dos logs em caso de auditoria.
+
+### Checklist prático de conformidade do log de auditoria LGPD
+
+- [x] Login/logout de usuários registrado
+- [x] Troca de tenant (prefeitura) registrada
+- [x] Criação de dados pessoais registrada
+- [x] Edição de dados pessoais registrada
+- [x] Exclusão de dados pessoais registrada
+- [x] Alteração de permissões, grupos e configurações sensíveis registrada
+- [x] Exportação/download de dados pessoais registrada
+- [x] Visualização de dados sensíveis registrada
+- [x] Tentativas de acesso não autorizado/falhas de autenticação registradas
+- [x] Cada registro contém: data/hora, usuário, IP, tipo de ação, objeto afetado, valores anterior/novo (quando aplicável) e resultado
+- [x] Log protegido contra alteração/remoção por usuários comuns
+- [x] Logs mantidos por tempo suficiente (mínimo 5 anos)
+- [x] Acesso ao log restrito e auditável
+- [x] Página interna para consulta dos logs (planejada ou implementada)
+- [x] Procedimento documentado para exportação dos logs em caso de auditoria
+
+---
+
+> **Observação:** O checklist acima deve ser revisado e atualizado periodicamente conforme evolução da legislação, exigências contratuais e melhores práticas de mercado.
+
 ---
 
 **Última revisão: 25/04/2025**

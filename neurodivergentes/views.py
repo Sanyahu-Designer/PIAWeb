@@ -16,6 +16,7 @@ from django.core.paginator import Paginator
 import os
 from .models import Neurodivergente, Monitoramento, PDI, PDIMetaHabilidade, evolucao, pei
 import logging
+from core.audit import audit_log
 
 logger = logging.getLogger(__name__)
 from django.db.models import Q, Max, F
@@ -147,6 +148,15 @@ def imprimir_pdi(request, pdi_id):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=pdi_{pdi.id}.pdf'
     
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'PDI {pdi_id}',
+        result='success'
+    )
+    
     return response
 
 @login_required
@@ -176,6 +186,15 @@ def imprimir_pdis_aluno(request, aluno_id):
     
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=pdis_{neurodivergente.id}.pdf'
+    
+    # Auditoria LGPD: exportação de dados sensíveis
+    audit_log(
+        action='export_data_pdf',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'PDIs do aluno {aluno_id}',
+        result='success'
+    )
     
     return response
 
@@ -419,6 +438,15 @@ def gerar_relatorio_pdf(request, neurodivergente_id):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=relatorio_{neurodivergente.primeiro_nome}_{neurodivergente.ultimo_nome}.pdf'
     
+    # Auditoria LGPD: exportação de dados sensíveis
+    audit_log(
+        action='export_data_pdf',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'PDIs do neurodivergente {neurodivergente_id}',
+        result='success'
+    )
+    
     return response
 
 @login_required
@@ -602,6 +630,15 @@ def gerar_relatorio_geral_html(request, neurodivergente_id):
         # Log de diagnóstico
         logger.info(f"Dados do relatório - PDIs: {pdis.count()}, Metas: {len(metas_habilidades)}")
         
+        # Auditoria LGPD: exportação de dados sensíveis
+        audit_log(
+            action='export_data_html',
+            user=request.user,
+            ip=request.META.get('REMOTE_ADDR'),
+            objeto=f'PDIs do neurodivergente {neurodivergente_id}',
+            result='success'
+        )
+        
         return render(request, 'neurodivergentes/relatorio_geral_html.html', context)
     
     except Exception as e:
@@ -657,6 +694,15 @@ def gerar_relatorio_evolucao_html(request, neurodivergente_id):
             'nome_prefeitura': nome_prefeitura,
             'cnpj_prefeitura': cnpj_prefeitura,
         }
+        
+        # Auditoria LGPD: exportação de dados sensíveis
+        audit_log(
+            action='export_data_html',
+            user=request.user,
+            ip=request.META.get('REMOTE_ADDR'),
+            objeto=f'Evoluções do neurodivergente {neurodivergente_id}',
+            result='success'
+        )
         
         return render(request, 'neurodivergentes/relatorio_evolucao.html', context)
         
@@ -1078,6 +1124,15 @@ def imprimir_evolucao(request, evolucao_id):
         response['Content-Disposition'] = f'inline; filename="evolucao_{evolucao.id}.pdf"'
         response.write(pdf)
         
+        # Auditoria LGPD: visualização de dados sensíveis
+        audit_log(
+            action='view_sensitive_data',
+            user=request.user,
+            ip=request.META.get('REMOTE_ADDR'),
+            objeto=f'Evolução {evolucao_id}',
+            result='success'
+        )
+        
         return response
         
     except Exception as e:
@@ -1132,6 +1187,15 @@ def gerar_relatorio_evolucao_html(request, neurodivergente_id):
             'nome_prefeitura': nome_prefeitura,
             'cnpj_prefeitura': cnpj_prefeitura,
         }
+        
+        # Auditoria LGPD: visualização de dados sensíveis
+        audit_log(
+            action='view_sensitive_data',
+            user=request.user,
+            ip=request.META.get('REMOTE_ADDR'),
+            objeto=f'Evoluções do neurodivergente {neurodivergente_id}',
+            result='success'
+        )
         
         return render(request, 'neurodivergentes/relatorio_evolucao.html', context)
         
@@ -1198,6 +1262,15 @@ def evolucao_popup_view(request, evolucao_id):
         'evolucao': evolucao,
     }
     
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'Evolução {evolucao_id}',
+        result='success'
+    )
+    
     return render(request, 'admin/neurodivergentes/registroevolucao/popup_view.html', context)
 
 @login_required
@@ -1261,6 +1334,15 @@ def pei_popup_view(request, pei_id):
         'aluno': pei.neurodivergente
     }
     
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'PEI {pei_id}',
+        result='success'
+    )
+    
     return render(request, 'neurodivergentes/pei_detail.html', context)
 
 @login_required
@@ -1306,6 +1388,15 @@ def imprimir_pei(request, pei_id):
     # Retorna o PDF como resposta HTTP
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=pei_{pei.id}.pdf'
+    
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'PEI {pei_id}',
+        result='success'
+    )
     
     return response
 
@@ -1397,6 +1488,15 @@ def gerar_relatorio_parecer_pdf(request, neurodivergente_id):
     # Retorna o PDF como resposta HTTP
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=relatorio_pareceres_{neurodivergente.id}.pdf'
+    
+    # Auditoria LGPD: exportação de dados sensíveis
+    audit_log(
+        action='export_data_pdf',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'Pareceres do neurodivergente {neurodivergente_id}',
+        result='success'
+    )
     
     return response
 
@@ -1536,6 +1636,15 @@ def gerar_relatorio_parecer_geral_pdf(request, neurodivergente_id):
             response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = f'inline; filename=relatorio_pareceres_{neurodivergente.id}.pdf'
             
+            # Auditoria LGPD: exportação de dados sensíveis
+            audit_log(
+                action='export_data_pdf',
+                user=request.user,
+                ip=request.META.get('REMOTE_ADDR'),
+                objeto=f'Pareceres gerais do neurodivergente {neurodivergente_id}',
+                result='success'
+            )
+            
             return response
         except Exception as pdf_error:
             logger.error(f"Erro ao gerar PDF: {str(pdf_error)}", exc_info=True)
@@ -1599,6 +1708,15 @@ def imprimir_parecer(request, parecer_id):
     # Retorna o PDF como resposta HTTP
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=parecer_{parecer.id}.pdf'
+    
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'Parecer {parecer_id}',
+        result='success'
+    )
     
     return response
 
@@ -1689,6 +1807,15 @@ def gerar_relatorio_pei_pdf(request, neurodivergente_id):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=relatorio_pei_{neurodivergente.id}.pdf'
     
+    # Auditoria LGPD: exportação de dados sensíveis
+    audit_log(
+        action='export_data_pdf',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'PEI do neurodivergente {neurodivergente_id}',
+        result='success'
+    )
+    
     return response
 
 @login_required
@@ -1738,6 +1865,15 @@ def imprimir_anamnese(request, anamnese_id):
     # Retorna o PDF como resposta HTTP
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=anamnese_{anamnese.id}.pdf'
+    
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'Anamnese {anamnese_id}',
+        result='success'
+    )
     
     return response
 
@@ -1840,6 +1976,15 @@ def imprimir_aluno(request, aluno_id):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename=aluno_{aluno.id}.pdf'
     
+    # Auditoria LGPD: visualização de dados sensíveis
+    audit_log(
+        action='view_sensitive_data',
+        user=request.user,
+        ip=request.META.get('REMOTE_ADDR'),
+        objeto=f'Aluno {aluno_id}',
+        result='success'
+    )
+    
     return response
 
 @login_required
@@ -1873,6 +2018,16 @@ def imprimir_neurodivergencia(request, neurodivergencia_id):
         
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'filename=neurodivergencia_{neurodivergencia_id}.pdf'
+        
+        # Auditoria LGPD: visualização de dados sensíveis
+        audit_log(
+            action='view_sensitive_data',
+            user=request.user,
+            ip=request.META.get('REMOTE_ADDR'),
+            objeto=f'Neurodivergência {neurodivergencia_id}',
+            result='success'
+        )
+        
         return response
     except Neurodivergencia.DoesNotExist:
         raise Http404("Neurodivergência não encontrada")

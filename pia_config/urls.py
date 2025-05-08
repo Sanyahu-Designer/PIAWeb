@@ -4,11 +4,13 @@ from django.template.response import TemplateResponse
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.models import User, Group
-from .views import CustomLoginView, dashboard_gerente, genero_por_neurodivergencia, ausencias_por_aluno, alunos_por_profissional, distribuicao_por_neurodivergencia, especializacao_profissionais, alunos_em_risco
+from .views import CustomLoginView, dashboard_gerente, genero_por_neurodivergencia, ausencias_por_aluno, alunos_por_profissional, distribuicao_por_neurodivergencia, especializacao_profissionais, alunos_em_risco, index_view, custom_logout
 from .views_perfil import perfil_usuario
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
+from django.shortcuts import redirect
+from core.views import auditoria_logs
 
 # Importante: a ordem das URLs importa!
 # Colocamos as URLs do realtime antes das URLs do admin
@@ -51,25 +53,28 @@ urlpatterns = [
                     'name': 'Grupos',
                     'object_name': 'group',
                     'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
-                    'admin_url': '/dashboard/admin/auth/group/',
-                    'add_url': '/dashboard/admin/auth/group/add/'
+                    'admin_url': '/usuarios/' if request.user.groups.filter(name='Admin da Prefeitura').exists() and not request.user.is_superuser else '/dashboard/admin/auth/group/',
+                    'add_url': '/usuarios/novo/' if request.user.groups.filter(name='Admin da Prefeitura').exists() and not request.user.is_superuser else '/dashboard/admin/auth/group/add/'
                 },
                 {
                     'name': 'Usuários',
                     'object_name': 'person',
                     'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
-                    'admin_url': '/dashboard/admin/auth/user/',
-                    'add_url': '/dashboard/admin/auth/user/add/'
+                    'admin_url': '/usuarios/' if request.user.groups.filter(name='Admin da Prefeitura').exists() and not request.user.is_superuser else '/dashboard/admin/auth/user/',
+                    'add_url': '/usuarios/novo/' if request.user.groups.filter(name='Admin da Prefeitura').exists() and not request.user.is_superuser else '/dashboard/admin/auth/user/add/'
                 }
             ]
         }]
     })), name='auth_dashboard'),
-    path('dashboard/admin/auth/user/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/app_index_material_dashboard.html', {
-        'title': 'Usuários',
-        'app_label': 'auth',
-        'users': User.objects.all().order_by('first_name', 'last_name')
-    })), name='usuarios_dashboard'),
-    
+    path('dashboard/admin/auth/user/', staff_member_required(lambda request: (
+        redirect('/usuarios/')
+        if request.user.groups.filter(name='Admin da Prefeitura').exists() and not request.user.is_superuser
+        else TemplateResponse(request, 'admin/auth/app_index_material_dashboard.html', {
+            'title': 'Usuários',
+            'app_label': 'auth',
+            'users': User.objects.all().order_by('first_name', 'last_name')
+        })
+    )), name='usuarios_dashboard'),
     path('dashboard/admin/auth/group/', staff_member_required(lambda request: TemplateResponse(request, 'admin/auth/group/change_list_material_dashboard.html', {
         'title': 'Grupos',
         'app_label': 'auth',
@@ -90,14 +95,16 @@ urlpatterns = [
     # URL para a página de perfil do usuário
     path('dashboard/perfil/', perfil_usuario, name='auth_user_perfil'),
     
+    # Removido Two-Factor Auth (2FA)
+    # path('account/', include('two_factor.urls')),
+    
     # Outras URLs
-    path('', CustomLoginView.as_view(
+    path('', index_view, name='index'),
+    path('login/', CustomLoginView.as_view(
         template_name='pia_config/login.html',
         next_page='/dashboard/'
     ), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(
-        next_page='/'
-    ), name='logout'),
+    path('logout/', custom_logout, name='logout'),
     path('escolas/', include('escola.urls')),
     path('profissionais/', include('profissionais_app.urls')),
     path('neurodivergentes/', include('neurodivergentes.urls')),
@@ -109,8 +116,12 @@ urlpatterns = [
     # URL para as configurações - redireciona diretamente para a configuração existente
     path('dashboard/admin/configuracoes/', include('configuracoes.urls', namespace='configuracoes')),
     
-    # Garantir que o admin do Django não sobrescreva nossa URL personalizada
-    #path('dashboard/admin/', admin.site.urls),
+    # Rotas exclusivas para superusuário (não aparecem no menu)
+    path('clientes/', include('clientes.urls')),
+    path('usuarios/', include('usuarios.urls')),
+    
+    # Página de auditoria de logs (restrito ao superusuário)
+    path('dashboard/auditoria/logs/', auditoria_logs, name='auditoria_logs'),
 ]
 
 # Servir arquivos estáticos e de mídia

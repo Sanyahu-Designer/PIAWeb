@@ -1,0 +1,208 @@
+{% extends "admin/base_material.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .gradient-header {
+      background: linear-gradient(to right, #6c757d, #8d99ae);
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 1.2rem 1rem 1rem 1.5rem;
+      margin-bottom: 0;
+    }
+    .gradient-header h6 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .btn-outline-primary {
+      color: #e91e63 !important;
+      border-color: #e91e63 !important;
+      background-color: transparent !important;
+    }
+    .btn-outline-primary:hover,
+    .btn-outline-primary:focus,
+    .btn-outline-primary:active {
+      color: #d81557 !important;
+      border-color: #d81557 !important;
+      background-color: transparent !important;
+      box-shadow: 0 3px 5px -1px rgba(233, 30, 99, 0.15) !important;
+    }
+    .btn-outline-info {
+      color: #1A73E8 !important;
+      border-color: #1A73E8 !important;
+    }
+    .btn-outline-info:hover {
+      box-shadow: 0 3px 5px -1px rgba(26, 115, 232, 0.15) !important;
+    }
+    .btn-outline-secondary {
+      color: #8392ab !important;
+      border-color: #8392ab !important;
+    }
+    .btn-outline-secondary:hover {
+      box-shadow: 0 3px 5px -1px rgba(131, 146, 171, 0.15) !important;
+    }
+    .btn-danger {
+      background-color: #f44335;
+      border-color: #f44335;
+    }
+    .btn-danger:hover {
+      background-color: #d32f2f;
+      border-color: #d32f2f;
+      box-shadow: 0 3px 5px -1px rgba(244, 67, 53, 0.15) !important;
+    }
+    .material-symbols-rounded.opacity-10 {
+      opacity: 0.10;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+    .table thead th {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom-width: 1px;
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+      letter-spacing: 0.025rem;
+      color: #344767;
+    }
+    .table tbody td {
+      padding: 1rem 0.5rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #f0f2f5;
+      color: #344767;
+    }
+  </style>
+{% endblock %}
+
+{% block navbar_buttons %}
+<div class="d-flex">
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="/dashboard/">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">home</i> Início
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="{% url 'realtime:chat_list' %}">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">chat</i> Mensagens
+  </a>
+  <a class="btn btn-outline-primary btn-sm mb-0 me-2" href="https://sanyahudesigner.com.br" target="_blank">
+    <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">help</i> Ajuda
+  </a>
+</div>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="/dashboard/">Início</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Prefeituras</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="shadow-dark border-radius-lg pt-4 pb-3" style="background: linear-gradient(to right, #6c757d, #8d99ae);">
+            <h6 class="text-white text-capitalize ps-3">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 24px;">business</i> 
+              Prefeituras Cadastradas
+            </h6>
+          </div>
+        </div>
+        <div class="card-body px-4 pb-2">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="input-group input-group-outline w-25">
+              <input type="text" class="form-control" placeholder="Pesquisar..." id="searchInput">
+            </div>
+            <a href="{% url 'nova_prefeitura' %}" class="btn btn-primary">
+              <i class="material-symbols-rounded opacity-10" style="font-size: 16px;">add</i> Nova Prefeitura
+            </a>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="table align-items-center mb-0" id="clientesTable">
+              <thead>
+                <tr>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nome</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">CNPJ</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Slug</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Estado</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cliente in clientes %}
+                  <tr>
+                    <td>
+                      <div class="d-flex px-2 py-1">
+                        <div class="d-flex flex-column justify-content-center">
+                          <h6 class="mb-0 text-sm">{{ cliente.nome }}</h6>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <p class="text-xs font-weight-bold mb-0">{{ cliente.cnpj }}</p>
+                    </td>
+                    <td>
+                      <p class="text-xs font-weight-bold mb-0">{{ cliente.slug }}</p>
+                    </td>
+                    <td>
+                      <p class="text-xs font-weight-bold mb-0">{{ cliente.estado }}</p>
+                    </td>
+                    <td class="align-middle text-center">
+                      <a href="{% url 'impersonate_cliente' cliente.id %}" class="btn btn-outline-info" title="Ver como Prefeitura">
+                        <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">visibility</i>
+                      </a>
+                      <a href="{% url 'editar_cliente' cliente.id %}" class="btn btn-outline-primary ms-1" title="Editar">
+                        <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">edit</i>
+                      </a>
+                      <a href="{% url 'listar_usuarios_cliente' cliente.id %}" class="btn btn-outline-secondary ms-1" title="Usuários">
+                        <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">group</i>
+                      </a>
+                      <a href="{% url 'confirmar_excluir_cliente' cliente.id %}" class="btn btn-outline-danger ms-1" title="Excluir">
+                        <i class="material-symbols-rounded opacity-10" style="font-size: 20px;">delete</i>
+                      </a>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5" class="text-center">Nenhuma prefeitura cadastrada.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('clientesTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    searchInput.addEventListener('keyup', function() {
+      const term = searchInput.value.toLowerCase();
+      
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cellText = cells[j].textContent.toLowerCase();
+          if (cellText.indexOf(term) > -1) {
+            found = true;
+            break;
+          }
+        }
+        
+        row.style.display = found ? '' : 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

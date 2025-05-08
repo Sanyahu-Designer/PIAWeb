@@ -57,6 +57,10 @@ class ProfissionalForm(forms.ModelForm):
                     'placeholder': 'Digite o CEP'
                 }
             ),
+            'estado': forms.Select(
+                choices=Profissional.ESTADOS_CHOICES,
+                attrs={'class': 'form-control'}
+            ),
             'experiencia_neurodiversidade': forms.Select(
                 choices=Profissional.SIM_NAO_CHOICES
             ),

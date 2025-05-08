@@ -1,4 +1,31 @@
-{% load i18n admin_urls %}
+{% load i18n admin_urls static %}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/diagnostico_field_fix.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'neurodivergentes/css/layout_fixes.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/field_overflow_fix.css' %}">
+
+<style>
+  /* Estilos inline para garantir que o campo de Neurodivergência tenha o tamanho correto */
+  select[name*="condicao"],
+  select[id*="condicao"],
+  select[name*="-condicao"],
+  select[id*="-condicao"],
+  .field-condicao select {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
+  }
+  
+  /* Estilo para o container do campo */
+  .field-condicao,
+  .form-row.field-condicao {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+  }
+</style>
 <div class="js-inline-admin-formset inline-group"
      id="{{ inline_admin_formset.formset.prefix }}-group"
      data-inline-type="stacked"
@@ -31,9 +58,11 @@
 <script type="text/javascript">
   // Este script garante que os selects sejam exibidos corretamente
   document.addEventListener('DOMContentLoaded', function() {
-    // Função para configurar os selects
-    function setupSelects() {
-      // Seleciona todos os selects
+    // Função para aplicar estilos após qualquer inicialização do Select2
+    function forceFieldStyles() {
+      console.log('Aplicando estilos forçados ao campo Neurodivergência');
+      
+      // Seleciona todos os selects de condição (Neurodivergência)
       const selects = document.querySelectorAll('select[name*="condicao"]');
       
       selects.forEach(function(select) {
@@ -50,11 +79,112 @@
         select.style.minHeight = '38px';
         select.style.padding = '0.25rem 0.5rem';
         select.style.width = '100%';
+        select.style.minWidth = '100%';
+        select.style.maxWidth = '100%';
+        select.style.boxSizing = 'border-box';
+        select.style.display = 'block';
         select.style.backgroundColor = '#fff';
         select.style.appearance = 'auto';
         select.style.webkitAppearance = 'auto';
         select.style.mozAppearance = 'auto';
+        
+        // Encontra o container pai do select
+        let container = select.closest('.form-row');
+        if (container) {
+          container.style.width = '100%';
+          container.style.maxWidth = '100%';
+          container.style.display = 'block';
+        }
+        
+        // Encontra o container pai da classe field-condicao
+        container = select.closest('.field-condicao');
+        if (container) {
+          container.style.width = '100%';
+          container.style.maxWidth = '100%';
+          container.style.display = 'block';
+        }
+        
+        // Se o select foi transformado em Select2, aplicar estilos ao container Select2
+        const select2Container = select.nextElementSibling;
+        if (select2Container && select2Container.classList.contains('select2-container')) {
+          select2Container.style.width = '100%';
+          select2Container.style.minWidth = '100%';
+          select2Container.style.maxWidth = '100%';
+          select2Container.style.display = 'block';
+          
+          // Aplicar estilos ao elemento de seleção do Select2
+          const selection = select2Container.querySelector('.select2-selection');
+          if (selection) {
+            selection.style.border = '1px solid #d2d6da';
+            selection.style.borderRadius = '0.5rem';
+            selection.style.minHeight = '38px';
+            selection.style.padding = '0.25rem 0.5rem';
+            selection.style.width = '100%';
+            selection.style.display = 'block';
+          }
+        }
       });
+      
+      // Também aplica estilos a todos os containers que possam conter o campo
+      document.querySelectorAll('.field-condicao, .form-row.field-condicao, [class*="condicao"]').forEach(function(container) {
+        container.style.width = '100%';
+        container.style.maxWidth = '100%';
+        container.style.display = 'block';
+      });
+    }
+    
+    // Função para configurar os selects
+    function setupSelects() {
+      // Seleciona todos os selects de condição (Neurodivergência)
+      const selects = document.querySelectorAll('select[name*="condicao"]');
+      
+      selects.forEach(function(select) {
+        // Adiciona classes para estilização consistente
+        select.classList.add('form-control');
+        
+        // Garante que o select seja clicável
+        select.style.pointerEvents = 'auto';
+        select.style.cursor = 'pointer';
+        
+        // Garante que o select tenha a aparência correta
+        select.style.border = '1px solid #d2d6da';
+        select.style.borderRadius = '0.5rem';
+        select.style.minHeight = '38px';
+        select.style.padding = '0.25rem 0.5rem';
+        select.style.width = '100%';
+        select.style.minWidth = '100%';
+        select.style.maxWidth = '100%';
+        select.style.boxSizing = 'border-box';
+        select.style.display = 'block';
+        select.style.backgroundColor = '#fff';
+        select.style.appearance = 'auto';
+        select.style.webkitAppearance = 'auto';
+        select.style.mozAppearance = 'auto';
+        
+        // Encontra o container pai do select
+        let container = select.closest('.form-row');
+        if (container) {
+          container.style.width = '100%';
+          container.style.maxWidth = '100%';
+          container.style.display = 'block';
+        }
+        
+        // Encontra o container pai da classe field-condicao
+        container = select.closest('.field-condicao');
+        if (container) {
+          container.style.width = '100%';
+          container.style.maxWidth = '100%';
+          container.style.display = 'block';
+        }
+      });
+      
+      // Também aplica estilos a todos os containers que possam conter o campo
+      document.querySelectorAll('.field-condicao, .form-row.field-condicao, [class*="condicao"]').forEach(function(container) {
+        container.style.width = '100%';
+        container.style.maxWidth = '100%';
+        container.style.display = 'block';
+      });
+      
       
       // Configura os campos de data
       const dateInputs = document.querySelectorAll('input[name*="data_identificacao"]');
@@ -82,13 +212,20 @@
     // Configura os selects iniciais
     setupSelects();
     
+    // Aplica estilos forçados inicialmente
+    forceFieldStyles();
+    
     // Configura os selects quando novos formulários são adicionados
     const addButton = document.querySelector('.add-row a');
     if (addButton) {
       addButton.addEventListener('click', function() {
         setTimeout(setupSelects, 100);
+        setTimeout(forceFieldStyles, 200); // Aplica estilos forçados após a configuração dos selects
       });
     }
+    
+    // Aplica estilos forçados periodicamente para garantir que não sejam sobrescritos
+    setInterval(forceFieldStyles, 500);
     
     // Observa mudanças na DOM para lidar com elementos adicionados dinamicamente
     const observer = new MutationObserver(function(mutations) {

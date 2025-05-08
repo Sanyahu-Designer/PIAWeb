@@ -1,11 +1,17 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
 from ..models import Neurodivergente
 
-class CategoriaNeurodivergente(models.Model):
+class CategoriaNeurodivergente(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     nome = models.CharField('Nome', max_length=100)
     descricao = models.TextField('Descrição', blank=True)
     ordem = models.IntegerField('Ordem de Exibição', default=0)
+    objects = TenantManager()
     
     class Meta:
         verbose_name = 'Categoria CID-10'
@@ -18,7 +24,10 @@ class CategoriaNeurodivergente(models.Model):
     def get_nome_real(self):
         return self.nome
 
-class CondicaoNeurodivergente(models.Model):
+class CondicaoNeurodivergente(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     categoria = models.ForeignKey(
         CategoriaNeurodivergente,
         on_delete=models.PROTECT,
@@ -29,6 +38,7 @@ class CondicaoNeurodivergente(models.Model):
     cid_10 = models.CharField('CID-10', max_length=50)
     descricao = models.TextField('Descrição', blank=True)
     ativo = models.BooleanField('Ativo', default=True)
+    objects = TenantManager()
     
     class Meta:
         verbose_name = 'Condição CID-10'
@@ -39,7 +49,10 @@ class CondicaoNeurodivergente(models.Model):
     def __str__(self):
         return f"{self.nome} - CID-10: {self.cid_10}"
 
-class Neurodivergencia(models.Model):
+class Neurodivergencia(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergente = models.OneToOneField(
         Neurodivergente,
         on_delete=models.CASCADE,
@@ -68,7 +81,8 @@ class Neurodivergencia(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    objects = TenantManager()
+    
     class Meta:
         verbose_name = 'Neurodivergente'
         verbose_name_plural = 'Neurodivergentes'
@@ -76,7 +90,10 @@ class Neurodivergencia(models.Model):
     def __str__(self):
         return f"Neurodivergências - {self.neurodivergente}"
 
-class DiagnosticoNeurodivergente(models.Model):
+class DiagnosticoNeurodivergente(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergencia = models.ForeignKey(
         Neurodivergencia,
         on_delete=models.CASCADE,
@@ -95,6 +112,7 @@ class DiagnosticoNeurodivergente(models.Model):
     )
     data_identificacao = models.DateField('Data de Identificação', blank=True, null=True)
     observacoes = models.TextField('Observações', blank=True)
+    objects = TenantManager()
     
     def save(self, *args, **kwargs):
         # Garante que a categoria seja definida com base na condição antes de salvar

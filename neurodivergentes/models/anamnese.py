@@ -1,10 +1,14 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django_multitenant.models import TenantModel, TenantManager
 from ..models import Neurodivergente
 from profissionais_app.models import Profissional
+from clientes.models import Cliente
+from encrypted_model_fields.fields import EncryptedTextField
 
-class Medicacao(models.Model):
+class Medicacao(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     anamnese = models.ForeignKey(
         'Anamnese',
         on_delete=models.CASCADE,
@@ -13,6 +17,7 @@ class Medicacao(models.Model):
     nome = models.CharField('Nome da Medicação', max_length=100)
     dosagem = models.CharField('Dosagem', max_length=50)
     frequencia = models.CharField('Frequência', max_length=100)
+    objects = TenantManager()
     
     class Meta:
         verbose_name = 'Medicação'
@@ -22,7 +27,8 @@ class Medicacao(models.Model):
     def __str__(self):
         return f"{self.nome} - {self.dosagem}"
 
-class RotinaAtividade(models.Model):
+class RotinaAtividade(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     anamnese = models.ForeignKey(
         'Anamnese',
         on_delete=models.CASCADE,
@@ -30,7 +36,8 @@ class RotinaAtividade(models.Model):
     )
     horario = models.TimeField('Horário')
     atividade = models.CharField('Atividade', max_length=200)
-    observacoes = models.TextField('Observações', blank=True, null=True)
+    observacoes = EncryptedTextField('Observações', blank=True, null=True)
+    objects = TenantManager()
     
     class Meta:
         verbose_name = 'Atividade da Rotina'
@@ -40,7 +47,7 @@ class RotinaAtividade(models.Model):
     def __str__(self):
         return f"{self.horario.strftime('%H:%M')} - {self.atividade}"
 
-class Anamnese(models.Model):
+class Anamnese(TenantModel):
     TIPO_PARTO_CHOICES = [
         ('normal', 'Normal'),
         ('cesarea', 'Cesárea')
@@ -57,7 +64,9 @@ class Anamnese(models.Model):
         (False, 'Não')
     ]
 
-    # Relacionamento com Aluno/Paciente
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergente = models.OneToOneField(
         Neurodivergente,
         on_delete=models.CASCADE,
@@ -65,7 +74,6 @@ class Anamnese(models.Model):
         verbose_name='Aluno/Paciente'
     )
 
-    # Profissional Responsável
     profissional_responsavel = models.ForeignKey(
         Profissional,
         on_delete=models.PROTECT,
@@ -75,7 +83,6 @@ class Anamnese(models.Model):
         blank=True  # Permitir formulários vazios temporariamente
     )
 
-    # Nascimento e Primeira Infância
     tipo_parto = models.CharField(
         'Tipo de Parto',
         max_length=10,
@@ -101,7 +108,7 @@ class Anamnese(models.Model):
             MaxValueValidator(20)
         ]
     )
-    observacoes_parto = models.TextField(
+    observacoes_parto = EncryptedTextField(
         'Observações sobre o Parto',
         blank=True
     )
@@ -111,7 +118,6 @@ class Anamnese(models.Model):
         choices=STATUS_PAIS_CHOICES
     )
 
-    # Informações Médicas
     beneficios_sociais = models.CharField(
         'Benefícios Sociais',
         max_length=100,
@@ -128,39 +134,35 @@ class Anamnese(models.Model):
         null=True
     )
 
-    # Histórico
-    queixa_inicial = models.TextField('Queixa Inicial')
-    historia_vida = models.TextField('História de Vida')
+    queixa_inicial = EncryptedTextField('Queixa Inicial')
+    historia_vida = EncryptedTextField('História de Vida')
 
-    comportamento_familiar = models.TextField(
-    'Comportamento no Ambiente Familiar',
-    blank=True  # Permite campo vazio no formulário
+    comportamento_familiar = EncryptedTextField(
+        'Comportamento no Ambiente Familiar',
+        blank=True
     )
-    comportamento_social = models.TextField(
-    'Comportamento no Ambiente Social e Escolar',
-    blank=True
+    comportamento_social = EncryptedTextField(
+        'Comportamento no Ambiente Social e Escolar',
+        blank=True
     )
 
-    # Desenvolvimento
-    autonomia = models.TextField('Autonomia')
-    comunicacao = models.TextField('Comunicação')
+    autonomia = EncryptedTextField('Autonomia')
+    comunicacao = EncryptedTextField('Comunicação')
     restricoes_alimentares = models.BooleanField(
         'Possui Restrições Alimentares',
         choices=SIM_NAO_CHOICES
     )
-    descricao_restricoes = models.TextField(
+    descricao_restricoes = EncryptedTextField(
         'Descrição das Restrições Alimentares',
         blank=True,
         null=True
     )
 
-    # Percepção dos Responsáveis
-    aspectos_cognitivos = models.TextField('Aspectos Cognitivos')
-    aspectos_psicomotores = models.TextField('Aspectos Psicomotores')
-    aspectos_emocionais = models.TextField('Aspectos Emocionais/Sociais')
-    aspectos_sensoriais = models.TextField('Aspectos Sensoriais')
+    aspectos_cognitivos = EncryptedTextField('Aspectos Cognitivos')
+    aspectos_psicomotores = EncryptedTextField('Aspectos Psicomotores')
+    aspectos_emocionais = EncryptedTextField('Aspectos Emocionais/Sociais')
+    aspectos_sensoriais = EncryptedTextField('Aspectos Sensoriais')
 
-    # Anexos
     anexos = models.FileField(
         'Anexos',
         upload_to='neurodivergentes/anamnese/',
@@ -168,10 +170,10 @@ class Anamnese(models.Model):
         null=True
     )
     
-    # Campos de controle
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    objects = TenantManager()
+    
     class Meta:
         verbose_name = 'Anamnese'
         verbose_name_plural = 'Anamneses'

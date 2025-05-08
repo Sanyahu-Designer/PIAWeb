@@ -3,9 +3,15 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils.html import mark_safe
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
+from encrypted_model_fields.fields import EncryptedCharField
 import datetime
 
-class Profissional(models.Model):
+class Profissional(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+
     GENDER_CHOICES = [
         ('M', 'Masculino'),
         ('F', 'Feminino'),
@@ -65,7 +71,7 @@ class Profissional(models.Model):
         blank=True,
         null=True
     )
-    celular = models.CharField(
+    celular = EncryptedCharField(
         'Celular/WhatsApp',
         max_length=15,
         validators=[
@@ -76,7 +82,7 @@ class Profissional(models.Model):
         ],
         help_text='Digite apenas os números. A formatação será aplicada automaticamente.'
     )
-    data_nascimento = models.DateField('Data de Nascimento')
+    data_nascimento = models.DateField('Data de Nascimento', blank=True, null=True)
     genero = models.CharField('Gênero', max_length=1, choices=GENDER_CHOICES)
 
     # Qualificação Profissional
@@ -92,16 +98,17 @@ class Profissional(models.Model):
         blank=True,
         help_text='Detalhe suas especializações'
     )
-    registro_profissional = models.CharField(
+    registro_profissional = EncryptedCharField(
         'Nº do Registro Profissional',
         max_length=50,
         blank=True
     )
-    local_registro = models.CharField(
-        'Local do Registro',
+    estado_registro = models.CharField(
+        'Estado de Registro',
         max_length=2,
         choices=ESTADOS_CHOICES,
-        blank=True
+        blank=True,
+        null=True
     )
     formacao = models.TextField(
         'Formação',
@@ -115,7 +122,7 @@ class Profissional(models.Model):
     )
 
     # Endereço
-    cep = models.CharField(
+    cep = EncryptedCharField(
         'CEP',
         max_length=9,
         validators=[
@@ -123,18 +130,16 @@ class Profissional(models.Model):
                 regex=r'^\d{5}-\d{3}$',
                 message='CEP inválido. Use o formato XXXXX-XXX'
             )
-        ]
+        ],
+        blank=True,
+        null=True
     )
-    endereco = models.CharField('Endereço', max_length=200)
-    numero = models.CharField('Número', max_length=10)
-    complemento = models.CharField(
-        'Complemento',
-        max_length=100,
-        blank=True
-    )
-    bairro = models.CharField('Bairro', max_length=100)
-    cidade = models.CharField('Cidade', max_length=100)
-    estado = models.CharField('Estado', max_length=2, choices=ESTADOS_CHOICES)
+    endereco = EncryptedCharField('Endereço', max_length=200, blank=True, null=True)
+    numero = EncryptedCharField('Número', max_length=10, blank=True, null=True)
+    complemento = EncryptedCharField('Complemento', max_length=100, blank=True, null=True)
+    bairro = EncryptedCharField('Bairro', max_length=100, blank=True, null=True)
+    cidade = EncryptedCharField('Cidade', max_length=100, blank=True, null=True)
+    estado = EncryptedCharField('Estado', max_length=2, blank=True, null=True)
 
     # Outros
     biografia = models.TextField(
@@ -156,6 +161,8 @@ class Profissional(models.Model):
     # Campos de controle
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Profissional'

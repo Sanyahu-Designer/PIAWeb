@@ -2,10 +2,16 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django_multitenant.models import TenantModel, TenantManager
+from encrypted_model_fields.fields import EncryptedTextField
 from ..models import Neurodivergente
 from profissionais_app.models import Profissional
+from clientes.models import Cliente
 
-class PDI(models.Model):
+class PDI(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     STATUS_CHOICES = [
         ('ausente', 'Ausente'),  # NOVO STATUS PRIMEIRA OPÇÃO
         ('iniciado', 'Iniciado'),
@@ -16,12 +22,11 @@ class PDI(models.Model):
     ]
 
     neurodivergente = models.ForeignKey(
-    Neurodivergente,
-    on_delete=models.CASCADE,
-    related_name='pdis',
-    verbose_name='Aluno/Paciente'
-)
-
+        Neurodivergente,
+        on_delete=models.CASCADE,
+        related_name='pdis',
+        verbose_name='Aluno/Paciente'
+    )
     data_criacao = models.DateField('Data do PDI')
     status = models.CharField(
         'Status',
@@ -36,13 +41,14 @@ class PDI(models.Model):
         verbose_name='Pedagogo Responsável',
         limit_choices_to={'profissao__in': ['educador_especial', 'pedagogo', 'psicopedagogo', 'neuropsicopedagogo']}
     )
-    observacoes = models.TextField(
+    observacoes = EncryptedTextField(
         'Diário de Classe',
         blank=True,
         null=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'PDI'
@@ -60,7 +66,10 @@ class PDI(models.Model):
                     'status': 'Não é possível salvar como "Concluído". Sugiro usar "Iniciado" ou "Em Andamento".'
                 })
 
-class PlanoEducacional(models.Model):
+class PlanoEducacional(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     pdi = models.OneToOneField(
         PDI,
         on_delete=models.CASCADE,
@@ -75,11 +84,12 @@ class PlanoEducacional(models.Model):
         related_name='planos_educacionais',
         limit_choices_to={'profissao__startswith': 'pedagogo'}
     )
-    objetivos = models.TextField('Objetivos')
-    estrategias = models.TextField('Estratégias')
-    recursos = models.TextField('Recursos Necessários')
+    objetivos = EncryptedTextField('Objetivos')
+    estrategias = EncryptedTextField('Estratégias')
+    recursos = EncryptedTextField('Recursos Necessários')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'ACI'
@@ -94,7 +104,10 @@ class PlanoEducacional(models.Model):
                 'data_fim': 'A data de finalização não pode ser anterior à data de início.'
             })
 
-class AdaptacaoCurricular(models.Model):
+class AdaptacaoCurricular(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     plano_educacional = models.ForeignKey(
         PlanoEducacional,
         on_delete=models.CASCADE,
@@ -109,12 +122,13 @@ class AdaptacaoCurricular(models.Model):
         limit_choices_to={'profissao__startswith': 'educador_especial'}
     )
     componente_curricular = models.CharField('Componente Curricular', max_length=100)
-    conteudo_adaptado = models.TextField('Conteúdo Adaptado')
-    estrategias = models.TextField('Estratégias de Ensino')
-    recursos = models.TextField('Recursos Didáticos')
-    avaliacao = models.TextField('Processo Avaliativo')
+    conteudo_adaptado = EncryptedTextField('Conteúdo Adaptado')
+    estrategias = EncryptedTextField('Estratégias de Ensino')
+    recursos = EncryptedTextField('Recursos Didáticos')
+    avaliacao = EncryptedTextField('Processo Avaliativo')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Adaptação Curricular'

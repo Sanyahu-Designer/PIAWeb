@@ -1,12 +1,18 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
 
-class MetaHabilidade(models.Model):
+class MetaHabilidade(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     nome = models.CharField('Nome', max_length=200)
     descricao = models.TextField('Descrição', blank=True)
     ativo = models.BooleanField('Ativo', default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Meta/Habilidade'
@@ -16,7 +22,10 @@ class MetaHabilidade(models.Model):
     def __str__(self):
         return self.nome
 
-class PDIMetaHabilidade(models.Model):
+class PDIMetaHabilidade(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     PROGRESSO_CHOICES = [(i, f'{i}%') for i in range(0, 101, 10)]
 
     pdi = models.ForeignKey(
@@ -40,6 +49,7 @@ class PDIMetaHabilidade(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Meta/Habilidade'

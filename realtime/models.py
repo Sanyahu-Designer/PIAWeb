@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.conf import settings
 import logging
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +14,9 @@ def validate_message_length(value):
     if len(value) > max_length:
         raise ValidationError(f'A mensagem não pode ter mais que {max_length} caracteres.')
 
-class PrivateMessage(models.Model):
+class PrivateMessage(TenantModel):
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     STATUS_CHOICES = (
         ('active', 'Ativa'),
         ('deleted', 'Excluída'),
@@ -48,6 +52,7 @@ class PrivateMessage(models.Model):
     has_notification = models.BooleanField('Tem notificação', default=False)
     deleted_by_sender = models.BooleanField(default=False)
     deleted_by_recipient = models.BooleanField(default=False)
+    objects = TenantManager()
 
     class Meta:
         ordering = ['-timestamp']

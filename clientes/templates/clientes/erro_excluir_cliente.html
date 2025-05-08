@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <div class="container mt-4">
+    <div class="alert alert-danger" role="alert">
+      <h4 class="alert-heading">Não foi possível excluir a prefeitura</h4>
+      <p>{{ mensagem }}</p>
+      <hr>
+      <a href="{% url 'listar_clientes' %}" class="btn btn-secondary">Voltar para lista de prefeituras</a>
+    </div>
+  </div>
+{% endblock %}

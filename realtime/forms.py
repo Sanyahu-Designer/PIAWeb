@@ -21,11 +21,29 @@ class MessageForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.sender = kwargs.pop('sender', None)
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         
         if self.sender:
-            # Filtra os usuários excluindo o remetente
-            recipient_queryset = User.objects.exclude(id=self.sender.id)
+            # Determinar o cliente atual (prefeitura)
+            cliente = None
+            
+            # Se o usuário está impersonando, usa o cliente impersonado
+            if self.request and hasattr(self.request, 'is_impersonating') and self.request.is_impersonating:
+                cliente = self.request.impersonated_cliente
+            # Caso contrário, usa o cliente do perfil do usuário
+            elif hasattr(self.sender, 'profile') and hasattr(self.sender.profile, 'cliente'):
+                cliente = self.sender.profile.cliente
+            
+            if cliente:
+                # Filtra apenas usuários da mesma prefeitura
+                recipient_queryset = User.objects.filter(profile__cliente=cliente).exclude(id=self.sender.id)
+                
+                # Excluir superusuários da lista
+                recipient_queryset = recipient_queryset.filter(is_superuser=False)
+            else:
+                # Fallback para o comportamento anterior se não conseguir determinar o cliente
+                recipient_queryset = User.objects.exclude(id=self.sender.id)
             
             # Configura o queryset e o label_from_instance para mostrar o nome completo
             self.fields['recipient'].queryset = recipient_queryset
@@ -44,7 +62,19 @@ class MessageForm(forms.ModelForm):
         instance.sender = self.sender
         instance.is_read = False
         
+        # Obter o cliente atual
+        # Se o usuário está impersonando um cliente, usa esse cliente
+        request = getattr(self, 'request', None)
+        if hasattr(self.sender, 'request'):
+            request = self.sender.request
+            
+        if request and hasattr(request, 'is_impersonating') and request.is_impersonating:
+            instance.cliente = request.impersonated_cliente
+        elif hasattr(self.sender, 'profile') and hasattr(self.sender.profile, 'cliente'):
+            # Usuário normal, usa o cliente do perfil
+            instance.cliente = self.sender.profile.cliente
+        
         if commit:
             instance.save()
         
-        return instance 
+        return instance

@@ -1,11 +1,17 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django_multitenant.models import TenantModel, TenantManager
+from encrypted_model_fields.fields import EncryptedTextField
 from ..models import Neurodivergente
 from escola.models import Escola
 from profissionais_app.models import Profissional
+from clientes.models import Cliente
 
-class ParecerAvaliativo(models.Model):
+class ParecerAvaliativo(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergente = models.ForeignKey(
         Neurodivergente,
         on_delete=models.CASCADE,
@@ -17,7 +23,7 @@ class ParecerAvaliativo(models.Model):
         on_delete=models.PROTECT,
         related_name='pareceres'
     )
-    evolucao = models.TextField('Parecer Descritivo', blank=True, null=True)
+    evolucao = EncryptedTextField('Parecer Descritivo', blank=True, null=True)
     data_avaliacao = models.DateField('Data do Parecer')
     profissional_responsavel = models.ForeignKey(
         Profissional,
@@ -50,6 +56,7 @@ class ParecerAvaliativo(models.Model):
         blank=True, 
         null=True
     )
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Parecer'

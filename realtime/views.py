@@ -30,7 +30,25 @@ def user_autocomplete(request):
     """View para autocomplete de usuários no Select2"""
     term = request.GET.get('term', '')
     
-    users = User.objects.exclude(id=request.user.id)
+    # Determinar o cliente atual (prefeitura)
+    if request.user.is_superuser and hasattr(request, 'is_impersonating') and request.is_impersonating:
+        # Se for superusuário impersonando, usa o cliente impersonado
+        cliente = request.impersonated_cliente
+    else:
+        # Caso contrário, usa o cliente do perfil do usuário
+        try:
+            cliente = request.user.profile.cliente
+        except Exception as e:
+            logger.error(f"Erro ao obter cliente do usuário: {str(e)}")
+            return JsonResponse({'results': [], 'pagination': {'more': False}})
+    
+    # Filtrar apenas usuários da mesma prefeitura
+    users = User.objects.filter(profile__cliente=cliente).exclude(id=request.user.id)
+    
+    # Excluir superusuários da lista
+    users = users.filter(is_superuser=False)
+    
+    # Aplicar filtro de busca se houver termo
     if term:
         users = users.filter(
             Q(username__icontains=term) |
@@ -46,6 +64,7 @@ def user_autocomplete(request):
         } for user in users[:10]],
         'pagination': {'more': False}
     }
+    
     return JsonResponse(data)
 
 @ajax_login_required
@@ -101,7 +120,7 @@ def new_message(request):
             pass
     
     if request.method == 'POST':
-        form = MessageForm(request.POST, sender=request.user)
+        form = MessageForm(request.POST, sender=request.user, request=request)
         if form.is_valid():
             message = form.save()
             django_messages.success(request, 'Mensagem enviada com sucesso!')
@@ -111,7 +130,7 @@ def new_message(request):
                 for error in errors:
                     django_messages.error(request, f"{field}: {error}")
     else:
-        form = MessageForm(initial=initial_data, sender=request.user)
+        form = MessageForm(initial=initial_data, sender=request.user, request=request)
     
     return render(request, 'realtime/new_message_form.html', {'form': form})
 
@@ -288,8 +307,24 @@ def edit_message(request, message_id):
             logger.error(f"Erro ao editar mensagem: {str(e)}", exc_info=True)
             django_messages.error(request, 'Ocorreu um erro ao editar a mensagem.')
     
-    # Lista todos os usuários exceto o atual para o select de destinatários
-    users = User.objects.exclude(id=request.user.id).order_by('first_name', 'last_name', 'username')
+    # Determinar o cliente atual (prefeitura)
+    if request.user.is_superuser and hasattr(request, 'is_impersonating') and request.is_impersonating:
+        # Se for superusuário impersonando, usa o cliente impersonado
+        cliente = request.impersonated_cliente
+    else:
+        # Caso contrário, usa o cliente do perfil do usuário
+        try:
+            cliente = request.user.profile.cliente
+        except Exception as e:
+            logger.error(f"Erro ao obter cliente do usuário: {str(e)}")
+            django_messages.error(request, 'Erro ao carregar usuários da prefeitura.')
+            return redirect('realtime:chat_list')
+    
+    # Filtrar apenas usuários da mesma prefeitura
+    users = User.objects.filter(profile__cliente=cliente).exclude(id=request.user.id)
+    
+    # Excluir superusuários da lista
+    users = users.filter(is_superuser=False).order_by('first_name', 'last_name', 'username')
     
     context = {
         'message': message,

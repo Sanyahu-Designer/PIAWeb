@@ -1,0 +1,12 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <h2>Detalhes da Prefeitura</h2>
+  <ul class="list-group">
+    <li class="list-group-item"><strong>Nome:</strong> {{ cliente.nome }}</li>
+    <li class="list-group-item"><strong>CNPJ:</strong> {{ cliente.cnpj }}</li>
+    <li class="list-group-item"><strong>Domínio:</strong> {{ cliente.dominio }}</li>
+    <li class="list-group-item"><strong>Slug:</strong> {{ cliente.slug }}</li>
+  </ul>
+  <a href="{% url 'listar_clientes' %}" class="btn btn-secondary mt-3">Voltar</a>
+  <!-- Aqui você pode adicionar um botão para acessar a aplicação do cliente, se aplicável -->
+{% endblock %}

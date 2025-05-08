@@ -29,10 +29,10 @@
             </div>
             {% if cl.result_count == 0 %}
             <div class="text-center py-5">
-              <p class="text-secondary">Nenhuma Prefeitura cadastrada.</p>
+              <p class="text-secondary">Nenhuma Instituição cadastrada.</p>
               {% if has_add_permission %}
               <a href="{% url 'admin:configuracoes_configuracaocliente_add' %}" class="btn btn-outline-primary">
-                <i class="material-symbols-rounded opacity-10">add</i> Adicionar Prefeitura
+                <i class="material-symbols-rounded opacity-10">add</i> Adicionar dados da Instituição
               </a>
               {% endif %}
             </div>
@@ -41,9 +41,9 @@
               <table class="table align-items-center mb-0">
                 <thead>
                   <tr>
-                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nome da Prefeitura</th>
-                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">CNPJ da Prefeitura</th>
-                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nome do Prefeito(a)</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nome da Instituição</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">CNPJ da Instituição</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nome do Dirigente</th>
                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">Ações</th>
                   </tr>
                 </thead>

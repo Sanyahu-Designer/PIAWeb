@@ -1,14 +1,19 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from escola.models import Escola
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
 
-class SeriesCursadas(models.Model):
+class SeriesCursadas(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     SERIES_CHOICES = [
         ('EDUCAÇÃO INFANTIL', (
             ('bercario1', 'Berçário I'),
             ('bercario2', 'Berçário II'),
-            ('maternal', 'Maternal'),
-            ('jardim', 'Jardim'),
+            ('maternal1', 'Maternal I'),
+            ('maternal2', 'Maternal II'),
             ('pre1', 'Pré I'),
             ('pre2', 'Pré II'),
         )),
@@ -30,8 +35,7 @@ class SeriesCursadas(models.Model):
     nome = models.CharField(
         'Série',
         max_length=10,
-        choices=[item for group in SERIES_CHOICES for item in group[1]],
-        unique=True
+        choices=[item for group in SERIES_CHOICES for item in group[1]]
     )
     categoria = models.CharField(
         'Categoria',
@@ -44,10 +48,13 @@ class SeriesCursadas(models.Model):
     )
     ordem = models.IntegerField('Ordem de exibição', default=0)
 
+    objects = TenantManager()
+
     class Meta:
         verbose_name = 'Série Cursada'
         verbose_name_plural = 'Séries Cursadas'
         ordering = ['ordem', 'nome']
+        unique_together = ['cliente', 'nome']
 
     def __str__(self):
         return self.get_nome_display()
@@ -55,21 +62,24 @@ class SeriesCursadas(models.Model):
     def save(self, *args, **kwargs):
         # Define a ordem baseada na série
         ordem_map = {
-            'bercario1': 1, 'bercario2': 2, 'maternal': 3,
-            'jardim': 4, 'pre1': 5, 'pre2': 6,
+            'bercario1': 1, 'bercario2': 2, 'maternal1': 3, 'maternal2': 4,
+            'pre1': 5, 'pre2': 6,
             '1ano': 7, '2ano': 8, '3ano': 9, '4ano': 10, '5ano': 11,
             '6ano': 12, '7ano': 13, '8ano': 14, '9ano': 15
         }
         self.ordem = ordem_map.get(self.nome, 0)
         super().save(*args, **kwargs)
 
-class HistoricoEscolar(models.Model):
+class HistoricoEscolar(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     SERIES_CHOICES = [
         ('EDUCAÇÃO INFANTIL', (
             ('bercario1', 'Berçário I'),
             ('bercario2', 'Berçário II'),
-            ('maternal', 'Maternal'),
-            ('jardim', 'Jardim'),
+            ('maternal1', 'Maternal I'),
+            ('maternal2', 'Maternal II'),
             ('pre1', 'Pré I'),
             ('pre2', 'Pré II'),
         )),
@@ -143,6 +153,8 @@ class HistoricoEscolar(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Histórico Escolar'

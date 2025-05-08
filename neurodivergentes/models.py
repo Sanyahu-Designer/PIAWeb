@@ -7,12 +7,18 @@ from datetime import date
 from escola.models import Escola
 from neurodivergentes.models.historico_escolar import SeriesCursadas
 from profissionais.models import Profissional
+from django_multitenant.models import TenantModel, TenantManager
+from clientes.models import Cliente
+from encrypted_model_fields.fields import EncryptedCharField, EncryptedEmailField
 
 def validate_future_date(value):
     if value > date.today():
         raise ValidationError('A data não pode ser no futuro.')
 
-class Neurodivergente(models.Model):
+class Neurodivergente(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     GENDER_CHOICES = [
         ('M', 'Masculino'),
         ('F', 'Feminino'),
@@ -39,18 +45,8 @@ class Neurodivergente(models.Model):
         validators=[validate_future_date]
     )
     genero = models.CharField('Gênero', max_length=1, choices=GENDER_CHOICES)
-    cpf = models.CharField(
-        'CPF',
-        max_length=14,
-        unique=True,
-        validators=[
-            RegexValidator(
-                regex=r'^\d{3}\.\d{3}\.\d{3}-\d{2}$',
-                message='CPF inválido. Use o formato XXX.XXX.XXX-XX'
-            )
-        ]
-    )
-    rg = models.CharField('RG', max_length=20, blank=True, null=True)
+    cpf = EncryptedCharField(max_length=14)
+    rg = EncryptedCharField(max_length=20, blank=True, null=True)
     
     # Localização
     estado_nascimento = models.CharField(
@@ -61,42 +57,17 @@ class Neurodivergente(models.Model):
     cidade_nascimento = models.CharField('Cidade de Nascimento', max_length=100)
     
     # Endereço
-    cep = models.CharField(
-        'CEP',
-        max_length=9,
-        validators=[
-            RegexValidator(
-                regex=r'^\d{5}-\d{3}$',
-                message='CEP inválido. Use o formato XXXXX-XXX'
-            )
-        ]
-    )
-    endereco = models.CharField('Endereço', max_length=255)
-    numero = models.CharField('Número', max_length=10)
-    complemento = models.CharField(
-        'Complemento',
-        max_length=100,
-        blank=True,
-        null=True
-    )
-    bairro = models.CharField('Bairro', max_length=100)
-    cidade = models.CharField('Cidade', max_length=100)
-    estado = models.CharField('Estado', max_length=2, choices=ESTADOS_CHOICES)
+    cep = EncryptedCharField(max_length=9)
+    endereco = EncryptedCharField(max_length=255)
+    numero = EncryptedCharField(max_length=10)
+    complemento = EncryptedCharField(max_length=100, blank=True, null=True)
+    bairro = EncryptedCharField(max_length=100)
+    cidade = EncryptedCharField(max_length=100)
+    estado = EncryptedCharField(max_length=2, choices=ESTADOS_CHOICES)
     
     # Contato
-    celular = models.CharField(
-        'Celular/WhatsApp',
-        max_length=15,
-        blank=True,
-        null=True,
-        validators=[
-            RegexValidator(
-                regex=r'^\(\d{2}\) \d{5}-\d{4}$',
-                message='Formato inválido. Use (XX) XXXXX-XXXX'
-            )
-        ]
-    )
-    email = models.EmailField('E-mail', blank=True, null=True)
+    celular = EncryptedCharField(max_length=15, blank=True, null=True)
+    email = EncryptedEmailField(blank=True, null=True)
     
     # Foto
     foto_perfil = models.ImageField(
@@ -131,6 +102,8 @@ class Neurodivergente(models.Model):
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
     
+    objects = TenantManager()
+
     class Meta:
         verbose_name = 'Aluno/Paciente'
         verbose_name_plural = 'Alunos/Pacientes'
@@ -177,7 +150,10 @@ class Neurodivergente(models.Model):
             if len(celular) == 11:
                 self.celular = f'({celular[:2]}) {celular[2:7]}-{celular[7:]}'
                 
-class GrupoFamiliar(models.Model):
+class GrupoFamiliar(TenantModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    tenant_id = 'cliente_id'  # Define o campo tenant_id necessário para o django-multitenant
+    
     neurodivergente = models.ForeignKey(
         Neurodivergente,
         on_delete=models.CASCADE,
@@ -185,3 +161,18 @@ class GrupoFamiliar(models.Model):
     )
     nome = models.CharField(max_length=100)
     data_nascimento = models.DateField()
+    # Documentos dos membros
+    cpf = EncryptedCharField(max_length=14, blank=True, null=True)
+    rg = EncryptedCharField(max_length=20, blank=True, null=True)
+    # Endereço residencial
+    cep = EncryptedCharField(max_length=9, blank=True, null=True)
+    endereco = EncryptedCharField(max_length=255, blank=True, null=True)
+    numero = EncryptedCharField(max_length=10, blank=True, null=True)
+    complemento = EncryptedCharField(max_length=100, blank=True, null=True)
+    bairro = EncryptedCharField(max_length=100, blank=True, null=True)
+    cidade = EncryptedCharField(max_length=100, blank=True, null=True)
+    estado = EncryptedCharField(max_length=2, blank=True, null=True)
+    # Dados de contato pessoais
+    celular = EncryptedCharField(max_length=15, blank=True, null=True)
+    email = EncryptedEmailField(blank=True, null=True)
+    objects = TenantManager()
