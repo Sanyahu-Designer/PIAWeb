@@ -1,12 +1,12 @@
-# 📘 PIA - Plano Individual de Aprendizagem
+# 📘 PIAWeb - Plano Individual de Aprendizagem
 
-**PIA** (Plano Individual de Aprendizagem) é uma aplicação desenvolvida em **Python, Django e Jazzmin** com o objetivo de integrar diferentes setores municipais para o acompanhamento educacional e clínico de alunos neurodivergentes. A plataforma conecta a **Secretaria de Educação**, a **Secretaria de Saúde**, os **alunos neurodivergentes** e seus **responsáveis** para criar uma rede colaborativa de suporte e acompanhamento do desenvolvimento e bem-estar dos estudantes.
+**PIAWeb** (Plano Individual de Aprendizagem) é uma aplicação desenvolvida em **Python, Django e Jazzmin** com o objetivo de integrar diferentes setores municipais para o acompanhamento educacional e clínico de alunos neurodivergentes. A plataforma conecta a **Secretaria de Educação**, a **Secretaria de Saúde**, os **alunos neurodivergentes** e seus **responsáveis** para criar uma rede colaborativa de suporte e acompanhamento do desenvolvimento e bem-estar dos estudantes.
 
 ---
 
 ## 🎯 Objetivo da Aplicação
 
-O **PIA** facilita o monitoramento contínuo e integrado dos alunos com necessidades especiais, permitindo um acompanhamento personalizado que envolve tanto os aspectos clínicos quanto educacionais.
+O **PIAWeb** facilita o monitoramento contínuo e integrado dos alunos com necessidades especiais, permitindo um acompanhamento personalizado que envolve tanto os aspectos clínicos quanto educacionais.
 
 A aplicação se baseia em uma interface amigável e acessível para que todos os envolvidos possam interagir e contribuir para o desenvolvimento do plano de aprendizagem individual de cada aluno.
 
